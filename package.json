@@ -9,12 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.4.1",
+    "@contentauth/c2pa-web": "^0.8.1",
+    "exifreader": "^4.39.1",
+    "jszip": "^3.10.1",
+    "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "posthog-js": "^1.376.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
