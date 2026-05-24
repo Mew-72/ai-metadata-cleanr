@@ -189,3 +189,43 @@ body {
 .animate-scaleUp {
   animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ── FONT SIZE & SPACE UTILIZATION SCALE-UP ── */
+
+/* 1. Scale container bounds to utilize modern displays */
+.max-w-\[1280px\], [class*="max-w-[1280px]"] {
+  max-width: 1480px !important;
+}
+
+/* 2. Scale small absolute pixel font-size mappings */
+.text-\[6px\], [class*="text-[6px]"] { font-size: 8px !important; }
+.text-\[7px\], [class*="text-[7px]"] { font-size: 9px !important; }
+.text-\[8px\], [class*="text-[8px]"] { font-size: 10px !important; }
+.text-\[9px\], [class*="text-[9px]"] { font-size: 11px !important; }
+.text-\[10px\], [class*="text-[10px]"] { font-size: 12.5px !important; }
+.text-\[11px\], [class*="text-[11px]"] { font-size: 13.5px !important; }
+.text-\[12px\], [class*="text-[12px]"] { font-size: 14.5px !important; }
+.text-\[13px\], [class*="text-[13px]"] { font-size: 15.5px !important; }
+.text-\[14px\], [class*="text-[14px]"] { font-size: 16.5px !important; }
+.text-\[15px\], [class*="text-[15px]"] { font-size: 17.5px !important; }
+
+/* 3. Scale standard relative typography classes */
+.text-xs { font-size: 13.5px !important; }
+.text-sm { font-size: 15.5px !important; }
+.text-base { font-size: 17.5px !important; }
+.text-lg { font-size: 19.5px !important; }
+.text-xl { font-size: 23px !important; }
+.text-2xl { font-size: 27px !important; }
+.text-3xl { font-size: 33px !important; }
+.text-4xl { font-size: 42px !important; }
+.text-5xl { font-size: 52px !important; }
+.text-6xl { font-size: 64px !important; }
+
+/* 4. Support larger grid columns and truncates in workspace */
+.max-w-\[130px\] {
+  max-width: 200px !important;
+}
+.max-w-\[200px\] {
+  max-width: 280px !important;
+}
+

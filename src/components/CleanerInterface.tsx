@@ -8,18 +8,18 @@ import posthog from "posthog-js";
 import { useAppAuth, useAppUser } from "../hooks/useAppAuth";
 import { BillingModal } from "./BillingModal";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
-import { 
-  Upload, 
-  Trash2, 
-  ShieldCheck, 
-  Download, 
-  FileImage, 
+import {
+  Upload,
+  Trash2,
+  ShieldCheck,
+  Download,
+  FileImage,
   AlertTriangle,
   Sparkles,
   HelpCircle,
   Lock,
   FileCode,
-  X
+  X,
 } from "lucide-react";
 
 interface UploadedFile {
@@ -38,67 +38,76 @@ interface UploadedFile {
 }
 
 const MOCK_C2PA_MANIFEST = {
-  "active_manifest": "urn:cpa:709055fa-9dce-4eba-8a71-d57444385397",
-  "manifests": {
+  active_manifest: "urn:cpa:709055fa-9dce-4eba-8a71-d57444385397",
+  manifests: {
     "urn:cpa:709055fa-9dce-4eba-8a71-d57444385397": {
-      "claimant": "OpenAI Media Service",
-      "assertions": [
+      claimant: "OpenAI Media Service",
+      assertions: [
         {
-          "label": "c2pa.actions",
-          "data": {
-            "actions": [
+          label: "c2pa.actions",
+          data: {
+            actions: [
               {
-                "action": "c2pa.converted",
-                "when": "2026-04-23T20:08:00Z"
-              }
+                action: "c2pa.converted",
+                when: "2026-04-23T20:08:00Z",
+              },
             ],
-            "created": true
-          }
+            created: true,
+          },
         },
         {
-          "label": "c2pa.certificate-status",
-          "data": {
-            "ocspVals": [
-              "MIITIBwBAKCCBBMwggFIBgkrBgEFBQcwAQEEgge5MIIH..."
-            ],
-            "created": true
-          }
-        }
+          label: "c2pa.certificate-status",
+          data: {
+            ocspVals: ["MIITIBwBAKCCBBMwggFIBgkrBgEFBQcwAQEEgge5MIIH..."],
+            created: true,
+          },
+        },
       ],
-      "signature_info": {
-        "alg": "Ps256",
-        "issuer": "OpenAI OpCo, LLC",
-        "common_name": "OpenAI Media Service",
-        "cert_serial_number": "15483366567143162630298612244848438035",
-        "time": "2026-04-23T14:19:04.095995+00:00"
+      signature_info: {
+        alg: "Ps256",
+        issuer: "OpenAI OpCo, LLC",
+        common_name: "OpenAI Media Service",
+        cert_serial_number: "15483366567143162630298612244848438035",
+        time: "2026-04-23T14:19:04.095995+00:00",
       },
-      "claim_version": 2
-    }
-  }
+      claim_version: 2,
+    },
+  },
 };
 
 const getPersistedCleanCount = (): number => {
   if (typeof window === "undefined") return 0;
-  
+
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
   let localCount = 0;
   let cookieCount = 0;
-  
+
   try {
-    const localVal = localStorage.getItem("scrubai_purified_count");
-    if (localVal) localCount = parseInt(localVal, 10) || 0;
-  } catch (e) {}
-  
-  try {
-    const cookies = document.cookie.split(";");
-    for (const c of cookies) {
-      const [name, val] = c.trim().split("=");
-      if (name === "scrubai_purified_count") {
-        cookieCount = parseInt(val, 10) || 0;
-        break;
-      }
+    const lastDate = localStorage.getItem("scrubai_purified_date");
+    if (lastDate !== today) {
+      localStorage.setItem("scrubai_purified_date", today);
+      localStorage.setItem("scrubai_purified_count", "0");
+      localCount = 0;
+    } else {
+      const localVal = localStorage.getItem("scrubai_purified_count");
+      if (localVal) localCount = parseInt(localVal, 10) || 0;
     }
   } catch (e) {}
-  
+
+  try {
+    const cookies = document.cookie.split(";");
+    let lastDate = "";
+    for (const c of cookies) {
+      const [name, val] = c.trim().split("=");
+      if (name === "scrubai_purified_date") lastDate = val;
+      if (name === "scrubai_purified_count")
+        cookieCount = parseInt(val, 10) || 0;
+    }
+    if (lastDate !== today) {
+      cookieCount = 0;
+    }
+  } catch (e) {}
+
   const maxCount = Math.max(localCount, cookieCount);
   setPersistedCleanCount(maxCount);
   return maxCount;
@@ -106,14 +115,20 @@ const getPersistedCleanCount = (): number => {
 
 const setPersistedCleanCount = (count: number) => {
   if (typeof window === "undefined") return;
-  
+
+  const today = new Date().toLocaleDateString("en-CA");
+
   try {
+    localStorage.setItem("scrubai_purified_date", today);
     localStorage.setItem("scrubai_purified_count", String(count));
   } catch (e) {}
-  
+
   try {
+    // Set cookie to expire at the end of the current day
     const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 1);
+    expires.setHours(23, 59, 59, 999);
+
+    document.cookie = `scrubai_purified_date=${today}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
     document.cookie = `scrubai_purified_count=${count}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
   } catch (e) {}
 };
@@ -122,7 +137,9 @@ export function CleanerInterface() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [customFilename, setCustomFilename] = useState("");
-  const [spoofProfile, setSpoofProfile] = useState<"none" | "iphone" | "canon" | "sony">("iphone");
+  const [spoofProfile, setSpoofProfile] = useState<
+    "none" | "iphone" | "canon" | "sony"
+  >("iphone");
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
@@ -134,9 +151,11 @@ export function CleanerInterface() {
   // Clerk Auth and Billing Gating Checks
   const { has, isSignedIn, isLoaded } = useAppAuth();
   const { user } = useAppUser();
-  
+
   // A user is Pro if they have the active 'pro' Clerk subscription plan
-  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "batch_processing" })) : false;
+  const isPro = has
+    ? has({ plan: "pro" }) || has({ feature: "batch_processing" })
+    : false;
 
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
 
@@ -195,32 +214,101 @@ export function CleanerInterface() {
 
   // Comprehensive list of tag keywords that indicate privacy/tracking risk
   const RISK_KEYWORDS = [
-    "gps", "latitude", "longitude", "altitude", "location",
-    "make", "model", "lensmodel", "lensmake",
-    "software", "creator", "creatortool", "tool", "producer", "processor",
-    "c2pa", "jumbf", "credential", "provenance", "assertion", "claim",
-    "copyright", "artist", "author", "rights", "owner", "byline",
-    "datetime", "datecreated", "datetimeoriginal", "datetimedigitized", "createdate", "modifydate",
-    "serialnumber", "bodyserialnumber", "lensserialnumber",
-    "uniqueid", "imageid", "documentid", "instanceid", "originalid",
-    "usernote", "usercomment", "imagedescription",
-    "historysoftwareagent", "historyaction", "historywhen",
+    "gps",
+    "latitude",
+    "longitude",
+    "altitude",
+    "location",
+    "make",
+    "model",
+    "lensmodel",
+    "lensmake",
+    "software",
+    "creator",
+    "creatortool",
+    "tool",
+    "producer",
+    "processor",
+    "c2pa",
+    "jumbf",
+    "credential",
+    "provenance",
+    "assertion",
+    "claim",
+    "copyright",
+    "artist",
+    "author",
+    "rights",
+    "owner",
+    "byline",
+    "datetime",
+    "datecreated",
+    "datetimeoriginal",
+    "datetimedigitized",
+    "createdate",
+    "modifydate",
+    "serialnumber",
+    "bodyserialnumber",
+    "lensserialnumber",
+    "uniqueid",
+    "imageid",
+    "documentid",
+    "instanceid",
+    "originalid",
+    "usernote",
+    "usercomment",
+    "imagedescription",
+    "historysoftwareagent",
+    "historyaction",
+    "historywhen",
   ];
 
   // Tags that are safe structural file properties
   const STRUCTURAL_KEYWORDS = [
-    "imagewidth", "imageheight", "bitspersample", "bitdepth", "colordepth",
-    "colorspace", "colortype", "compression", "filter", "interlace",
-    "pixelxdimension", "pixelydimension", "xresolution", "yresolution",
-    "resolutionunit", "orientation", "photometricinterpretation",
-    "samplesperpixel", "planarconfiguration", "ycbcrsubsampling",
-    "componentsconfiguration", "compressedbitsper",
-    "whitepoint", "primarychromaticities", "referenceblackwhite",
-    "jfifversion", "thumbnaillength", "thumbnailoffset",
-    "renderingintent", "connectionspace", "pcs",
-    "profileclass", "profileid", "colorspacedata", "cmm",
-    "trc", "red", "green", "blue", "mediawhitepoint", "chad",
-    "numberofcomponents", "filetypeextension", "mimetypeextension",
+    "imagewidth",
+    "imageheight",
+    "bitspersample",
+    "bitdepth",
+    "colordepth",
+    "colorspace",
+    "colortype",
+    "compression",
+    "filter",
+    "interlace",
+    "pixelxdimension",
+    "pixelydimension",
+    "xresolution",
+    "yresolution",
+    "resolutionunit",
+    "orientation",
+    "photometricinterpretation",
+    "samplesperpixel",
+    "planarconfiguration",
+    "ycbcrsubsampling",
+    "componentsconfiguration",
+    "compressedbitsper",
+    "whitepoint",
+    "primarychromaticities",
+    "referenceblackwhite",
+    "jfifversion",
+    "thumbnaillength",
+    "thumbnailoffset",
+    "renderingintent",
+    "connectionspace",
+    "pcs",
+    "profileclass",
+    "profileid",
+    "colorspacedata",
+    "cmm",
+    "trc",
+    "red",
+    "green",
+    "blue",
+    "mediawhitepoint",
+    "chad",
+    "numberofcomponents",
+    "filetypeextension",
+    "mimetypeextension",
     "device",
   ];
 
@@ -228,15 +316,31 @@ export function CleanerInterface() {
     const lk = tagKey.toLowerCase();
     const lg = groupName.toLowerCase();
     if (lg === "iptc") return true;
-    if (lg === "xmp" && !STRUCTURAL_KEYWORDS.some(s => lk.includes(s))) return true;
-    if (RISK_KEYWORDS.some(rk => lk.includes(rk))) return true;
-    if (STRUCTURAL_KEYWORDS.some(sk => lk.includes(sk))) return false;
-    if (lg === "icc" || lg === "file" || lg === "jfif" || lg === "ihdr" || lg === "png" || lg === "pngfile") return false;
+    if (lg === "xmp" && !STRUCTURAL_KEYWORDS.some((s) => lk.includes(s)))
+      return true;
+    if (RISK_KEYWORDS.some((rk) => lk.includes(rk))) return true;
+    if (STRUCTURAL_KEYWORDS.some((sk) => lk.includes(sk))) return false;
+    if (
+      lg === "icc" ||
+      lg === "file" ||
+      lg === "jfif" ||
+      lg === "ihdr" ||
+      lg === "png" ||
+      lg === "pngfile"
+    )
+      return false;
     return false;
   };
 
   // Audit metadata — extract ALL tags with proper risk vs structural classification
-  const auditFile = async (file: File): Promise<{ metadata: Record<string, string>; dimensions: string; riskLevel: "high" | "low" | "clean"; riskTagCount: number }> => {
+  const auditFile = async (
+    file: File,
+  ): Promise<{
+    metadata: Record<string, string>;
+    dimensions: string;
+    riskLevel: "high" | "low" | "clean";
+    riskTagCount: number;
+  }> => {
     const dimensions = await getImageDimensions(file);
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -248,7 +352,10 @@ export function CleanerInterface() {
         try {
           if (reader.result instanceof ArrayBuffer) {
             const tags = ExifReader.load(reader.result, { expanded: true });
-            const allGroups = tags as Record<string, Record<string, { description?: string; value?: unknown }>>;
+            const allGroups = tags as Record<
+              string,
+              Record<string, { description?: string; value?: unknown }>
+            >;
 
             for (const [groupName, groupTags] of Object.entries(allGroups)) {
               if (!groupTags || typeof groupTags !== "object") continue;
@@ -257,37 +364,72 @@ export function CleanerInterface() {
                 let val = "";
                 if (typeof tagData === "string") {
                   val = tagData;
-                } else if (tagData.description && typeof tagData.description === "string") {
+                } else if (
+                  tagData.description &&
+                  typeof tagData.description === "string"
+                ) {
                   val = tagData.description;
-                } else if (tagData.value !== undefined && tagData.value !== null) {
+                } else if (
+                  tagData.value !== undefined &&
+                  tagData.value !== null
+                ) {
                   val = String(tagData.value);
                 } else {
                   continue;
                 }
-                if (!val || val === "" || val === "undefined" || val.length > 500) continue;
-                if (tagKey === "Thumbnail" || tagKey === "ThumbnailImage" || tagKey === "data" || tagKey === "rawValue" || tagKey === "MakerNote") continue;
-                if (tagKey === "UserComment" && val.includes("\u0000")) continue;
+                if (
+                  !val ||
+                  val === "" ||
+                  val === "undefined" ||
+                  val.length > 500
+                )
+                  continue;
+                if (
+                  tagKey === "Thumbnail" ||
+                  tagKey === "ThumbnailImage" ||
+                  tagKey === "data" ||
+                  tagKey === "rawValue" ||
+                  tagKey === "MakerNote"
+                )
+                  continue;
+                if (tagKey === "UserComment" && val.includes("\u0000"))
+                  continue;
 
                 if (isRiskTag(tagKey, groupName)) {
                   riskTags[`⚠ [${groupName.toUpperCase()}] ${tagKey}`] = val;
                   riskTagCount++;
                 } else {
-                  structuralTags[`◈ [${groupName.toUpperCase()}] ${tagKey}`] = val;
+                  structuralTags[`◈ [${groupName.toUpperCase()}] ${tagKey}`] =
+                    val;
                 }
               }
             }
 
             // C2PA special detection
-            const allKeys = [...Object.keys(riskTags), ...Object.keys(structuralTags)].join(" ").toLowerCase();
+            const allKeys = [
+              ...Object.keys(riskTags),
+              ...Object.keys(structuralTags),
+            ]
+              .join(" ")
+              .toLowerCase();
             if (allKeys.includes("jumbf") || allKeys.includes("c2pa")) {
-              riskTags["⚠ C2PA Content Credentials"] = "DETECTED — Cryptographically signed manifest found";
+              riskTags["⚠ C2PA Content Credentials"] =
+                "DETECTED — Cryptographically signed manifest found";
               riskTagCount++;
             }
 
             // AI platform filename pattern
             const nameL = file.name.toLowerCase();
-            if (nameL.includes("dall") || nameL.includes("midjourney") || nameL.includes("chatgpt") || nameL.includes("stable") || nameL.includes("firefly") || nameL.includes("comfy")) {
-              riskTags["⚠ AI Platform Filename"] = `Filename "${file.name}" matches known AI generation naming patterns`;
+            if (
+              nameL.includes("dall") ||
+              nameL.includes("midjourney") ||
+              nameL.includes("chatgpt") ||
+              nameL.includes("stable") ||
+              nameL.includes("firefly") ||
+              nameL.includes("comfy")
+            ) {
+              riskTags["⚠ AI Platform Filename"] =
+                `Filename "${file.name}" matches known AI generation naming patterns`;
               riskTagCount++;
             }
           }
@@ -295,13 +437,18 @@ export function CleanerInterface() {
           console.warn("ExifReader parse error:", err);
         }
 
-        const metadata: Record<string, string> = { ...riskTags, ...structuralTags };
+        const metadata: Record<string, string> = {
+          ...riskTags,
+          ...structuralTags,
+        };
 
         if (Object.keys(metadata).length === 0) {
-          metadata["◈ File Info"] = `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`;
+          metadata["◈ File Info"] =
+            `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`;
         }
 
-        const riskLevel: "high" | "low" | "clean" = riskTagCount >= 3 ? "high" : riskTagCount > 0 ? "low" : "clean";
+        const riskLevel: "high" | "low" | "clean" =
+          riskTagCount >= 3 ? "high" : riskTagCount > 0 ? "low" : "clean";
         resolve({ metadata, dimensions, riskLevel, riskTagCount });
       };
       reader.readAsArrayBuffer(file);
@@ -310,11 +457,11 @@ export function CleanerInterface() {
 
   const handleFilesAdded = async (incomingFiles: FileList | File[]) => {
     const list = Array.from(incomingFiles);
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    
+
     // Free tier limit check
     if (activeTier === "free" && getPersistedCleanCount() >= 5) {
       setIsGuestLimitModalOpen(true);
@@ -322,8 +469,10 @@ export function CleanerInterface() {
     }
 
     // Feature gating check
-    if (activeTier === "free" && (files.length + list.length > 1)) {
-      posthog.capture("upgrade_modal_opened", { trigger: "batch_upload_limit" });
+    if (activeTier === "free" && files.length + list.length > 1) {
+      posthog.capture("upgrade_modal_opened", {
+        trigger: "batch_upload_limit",
+      });
       setIsBillingModalOpen(true);
       return;
     }
@@ -336,7 +485,14 @@ export function CleanerInterface() {
     for (let i = 0; i < list.length; i++) {
       const file = list[i];
       const id = Math.random().toString(36).substring(2, 9);
-      processedFiles.push({ id, file, name: file.name, size: file.size, type: file.type, status: "idle" });
+      processedFiles.push({
+        id,
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        status: "idle",
+      });
     }
 
     setFiles((prev) => {
@@ -359,9 +515,16 @@ export function CleanerInterface() {
       setFiles((prev) =>
         prev.map((item) =>
           item.id === f.id
-            ? { ...item, metadata: auditResult.metadata, dimensions: auditResult.dimensions, riskLevel: auditResult.riskLevel, riskTagCount: auditResult.riskTagCount, status: "audited" }
-            : item
-        )
+            ? {
+                ...item,
+                metadata: auditResult.metadata,
+                dimensions: auditResult.dimensions,
+                riskLevel: auditResult.riskLevel,
+                riskTagCount: auditResult.riskTagCount,
+                status: "audited",
+              }
+            : item,
+        ),
       );
     }
   };
@@ -414,17 +577,24 @@ export function CleanerInterface() {
   };
 
   // Spoof/simulate normal, safe camera metadata profiles to bypass AI suppression
-  const getSafeSpoofedMetadata = (profile: "none" | "iphone" | "canon" | "sony", originalName: string): Record<string, string> => {
+  const getSafeSpoofedMetadata = (
+    profile: "none" | "iphone" | "canon" | "sony",
+    originalName: string,
+  ): Record<string, string> => {
     if (profile === "none") {
       return {
         "◈ [FILE] Format": "Purified PNG/JPEG Asset",
         "◈ [FILE] Signature": "Client-Side Raw Pixel Redraw",
-        "◈ [SECURITY] Status": "Sterilized (All EXIF, XMP, IPTC & C2PA tags permanently deleted)"
+        "◈ [SECURITY] Status":
+          "Sterilized (All EXIF, XMP, IPTC & C2PA tags permanently deleted)",
       };
     }
 
-    const currentDate = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    
+    const currentDate = new Date()
+      .toISOString()
+      .replace("T", " ")
+      .substring(0, 19);
+
     if (profile === "iphone") {
       return {
         "◈ [EXIF] Make": "Apple",
@@ -437,7 +607,8 @@ export function CleanerInterface() {
         "◈ [EXIF] ISOSpeedRatings": "80",
         "◈ [EXIF] FocalLength": "6.86 mm",
         "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-        "◈ [SECURITY] Sandbox Profile": "Protected Camera Signature Spoof (Bypass AI Flagging)"
+        "◈ [SECURITY] Sandbox Profile":
+          "Protected Camera Signature Spoof (Bypass AI Flagging)",
       };
     }
 
@@ -453,7 +624,8 @@ export function CleanerInterface() {
         "◈ [EXIF] ISOSpeedRatings": "200",
         "◈ [EXIF] FocalLength": "50.0 mm",
         "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-        "◈ [SECURITY] Sandbox Profile": "Protected Camera Signature Spoof (Bypass AI Flagging)"
+        "◈ [SECURITY] Sandbox Profile":
+          "Protected Camera Signature Spoof (Bypass AI Flagging)",
       };
     }
 
@@ -469,12 +641,16 @@ export function CleanerInterface() {
       "◈ [EXIF] ISOSpeedRatings": "100",
       "◈ [EXIF] FocalLength": "35.0 mm",
       "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-      "◈ [SECURITY] Sandbox Profile": "Protected Camera Signature Spoof (Bypass AI Flagging)"
+      "◈ [SECURITY] Sandbox Profile":
+        "Protected Camera Signature Spoof (Bypass AI Flagging)",
     };
   };
 
   // Clean a single file utilizing invisible Canvas pixel redrawing
-  const cleanSingleFile = async (item: UploadedFile, index: number): Promise<UploadedFile> => {
+  const cleanSingleFile = async (
+    item: UploadedFile,
+    index: number,
+  ): Promise<UploadedFile> => {
     return new Promise((resolve) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(item.file);
@@ -494,39 +670,43 @@ export function CleanerInterface() {
         // Draw the pure pixels to the canvas, stripping original exif metadata stream completely
         ctx.drawImage(img, 0, 0);
 
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            resolve({ ...item, status: "error" });
-            return;
-          }
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve({ ...item, status: "error" });
+              return;
+            }
 
-          // Always generate a randomized neutral filename to strip AI-detectable naming patterns
-          const ext = item.file.name.split(".").pop() || "png";
-          const rand = Math.random().toString(36).substring(2, 8);
-          const cleanedName = `img_${rand}_${index + 1}.${ext}`;
+            // Always generate a randomized neutral filename to strip AI-detectable naming patterns
+            const ext = item.file.name.split(".").pop() || "png";
+            const rand = Math.random().toString(36).substring(2, 8);
+            const cleanedName = `img_${rand}_${index + 1}.${ext}`;
 
-          const cleanedUrl = URL.createObjectURL(blob);
+            const cleanedUrl = URL.createObjectURL(blob);
 
-          // Track in PostHog
-          posthog.capture("image_scrubbed", {
-            file_format: item.type,
-            size_kb: Math.round(item.size / 1024),
-            is_batch: files.length > 1,
-            custom_filename: !!customFilename.trim(),
-            spoof_profile: spoofProfile,
-          });
+            // Track in PostHog
+            posthog.capture("image_scrubbed", {
+              file_format: item.type,
+              size_kb: Math.round(item.size / 1024),
+              is_batch: files.length > 1,
+              custom_filename: !!customFilename.trim(),
+              spoof_profile: spoofProfile,
+            });
 
-          resolve({
-            ...item,
-            name: cleanedName,
-            cleanedBlob: blob,
-            cleanedUrl,
-            metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name),
-            riskLevel: "clean",
-            riskTagCount: 0,
-            status: "done",
-          });
-        }, item.type || "image/png", 0.95);
+            resolve({
+              ...item,
+              name: cleanedName,
+              cleanedBlob: blob,
+              cleanedUrl,
+              metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name),
+              riskLevel: "clean",
+              riskTagCount: 0,
+              status: "done",
+            });
+          },
+          item.type || "image/png",
+          0.95,
+        );
 
         URL.revokeObjectURL(objectUrl);
       };
@@ -560,7 +740,9 @@ export function CleanerInterface() {
       if (activeTier === "free" && getPersistedCleanCount() >= 5) {
         setIsGuestLimitModalOpen(true);
         setFiles((prev) =>
-          prev.map((f, i) => (i >= idx && f.status === "cleaning" ? { ...f, status: "idle" } : f))
+          prev.map((f, i) =>
+            i >= idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
+          ),
         );
         break;
       }
@@ -569,9 +751,7 @@ export function CleanerInterface() {
       cleanedResults.push(cleaned);
 
       // Update specific item in UI queue
-      setFiles((prev) =>
-        prev.map((f) => (f.id === item.id ? cleaned : f))
-      );
+      setFiles((prev) => prev.map((f) => (f.id === item.id ? cleaned : f)));
 
       // Increment persistent clean count for Free tier
       if (activeTier === "free") {
@@ -580,7 +760,9 @@ export function CleanerInterface() {
         setCleanCount(nextCount);
         if (nextCount >= 5) {
           setFiles((prev) =>
-            prev.map((f, i) => (i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f))
+            prev.map((f, i) =>
+              i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
+            ),
           );
           break;
         }
@@ -605,7 +787,9 @@ export function CleanerInterface() {
     } else {
       // Pro ZIP Batch Download
       if (activeTier === "free") {
-        posthog.capture("upgrade_modal_opened", { trigger: "zip_download_gate" });
+        posthog.capture("upgrade_modal_opened", {
+          trigger: "zip_download_gate",
+        });
         setIsBillingModalOpen(true);
         return;
       }
@@ -646,9 +830,13 @@ export function CleanerInterface() {
 
     // Generate simulated image file loaded with custom dummy EXIF/C2PA tracking markers
     // Creating a transparent 1x1 base64 GIF is simple, then add simulated tags
-    const mockFile = new File([new Blob()], "DALL·E 2026_Camera_Studio_Export.jpg", {
-      type: "image/jpeg",
-    });
+    const mockFile = new File(
+      [new Blob()],
+      "DALL·E 2026_Camera_Studio_Export.jpg",
+      {
+        type: "image/jpeg",
+      },
+    );
 
     const id = Math.random().toString(36).substring(2, 9);
     const newFile: UploadedFile = {
@@ -667,7 +855,8 @@ export function CleanerInterface() {
         "⚠ [EXIF] GPSLatitude": "40.7128° N, 74.0060° W (New York City, NY)",
         "⚠ [EXIF] Copyright": "Midjourney Studio v6 & Adobe Asset Sync",
         "⚠ [EXIF] DateTimeOriginal": "2026-05-23 17:04:31",
-        "⚠ C2PA Content Credentials": "DETECTED — Cryptographically signed JUMBF manifest found",
+        "⚠ C2PA Content Credentials":
+          "DETECTED — Cryptographically signed JUMBF manifest found",
         "◈ [EXIF] ImageWidth": "1024",
         "◈ [EXIF] ImageHeight": "1024",
         "◈ [ICC] ColorSpace": "sRGB",
@@ -682,7 +871,8 @@ export function CleanerInterface() {
   };
 
   const selectedFile = files.find((f) => f.id === selectedFileId);
-  const allPurified = files.length > 0 && files.every((f) => f.status === "done");
+  const allPurified =
+    files.length > 0 && files.every((f) => f.status === "done");
 
   return (
     <div className="w-full font-sans transition-colors duration-250 select-none">
@@ -697,25 +887,31 @@ export function CleanerInterface() {
       <div className="grid grid-cols-1 lg:grid-cols-3 border-b-4 border-ink">
         {/* Left column: Drag & Drop Zone + Image Queue (Span 2) */}
         <div className="lg:col-span-2 border-r-0 lg:border-r border-ink flex flex-col min-h-[500px]">
-          
           {/* Top Panel Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-6 border-b border-ink bg-n100 gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <span className="font-serif text-lg font-bold tracking-tight text-ink">
                 Scrubbing Workspace
               </span>
-              <span className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${
-                activeTier === "pro" ? "bg-accent text-white" : "bg-bg text-ink"
-              }`}>
-                {activeTier === "pro" ? "PRO TIER ACTIVATED" : "FREE TIER (1 FILE LIMIT)"}
+              <span
+                className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${
+                  activeTier === "pro"
+                    ? "bg-accent text-white"
+                    : "bg-bg text-ink"
+                }`}
+              >
+                {activeTier === "pro"
+                  ? "PRO TIER ACTIVATED"
+                  : "FREE TIER (1 FILE LIMIT)"}
               </span>
               {activeTier === "free" && (
                 <span className="text-[9px] font-mono px-2 py-0.5 border border-ink bg-accent/5 text-accent font-bold animate-pulse">
-                  {isSignedIn ? "FREE MEMBER SCRUBS" : "GUEST SCRUBS"}: {cleanCount} / 5 IMAGES
+                  {isSignedIn ? "FREE MEMBER SCRUBS" : "GUEST SCRUBS"}:{" "}
+                  {cleanCount} / 5 IMAGES
                 </span>
               )}
             </div>
-            
+
             <div className="flex items-center gap-3.5">
               {files.length > 0 && (
                 <button
@@ -725,7 +921,7 @@ export function CleanerInterface() {
                   Clear Workspace
                 </button>
               )}
-              
+
               <button
                 onClick={handleUseSample}
                 className="font-mono text-[9px] uppercase tracking-wider bg-ink text-bg px-3.5 py-1.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none flex items-center gap-1.5"
@@ -743,7 +939,9 @@ export function CleanerInterface() {
             onDragLeave={handleDrag}
             onDrop={handleDrop}
             className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-all ${
-              isDragging ? "bg-accent/5 border-4 border-dashed border-accent" : ""
+              isDragging
+                ? "bg-accent/5 border-4 border-dashed border-accent"
+                : ""
             }`}
           >
             {files.length === 0 ? (
@@ -751,14 +949,16 @@ export function CleanerInterface() {
                 <div className="w-16 h-16 border border-ink flex items-center justify-center mb-6 bg-bg transition-transform hover:scale-105 duration-200">
                   <Upload size={24} className="text-ink" />
                 </div>
-                
+
                 <h3 className="font-serif text-2xl font-bold text-ink tracking-tight mb-2">
                   DRAG & DROP IMAGE HERE
                 </h3>
                 <p className="font-body text-xs text-n500 mb-6 leading-relaxed">
-                  Purify files completely locally in your browser. Raw pixel redraw guarantees total annihilation of EXIF, XMP, IPTC labels, and cryptographically signed C2PA markers.
+                  Purify files completely locally in your browser. Raw pixel
+                  redraw guarantees total annihilation of EXIF, XMP, IPTC
+                  labels, and cryptographically signed C2PA markers.
                 </p>
-                
+
                 <button
                   onClick={handleBrowseFiles}
                   className="bg-ink text-bg border-2 border-ink px-7 py-3 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
@@ -780,17 +980,22 @@ export function CleanerInterface() {
                         key={item.id}
                         onClick={() => setSelectedFileId(item.id)}
                         className={`border-2 p-4 text-left cursor-pointer flex flex-col justify-between transition-all select-none hover:border-ink ${
-                          isSelected ? "border-ink bg-n100 shadow-md" : "border-muted-border bg-bg"
+                          isSelected
+                            ? "border-ink bg-n100 shadow-md"
+                            : "border-muted-border bg-bg"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2.5">
                           <div className="flex items-center gap-2 overflow-hidden">
-                            <FileImage size={16} className={`${isSelected ? "text-accent" : "text-n500"}`} />
+                            <FileImage
+                              size={16}
+                              className={`${isSelected ? "text-accent" : "text-n500"}`}
+                            />
                             <span className="font-mono text-[10px] font-bold tracking-tight text-ink truncate max-w-[130px]">
                               {item.name}
                             </span>
                           </div>
-                          
+
                           <button
                             onClick={(e) => handleDeleteFile(item.id, e)}
                             className="text-n400 hover:text-accent cursor-pointer"
@@ -802,19 +1007,31 @@ export function CleanerInterface() {
 
                         {/* File Details */}
                         <div className="mt-4 pt-3 border-t border-muted-border font-mono text-[9px] text-n500 flex flex-col gap-1.5">
-                          <div>Size: <span className="font-bold text-ink">{(item.size / 1024).toFixed(1)} KB</span></div>
-                          <div>Dimensions: <span className="font-bold text-ink">{item.dimensions || "Loading..."}</span></div>
+                          <div>
+                            Size:{" "}
+                            <span className="font-bold text-ink">
+                              {(item.size / 1024).toFixed(1)} KB
+                            </span>
+                          </div>
+                          <div>
+                            Dimensions:{" "}
+                            <span className="font-bold text-ink">
+                              {item.dimensions || "Loading..."}
+                            </span>
+                          </div>
                           <div className="flex items-center justify-between mt-2.5">
-                            <span className={`px-1.5 py-0.5 text-[8px] font-bold border ${
-                              item.status === "done" 
-                                ? "bg-green-800/10 border-green-800 text-green-800" 
-                                : item.status === "cleaning" 
-                                ? "bg-amber-500/10 border-amber-500 text-amber-500 animate-pulse" 
-                                : "bg-bg border-ink/20 text-n500"
-                            }`}>
+                            <span
+                              className={`px-1.5 py-0.5 text-[8px] font-bold border ${
+                                item.status === "done"
+                                  ? "bg-green-800/10 border-green-800 text-green-800"
+                                  : item.status === "cleaning"
+                                    ? "bg-amber-500/10 border-amber-500 text-amber-500 animate-pulse"
+                                    : "bg-bg border-ink/20 text-n500"
+                              }`}
+                            >
                               {item.status.toUpperCase()}
                             </span>
-                            
+
                             {item.status === "done" && (
                               <span className="text-[8px] font-bold text-green-800 flex items-center gap-0.5">
                                 ✓ Sanitized
@@ -828,7 +1045,7 @@ export function CleanerInterface() {
 
                   {/* Quick Drop Zone placeholder inside Queue */}
                   {files.length < 50 && (
-                    <div 
+                    <div
                       onClick={handleBrowseFiles}
                       className="border-2 border-dashed border-ink/25 hover:border-ink p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[120px] transition-colors"
                     >
@@ -842,13 +1059,17 @@ export function CleanerInterface() {
 
                 {/* Batch Action Bar */}
                 <div className="mt-auto p-6 border-t border-ink bg-bg flex flex-col gap-4">
-                  
                   {/* Two Column Control Grid: Filename & Safe Spoof Profile */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Filename Input */}
                     <div className="flex flex-col gap-1">
-                      <label htmlFor="output-filename" className="font-mono text-[9px] tracking-widest uppercase text-n500">
-                        {files.length > 1 ? "ZIP Archive Name (optional)" : "Output Filename (optional)"}
+                      <label
+                        htmlFor="output-filename"
+                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                      >
+                        {files.length > 1
+                          ? "ZIP Archive Name (optional)"
+                          : "Output Filename (optional)"}
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -856,12 +1077,19 @@ export function CleanerInterface() {
                           type="text"
                           value={customFilename}
                           onChange={(e) => setCustomFilename(e.target.value)}
-                          placeholder={files.length > 1 ? "my_batch" : files[0]?.name?.replace(/\.[^/.]+$/, "") || "cleaned_image"}
+                          placeholder={
+                            files.length > 1
+                              ? "my_batch"
+                              : files[0]?.name?.replace(/\.[^/.]+$/, "") ||
+                                "cleaned_image"
+                          }
                           className="flex-1 bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent select-text placeholder:text-n400"
                         />
                         <button
                           onClick={() => {
-                            const rand = Math.random().toString(36).substring(2, 8);
+                            const rand = Math.random()
+                              .toString(36)
+                              .substring(2, 8);
                             setCustomFilename(`batch_${rand}`);
                           }}
                           className="shrink-0 border border-ink px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-n500 hover:bg-ink hover:text-bg transition-colors cursor-pointer select-none"
@@ -879,7 +1107,10 @@ export function CleanerInterface() {
 
                     {/* Safe Spoof Profile Select */}
                     <div className="flex flex-col gap-1">
-                      <label htmlFor="spoof-profile" className="font-mono text-[9px] tracking-widest uppercase text-n500">
+                      <label
+                        htmlFor="spoof-profile"
+                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                      >
                         Safe Spoof Profile (Bypasses AI reach suppression)
                       </label>
                       <select
@@ -888,24 +1119,34 @@ export function CleanerInterface() {
                         onChange={(e) => setSpoofProfile(e.target.value as any)}
                         className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
                       >
-                        <option value="iphone" className="bg-bg text-ink">📱 Apple iPhone 15 Capture Footprint (Recommended)</option>
-                        <option value="canon" className="bg-bg text-ink">📷 Canon EOS 5D Professional SLR Footprint</option>
-                        <option value="sony" className="bg-bg text-ink">📷 Sony Alpha 7R Professional SLR Footprint</option>
-                        <option value="none" className="bg-bg text-ink">🛡 Sterile Capture Footprint (100% Stripped / Blank)</option>
+                        <option value="iphone" className="bg-bg text-ink">
+                          📱 Apple iPhone 15 Capture Footprint (Recommended)
+                        </option>
+                        <option value="canon" className="bg-bg text-ink">
+                          📷 Canon EOS 5D Professional SLR Footprint
+                        </option>
+                        <option value="sony" className="bg-bg text-ink">
+                          📷 Sony Alpha 7R Professional SLR Footprint
+                        </option>
+                        <option value="none" className="bg-bg text-ink">
+                          🛡 Sterile Capture Footprint (100% Stripped / Blank)
+                        </option>
                       </select>
                       <div className="font-mono text-[8px] text-accent uppercase tracking-wider font-bold">
-                        Injects standard, safe metadata to blend in perfectly on social platforms
+                        Injects standard, safe metadata to blend in perfectly on
+                        social platforms
                       </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
-                    
                     {/* Free Tier / Guest Usage real-time counter */}
                     {activeTier === "free" ? (
                       <div className="text-left py-1">
                         <div className="font-mono text-[9px] text-n500 uppercase tracking-widest">
-                          {isSignedIn ? "Free Account Usage" : "Guest Cleaning Usage"}
+                          {isSignedIn
+                            ? "Free Account Usage"
+                            : "Guest Cleaning Usage"}
                         </div>
                         <div className="font-sans text-[11px] font-bold text-ink uppercase tracking-wider mt-0.5">
                           {cleanCount} of 5 free cleans used
@@ -924,7 +1165,8 @@ export function CleanerInterface() {
                           onClick={handleCleanImages}
                           className="w-full sm:w-auto bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
                         >
-                          Sanitize Metadata ({files.length} {files.length === 1 ? "File" : "Files"})
+                          Sanitize Metadata ({files.length}{" "}
+                          {files.length === 1 ? "File" : "Files"})
                         </button>
                       ) : (
                         <button
@@ -932,7 +1174,8 @@ export function CleanerInterface() {
                           className="w-full sm:w-auto bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors flex items-center justify-center gap-2"
                         >
                           <Download size={14} />
-                          Download {files.length > 1 ? "ZIP Bundle" : "Cleaned Image"}
+                          Download{" "}
+                          {files.length > 1 ? "ZIP Bundle" : "Cleaned Image"}
                         </button>
                       )}
                     </div>
@@ -948,7 +1191,9 @@ export function CleanerInterface() {
           <div className="flex items-center gap-2 mb-4 pb-2.5 border-b border-ink shrink-0">
             <ShieldCheck size={18} className="text-accent" />
             <h3 className="font-serif text-xl font-bold tracking-tight text-ink">
-              {selectedFile?.status === "done" ? "Scrubbing Report" : "Auditing Briefing"}
+              {selectedFile?.status === "done"
+                ? "Scrubbing Report"
+                : "Auditing Briefing"}
             </h3>
           </div>
 
@@ -956,7 +1201,8 @@ export function CleanerInterface() {
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-n500">
               <HelpCircle size={24} className="mb-3 opacity-50" />
               <p className="font-body text-xs leading-relaxed max-w-[200px]">
-                Upload an image or load the sample file to perform a structural tracking audit.
+                Upload an image or load the sample file to perform a structural
+                tracking audit.
               </p>
             </div>
           ) : selectedFile.status === "done" ? (
@@ -965,13 +1211,17 @@ export function CleanerInterface() {
               <div className="flex flex-col gap-5">
                 {/* Header Badge */}
                 <div className="bg-green-800/5 border border-green-800 p-4 flex items-start gap-3">
-                  <ShieldCheck size={18} className="text-green-800 shrink-0 mt-0.5" />
+                  <ShieldCheck
+                    size={18}
+                    className="text-green-800 shrink-0 mt-0.5"
+                  />
                   <div>
                     <h4 className="font-serif text-sm font-bold text-green-900 uppercase tracking-wide">
                       Processing Complete!
                     </h4>
                     <p className="font-body text-[10px] text-n500 mt-0.5 leading-normal">
-                      The image has been completely stripped of tracking vulnerabilities and re-encoded with the safe footprint.
+                      The image has been completely stripped of tracking
+                      vulnerabilities and re-encoded with the safe footprint.
                     </p>
                   </div>
                 </div>
@@ -979,22 +1229,38 @@ export function CleanerInterface() {
                 {/* Grid stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Scrubbed</span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">1 Image</span>
-                  </div>
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Size reduction</span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">83.5%</span>
-                  </div>
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Pixels Modified</span>
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                      Scrubbed
+                    </span>
                     <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                      {selectedFile.dimensions ? `${parseInt(selectedFile.dimensions) * parseInt(selectedFile.dimensions.split("x")[1] || "1") || "1.2M"}` : "1.5M"}
+                      1 Image
                     </span>
                   </div>
                   <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Avg. Quality</span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">95%</span>
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                      Size reduction
+                    </span>
+                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                      83.5%
+                    </span>
+                  </div>
+                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                      Pixels Modified
+                    </span>
+                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                      {selectedFile.dimensions
+                        ? `${parseInt(selectedFile.dimensions) * parseInt(selectedFile.dimensions.split("x")[1] || "1") || "1.2M"}`
+                        : "1.5M"}
+                    </span>
+                  </div>
+                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                      Avg. Quality
+                    </span>
+                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                      95%
+                    </span>
                   </div>
                 </div>
 
@@ -1010,7 +1276,9 @@ export function CleanerInterface() {
                     </div>
                     <div className="flex items-center gap-2 text-ink">
                       <span className="text-green-800 font-bold">✓</span>
-                      <span>Stripped device make, model, & software tracking blocks</span>
+                      <span>
+                        Stripped device make, model, & software tracking blocks
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-ink">
                       <span className="text-green-800 font-bold">✓</span>
@@ -1018,12 +1286,18 @@ export function CleanerInterface() {
                     </div>
                     <div className="flex items-center gap-2 text-ink">
                       <span className="text-green-800 font-bold">✓</span>
-                      <span>Applied raw canvas pixel redraw pipeline to disrupt AI classification</span>
+                      <span>
+                        Applied raw canvas pixel redraw pipeline to disrupt AI
+                        classification
+                      </span>
                     </div>
                     {spoofProfile !== "none" ? (
                       <div className="flex items-center gap-2 text-accent font-bold">
                         <span className="text-accent font-bold">✓</span>
-                        <span>Injected Safe {spoofProfile.toUpperCase()} Camera Footprint Profile</span>
+                        <span>
+                          Injected Safe {spoofProfile.toUpperCase()} Camera
+                          Footprint Profile
+                        </span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-n500">
@@ -1041,7 +1315,8 @@ export function CleanerInterface() {
               </div>
 
               <div className="mt-8 border-t border-ink/15 pt-5 font-mono text-[9px] text-n500 leading-relaxed uppercase tracking-wider">
-                💡 Re-upload the downloaded image into the analyzer below to verify total tracking signal annihilation!
+                💡 Re-upload the downloaded image into the analyzer below to
+                verify total tracking signal annihilation!
               </div>
             </div>
           ) : (
@@ -1065,7 +1340,9 @@ export function CleanerInterface() {
                   <button
                     onClick={() => setAuditTab("tags")}
                     className={`flex-1 py-2 text-center border-r border-ink transition-colors cursor-pointer ${
-                      auditTab === "tags" ? "bg-ink text-bg font-bold" : "text-n500 hover:bg-n200"
+                      auditTab === "tags"
+                        ? "bg-ink text-bg font-bold"
+                        : "text-n500 hover:bg-n200"
                     }`}
                   >
                     📊 Extracted Tags
@@ -1073,7 +1350,9 @@ export function CleanerInterface() {
                   <button
                     onClick={() => setAuditTab("c2pa")}
                     className={`flex-1 py-2 text-center transition-colors cursor-pointer flex items-center justify-center gap-1 ${
-                      auditTab === "c2pa" ? "bg-ink text-bg font-bold" : "text-n500 hover:bg-n200"
+                      auditTab === "c2pa"
+                        ? "bg-ink text-bg font-bold"
+                        : "text-n500 hover:bg-n200"
                     }`}
                   >
                     🛡️ C2PA Analyzer
@@ -1086,13 +1365,21 @@ export function CleanerInterface() {
                     {/* Risk Assessment Badge */}
                     {selectedFile.riskLevel === "high" && (
                       <div className="bg-accent/5 border border-accent p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <AlertTriangle size={16} className="text-accent shrink-0 mt-0.5" />
+                        <AlertTriangle
+                          size={16}
+                          className="text-accent shrink-0 mt-0.5"
+                        />
                         <div>
                           <div className="font-sans text-[10px] font-bold text-accent uppercase tracking-wider">
-                            High Tracking Risk — {selectedFile.riskTagCount} risk tag{(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""} found
+                            High Tracking Risk — {selectedFile.riskTagCount}{" "}
+                            risk tag
+                            {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
+                            found
                           </div>
                           <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            This file contains device identification, software fingerprints, or cryptographic signatures that platforms use to shadowban or limit reach.
+                            This file contains device identification, software
+                            fingerprints, or cryptographic signatures that
+                            platforms use to shadowban or limit reach.
                           </p>
                         </div>
                       </div>
@@ -1100,13 +1387,19 @@ export function CleanerInterface() {
 
                     {selectedFile.riskLevel === "low" && (
                       <div className="bg-amber-500/5 border border-amber-500 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                        <AlertTriangle
+                          size={16}
+                          className="text-amber-500 shrink-0 mt-0.5"
+                        />
                         <div>
                           <div className="font-sans text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                            Low Risk — {selectedFile.riskTagCount} tracking tag{(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""} detected
+                            Low Risk — {selectedFile.riskTagCount} tracking tag
+                            {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
+                            detected
                           </div>
                           <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            Minor tracking indicators found. Run the purifier to eliminate them completely.
+                            Minor tracking indicators found. Run the purifier to
+                            eliminate them completely.
                           </p>
                         </div>
                       </div>
@@ -1114,13 +1407,18 @@ export function CleanerInterface() {
 
                     {selectedFile.riskLevel === "clean" && (
                       <div className="bg-green-800/5 border border-green-800 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <ShieldCheck size={16} className="text-green-800 shrink-0 mt-0.5" />
+                        <ShieldCheck
+                          size={16}
+                          className="text-green-800 shrink-0 mt-0.5"
+                        />
                         <div>
                           <div className="font-sans text-[10px] font-bold text-green-800 uppercase tracking-wider">
                             ✓ Safe — No tracking metadata detected
                           </div>
                           <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            This file contains only harmless structural properties. It is safe for platform upload without reach suppression risk.
+                            This file contains only harmless structural
+                            properties. It is safe for platform upload without
+                            reach suppression risk.
                           </p>
                         </div>
                       </div>
@@ -1130,20 +1428,38 @@ export function CleanerInterface() {
                     <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[300px]">
                       <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
                         <div>Indicator Tag</div>
-                        <div>Extracted Data {selectedFile.metadata ? `(${Object.keys(selectedFile.metadata).length})` : ""}</div>
+                        <div>
+                          Extracted Data{" "}
+                          {selectedFile.metadata
+                            ? `(${Object.keys(selectedFile.metadata).length})`
+                            : ""}
+                        </div>
                       </div>
-                      
+
                       <div className="divide-y divide-muted-border overflow-y-auto flex-1">
                         {selectedFile.metadata ? (
-                          Object.entries(selectedFile.metadata).map(([key, val]) => {
-                            const isRisk = key.startsWith("⚠");
-                            return (
-                              <div key={key} className={`grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 ${isRisk ? "bg-accent/3" : ""}`}>
-                                <div className={`font-medium ${isRisk ? "text-accent" : "text-n500"}`}>{key}</div>
-                                <div className={`font-bold break-all ${isRisk ? "text-ink" : "text-n500"}`}>{val}</div>
-                              </div>
-                            );
-                          })
+                          Object.entries(selectedFile.metadata).map(
+                            ([key, val]) => {
+                              const isRisk = key.startsWith("⚠");
+                              return (
+                                <div
+                                  key={key}
+                                  className={`grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 ${isRisk ? "bg-accent/3" : ""}`}
+                                >
+                                  <div
+                                    className={`font-medium ${isRisk ? "text-accent" : "text-n500"}`}
+                                  >
+                                    {key}
+                                  </div>
+                                  <div
+                                    className={`font-bold break-all ${isRisk ? "text-ink" : "text-n500"}`}
+                                  >
+                                    {val}
+                                  </div>
+                                </div>
+                              );
+                            },
+                          )
                         ) : (
                           <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
                             Scanning structural headers...
@@ -1156,7 +1472,13 @@ export function CleanerInterface() {
                   /* TAB 2: C2PA CREDENTIALS DEEP ANALYZER */
                   <div className="flex-1 flex flex-col overflow-y-auto gap-4 pr-1 h-[300px] max-h-[300px]">
                     {selectedFile.metadata &&
-                    Object.keys(selectedFile.metadata).some(k => k.toLowerCase().includes("c2pa") || k.toLowerCase().includes("jumbf") || k.toLowerCase().includes("openai") || k.toLowerCase().includes("adobe")) ? (
+                    Object.keys(selectedFile.metadata).some(
+                      (k) =>
+                        k.toLowerCase().includes("c2pa") ||
+                        k.toLowerCase().includes("jumbf") ||
+                        k.toLowerCase().includes("openai") ||
+                        k.toLowerCase().includes("adobe"),
+                    ) ? (
                       <>
                         {/* Status Badge */}
                         <div className="bg-accent/5 border border-accent p-3.5 flex items-center justify-between shrink-0">
@@ -1174,15 +1496,22 @@ export function CleanerInterface() {
                         {/* Signature Info Card */}
                         <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-2.5 shrink-0">
                           <h5 className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 pb-1.5 flex items-center gap-1.5">
-                            <Lock size={12} className="text-accent" /> Signature Information
+                            <Lock size={12} className="text-accent" /> Signature
+                            Information
                           </h5>
                           <div className="grid grid-cols-2 gap-y-2 font-mono text-[9px] text-n500">
                             <div className="uppercase">Issuer:</div>
-                            <div className="font-bold text-ink">OpenAI OpCo, LLC</div>
+                            <div className="font-bold text-ink">
+                              OpenAI OpCo, LLC
+                            </div>
                             <div className="uppercase">Common Name:</div>
-                            <div className="font-bold text-ink">OpenAI Media Service</div>
+                            <div className="font-bold text-ink">
+                              OpenAI Media Service
+                            </div>
                             <div className="uppercase">Signed At:</div>
-                            <div className="font-bold text-ink">April 23, 2026 at 07:49 PM</div>
+                            <div className="font-bold text-ink">
+                              April 23, 2026 at 07:49 PM
+                            </div>
                             <div className="uppercase">Algorithm:</div>
                             <div className="font-bold text-ink">Ps256</div>
                           </div>
@@ -1194,7 +1523,8 @@ export function CleanerInterface() {
                             Validation Details
                           </h5>
                           <div className="bg-accent/5 border border-accent/20 p-2.5 font-mono text-[9px] text-accent leading-normal">
-                            signingCredential.untrusted<br/>
+                            signingCredential.untrusted
+                            <br />
                             signing certificate untrusted
                           </div>
                         </div>
@@ -1205,16 +1535,24 @@ export function CleanerInterface() {
                             <FileCode size={12} /> Raw Manifest Data
                           </div>
                           <div className="p-3 bg-[#1e1e1e] text-[#c5c8c6] font-mono text-[9px] overflow-x-auto max-h-[180px] select-text border-t border-ink/20">
-                            <pre className="whitespace-pre-wrap">{JSON.stringify(MOCK_C2PA_MANIFEST, null, 2)}</pre>
+                            <pre className="whitespace-pre-wrap">
+                              {JSON.stringify(MOCK_C2PA_MANIFEST, null, 2)}
+                            </pre>
                           </div>
                         </div>
                       </>
                     ) : (
                       <div className="border-2 border-dashed border-ink/15 bg-bg p-8 text-center font-mono text-[10px] text-n500 uppercase tracking-widest flex flex-col items-center justify-center gap-3 py-16">
-                        <ShieldCheck size={28} className="text-green-800 opacity-60" />
+                        <ShieldCheck
+                          size={28}
+                          className="text-green-800 opacity-60"
+                        />
                         <div>
-                          No C2PA JUMBF Manifest detected.<br/><br/>
-                          This file is structurally clean of cryptographic tracking claims.
+                          No C2PA JUMBF Manifest detected.
+                          <br />
+                          <br />
+                          This file is structurally clean of cryptographic
+                          tracking claims.
                         </div>
                       </div>
                     )}
@@ -1224,7 +1562,9 @@ export function CleanerInterface() {
 
               {/* Auditor action instructions */}
               <div className="mt-8 border-t border-ink/15 pt-5 font-mono text-[9px] text-n500 leading-relaxed uppercase tracking-wider shrink-0">
-                💡 Canvas pipeline draws raw pixel RGB values to strip all metadata signatures. Download output and re-upload to verify total annihilation.
+                💡 Canvas pipeline draws raw pixel RGB values to strip all
+                metadata signatures. Download output and re-upload to verify
+                total annihilation.
               </div>
             </div>
           )}
@@ -1238,80 +1578,66 @@ export function CleanerInterface() {
       />
 
       {/* Guest Limit annoying popup */}
-      {isGuestLimitModalOpen && mounted && typeof document !== "undefined" && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
-          style={{ zIndex: 999999 }}
-        >
-          <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
-            {/* Close button */}
-            <button
-              onClick={() => setIsGuestLimitModalOpen(false)}
-              className="absolute top-4 right-4 text-n400 hover:text-ink transition-colors cursor-pointer select-none"
-              title="Close"
-            >
-              <X size={16} />
-            </button>
+      {isGuestLimitModalOpen &&
+        mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
+            style={{ zIndex: 999999 }}
+          >
+            <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
+              {/* Close button */}
+              <button
+                onClick={() => setIsGuestLimitModalOpen(false)}
+                className="absolute top-4 right-4 text-n400 hover:text-ink transition-colors cursor-pointer select-none"
+                title="Close"
+              >
+                <X size={16} />
+              </button>
 
-            {/* Warning header */}
-            <div className="flex items-center gap-3 border-b-2 border-ink pb-4 mb-6">
-              <AlertTriangle className="text-accent shrink-0 animate-bounce" size={24} />
-              <div>
-                <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold">
-                  {isSignedIn ? "✦ Free Tier Limit Reached ✦" : "✦ Guest Limit Reached ✦"}
+              {/* Warning header */}
+              <div className="flex items-center gap-3 border-b-2 border-ink pb-4 mb-6">
+                <AlertTriangle
+                  className="text-accent shrink-0 animate-bounce"
+                  size={24}
+                />
+                <div>
+                  <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold">
+                    {isSignedIn
+                      ? "✦ Free Tier Limit Reached ✦"
+                      : "✦ Guest Limit Reached ✦"}
+                  </div>
+                  <h3 className="font-serif text-xl font-bold text-ink uppercase tracking-tight mt-0.5">
+                    Scrubbing Limit
+                  </h3>
                 </div>
-                <h3 className="font-serif text-xl font-bold text-ink uppercase tracking-tight mt-0.5">
-                  Scrubbing Limit
-                </h3>
               </div>
-            </div>
 
-            {/* Description */}
-            <p className="font-body text-xs text-n500 leading-relaxed mb-6">
-              You have scrubbed <strong>5 / 5 free images</strong> in this {isSignedIn ? "account session" : "guest session"}. 
-            </p>
-            
-            <p className="font-sans text-[11px] font-bold text-ink uppercase tracking-wide bg-n100 border border-ink/10 p-3 mb-6 flex items-center gap-2">
-              {isSignedIn 
-                ? "✦ Upgrade to Pro to unlock unlimited daily processing and up to 50 files concurrently."
-                : "✦ Create a free account to unlock your personal workspace or acquire a Pro plan for unlimited cleanups."
-              }
-            </p>
+              {/* Description */}
+              <p className="font-body text-xs text-n500 leading-relaxed mb-6">
+                You have scrubbed <strong>5 / 5 free images</strong> in this{" "}
+                {isSignedIn ? "account session" : "guest session"}.
+              </p>
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-3">
-              {isSignedIn ? (
-                <>
-                  <button
-                    onClick={() => {
-                      posthog.capture("upgrade_modal_opened", { trigger: "guest_limit_reached" });
-                      setIsGuestLimitModalOpen(false);
-                      setIsBillingModalOpen(true);
-                    }}
-                    className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
-                    style={{ transition: "all 0.15s ease" }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--bg)";
-                      e.currentTarget.style.color = "var(--accent)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--accent)";
-                      e.currentTarget.style.color = "#ffffff";
-                    }}
-                  >
-                    Upgrade to Pro Tiers
-                  </button>
-                  <button 
-                    onClick={() => setIsGuestLimitModalOpen(false)}
-                    className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
-                  >
-                    Dismiss Workspace
-                  </button>
-                </>
-              ) : (
-                <>
-                  <SignUpButton mode="modal">
-                    <button 
+              <p className="font-sans text-[11px] font-bold text-ink uppercase tracking-wide bg-n100 border border-ink/10 p-3 mb-6 flex items-center gap-2">
+                {isSignedIn
+                  ? "✦ Upgrade to Pro to unlock unlimited daily processing and up to 50 files concurrently."
+                  : "✦ Create a free account to unlock your personal workspace or acquire a Pro plan for unlimited cleanups."}
+              </p>
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-3">
+                {isSignedIn ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        posthog.capture("upgrade_modal_opened", {
+                          trigger: "guest_limit_reached",
+                        });
+                        setIsGuestLimitModalOpen(false);
+                        setIsBillingModalOpen(true);
+                      }}
                       className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
                       style={{ transition: "all 0.15s ease" }}
                       onMouseEnter={(e) => {
@@ -1323,28 +1649,53 @@ export function CleanerInterface() {
                         e.currentTarget.style.color = "#ffffff";
                       }}
                     >
-                      Create Free Account
+                      Upgrade to Pro Tiers
                     </button>
-                  </SignUpButton>
-                  <SignInButton mode="modal">
-                    <button className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2">
-                      Sign In to Existing Account
+                    <button
+                      onClick={() => setIsGuestLimitModalOpen(false)}
+                      className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
+                    >
+                      Dismiss Workspace
                     </button>
-                  </SignInButton>
-                </>
-              )}
-            </div>
+                  </>
+                ) : (
+                  <>
+                    <SignUpButton mode="modal">
+                      <button
+                        className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                        style={{ transition: "all 0.15s ease" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--bg)";
+                          e.currentTarget.style.color = "var(--accent)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "var(--accent)";
+                          e.currentTarget.style.color = "#ffffff";
+                        }}
+                      >
+                        Create Free Account
+                      </button>
+                    </SignUpButton>
+                    <SignInButton mode="modal">
+                      <button className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2">
+                        Sign In to Existing Account
+                      </button>
+                    </SignInButton>
+                  </>
+                )}
+              </div>
 
-            {/* Subtext info */}
-            <div className="mt-6 text-center border-t border-ink/10 pt-4">
-              <span className="font-mono text-[9px] text-n500 uppercase tracking-widest">
-                ScrubAI · Client-Side Protection Service
-              </span>
+              {/* Subtext info */}
+              <div className="mt-6 text-center border-t border-ink/10 pt-4">
+                <span className="font-mono text-[9px] text-n500 uppercase tracking-widest">
+                  ScrubAI · Client-Side Protection Service
+                </span>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

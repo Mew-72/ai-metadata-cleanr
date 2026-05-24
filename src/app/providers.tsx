@@ -2,7 +2,7 @@
 
 import React, { useEffect, Suspense } from "react";
 import posthog from "posthog-js";
-import { ClerkProvider, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useReportWebVitals } from "next/web-vitals";
 
@@ -80,7 +80,8 @@ function ScrollDepthTracker() {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       // Get maximum scrollable height
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       if (docHeight <= 0) return;
 
       const percentage = Math.round((scrollTop / docHeight) * 100);
@@ -103,10 +104,8 @@ function ScrollDepthTracker() {
   return null;
 }
 
-const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
 export function Providers({ children }: { children: React.ReactNode }) {
-  const content = (
+  return (
     <>
       <PostHogUserIdentifier />
       <PostHogPageView />
@@ -115,16 +114,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {children}
     </>
   );
-
-  if (hasClerkKey) {
-    return (
-      <ClerkProvider
-        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      >
-        {content}
-      </ClerkProvider>
-    );
-  }
-
-  return content;
 }

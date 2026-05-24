@@ -4,6 +4,10 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
+import { useAppAuth } from "../../hooks/useAppAuth";
+import posthog from "posthog-js";
+import { BillingModal } from "../../components/BillingModal";
+import { createPortal } from "react-dom";
 import { 
   ShieldCheck, 
   HelpCircle, 
@@ -16,8 +20,66 @@ import {
   Calendar,
   Cpu,
   Fingerprint,
-  RotateCcw
+  RotateCcw,
+  AlertTriangle,
+  X
 } from "lucide-react";
+
+const getPersistedC2paScanCount = (): number => {
+  if (typeof window === "undefined") return 0;
+
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  let localCount = 0;
+  let cookieCount = 0;
+
+  try {
+    const lastDate = localStorage.getItem("scrubai_c2pa_scanned_date");
+    if (lastDate !== today) {
+      localStorage.setItem("scrubai_c2pa_scanned_date", today);
+      localStorage.setItem("scrubai_c2pa_scanned_count", "0");
+      localCount = 0;
+    } else {
+      const localVal = localStorage.getItem("scrubai_c2pa_scanned_count");
+      if (localVal) localCount = parseInt(localVal, 10) || 0;
+    }
+  } catch (e) {}
+
+  try {
+    const cookies = document.cookie.split(";");
+    let lastDate = "";
+    for (const c of cookies) {
+      const [name, val] = c.trim().split("=");
+      if (name === "scrubai_c2pa_scanned_date") lastDate = val;
+      if (name === "scrubai_c2pa_scanned_count")
+        cookieCount = parseInt(val, 10) || 0;
+    }
+    if (lastDate !== today) {
+      cookieCount = 0;
+    }
+  } catch (e) {}
+
+  const maxCount = Math.max(localCount, cookieCount);
+  return maxCount;
+};
+
+const setPersistedC2paScanCount = (count: number) => {
+  if (typeof window === "undefined") return;
+
+  const today = new Date().toLocaleDateString("en-CA");
+
+  try {
+    localStorage.setItem("scrubai_c2pa_scanned_date", today);
+    localStorage.setItem("scrubai_c2pa_scanned_count", String(count));
+  } catch (e) {}
+
+  try {
+    const expires = new Date();
+    expires.setHours(23, 59, 59, 999);
+
+    document.cookie = `scrubai_c2pa_scanned_date=${today}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    document.cookie = `scrubai_c2pa_scanned_count=${count}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+  } catch (e) {}
+};
 
 // Types for C2PA parsed results
 interface C2paResult {
@@ -120,6 +182,34 @@ export default function C2paScannerPage() {
   const [sdkInitialized, setSdkInitialized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [scanCount, setScanCount] = useState<number>(0);
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+  const [isGuestLimitModalOpen, setIsGuestLimitModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Clerk Auth and Billing Gating Checks
+  const { has, isSignedIn } = useAppAuth();
+
+  // A user is Pro if they have active pro billing credentials
+  const isPro = has
+    ? has({ plan: "pro" }) || has({ feature: "batch_processing" }) || has({ feature: "unlimited_daily" }) || has({ feature: "unlimited_c2pa_scans" })
+    : false;
+
+  const activeTier = isPro ? "pro" : "free";
+
+  // Set mounted status and load counts on mount
+  useEffect(() => {
+    setMounted(true);
+    setScanCount(getPersistedC2paScanCount());
+  }, []);
+
+  // Close guest limit modal if user signs in
+  useEffect(() => {
+    if (isSignedIn) {
+      setIsGuestLimitModalOpen(false);
+    }
+  }, [isSignedIn]);
+
   // Initialize the CAI C2PA SDK inside a client-side dynamic import safe block
   useEffect(() => {
     const loadSdk = async () => {
@@ -174,6 +264,12 @@ export default function C2paScannerPage() {
       return;
     }
 
+    // Free tier scan limit check
+    if (activeTier === "free" && getPersistedC2paScanCount() >= 5) {
+      setIsGuestLimitModalOpen(true);
+      return;
+    }
+
     setFile(selectedFile);
     setLoading(true);
     setC2paResult(null);
@@ -181,6 +277,20 @@ export default function C2paScannerPage() {
     // Create object URL for visual preview
     const url = URL.createObjectURL(selectedFile);
     setPreviewUrl(url);
+
+    posthog.capture("c2pa_scan_performed", {
+      tier: activeTier,
+      file_name: selectedFile.name,
+      file_size: selectedFile.size
+    });
+
+    const incrementScanCounter = () => {
+      if (activeTier === "free") {
+        const nextCount = getPersistedC2paScanCount() + 1;
+        setPersistedC2paScanCount(nextCount);
+        setScanCount(nextCount);
+      }
+    };
 
     try {
       if (sdkInitialized) {
@@ -270,6 +380,7 @@ export default function C2paScannerPage() {
             rawManifest: null
           });
         }
+        incrementScanCounter();
       } else {
         // Fallback static parsing (checks binary segments for JUMBF markers)
         const reader = new FileReader();
@@ -298,6 +409,7 @@ export default function C2paScannerPage() {
                 rawManifest: null
               });
             }
+            incrementScanCounter();
             setLoading(false);
           }, 1500); // Realistic scan delay
         };
@@ -311,6 +423,7 @@ export default function C2paScannerPage() {
         hasCredentials: false,
         rawManifest: null
       });
+      incrementScanCounter();
     }
     setLoading(false);
   };
@@ -365,6 +478,21 @@ export default function C2paScannerPage() {
             <p className="font-body text-[13px] text-n500 max-w-xl leading-relaxed mb-8">
               Verify whether an image was created by AI or modified using tools that attach cryptographically signed Content Credentials. This tool executes a sandbox WebAssembly compiler completely inside your browser to inspect binary structures.
             </p>
+
+            {mounted && activeTier === "free" && (
+              <div className="bg-n100 border border-ink/20 p-3.5 mb-6 font-mono text-[9px] uppercase tracking-wider text-n500 flex items-center justify-between">
+                <span>✦ FREE SCANNING CAPACITY TODAY:</span>
+                <span className="font-black text-ink">
+                  {scanCount} / 5 VERIFIED SCANS
+                </span>
+              </div>
+            )}
+            {mounted && activeTier === "pro" && (
+              <div className="bg-accent/5 border border-accent/20 p-3.5 mb-6 font-mono text-[9px] uppercase tracking-wider text-accent flex items-center justify-between font-bold">
+                <span>✦ PRO VERIFICATION SESSION:</span>
+                <span>UNLIMITED SCANS</span>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="bg-accent/5 border border-accent p-3.5 mb-6 flex items-start gap-2.5 font-mono text-[10px] text-accent uppercase tracking-wider">
@@ -700,6 +828,130 @@ export default function C2paScannerPage() {
           </div>
         </div>
       </section>
+
+      {/* Billing Modal */}
+      <BillingModal
+        isOpen={isBillingModalOpen}
+        onClose={() => setIsBillingModalOpen(false)}
+      />
+
+      {/* Guest Limit Popup */}
+      {isGuestLimitModalOpen &&
+        mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
+            style={{ zIndex: 999999 }}
+          >
+            <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
+              {/* Close button */}
+              <button
+                onClick={() => setIsGuestLimitModalOpen(false)}
+                className="absolute top-4 right-4 text-n400 hover:text-ink transition-colors cursor-pointer select-none"
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+
+              {/* Warning header */}
+              <div className="flex items-center gap-3 border-b-2 border-ink pb-4 mb-6">
+                <AlertTriangle
+                  className="text-accent shrink-0 animate-bounce"
+                  size={24}
+                />
+                <div>
+                  <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold">
+                    {isSignedIn
+                      ? "✦ Free Tier Limit Reached ✦"
+                      : "✦ Guest Limit Reached ✦"}
+                  </div>
+                  <h3 className="font-serif text-xl font-bold text-ink uppercase tracking-tight mt-0.5">
+                    Scan Limit Reached
+                  </h3>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="font-body text-xs text-n500 leading-relaxed mb-6">
+                You have verified <strong>5 / 5 free images</strong> using the C2PA Verification Scanner in this{" "}
+                {isSignedIn ? "account session" : "guest session"}.
+              </p>
+
+              <p className="font-sans text-[11px] font-bold text-ink uppercase tracking-wide bg-n100 border border-ink/10 p-3 mb-6 flex items-center gap-2">
+                {isSignedIn
+                  ? "✦ Upgrade to Pro to unlock unlimited daily scans and full provenance insights."
+                  : "✦ Create a free account to unlock your personal workspace or acquire a Pro plan for unlimited verifications."}
+              </p>
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-3">
+                {isSignedIn ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        posthog.capture("upgrade_modal_opened", {
+                          trigger: "c2pa_limit_reached",
+                        });
+                        setIsGuestLimitModalOpen(false);
+                        setIsBillingModalOpen(true);
+                      }}
+                      className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                      style={{ transition: "all 0.15s ease" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--bg)";
+                        e.currentTarget.style.color = "var(--accent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--accent)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                    >
+                      Upgrade to Pro Tiers
+                    </button>
+                    <button
+                      onClick={() => setIsGuestLimitModalOpen(false)}
+                      className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
+                    >
+                      Dismiss Workspace
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/sign-up"
+                      className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2 text-center"
+                      style={{ transition: "all 0.15s ease" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--bg)";
+                        e.currentTarget.style.color = "var(--accent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--accent)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                    >
+                      Create Free Account
+                    </Link>
+                    <button
+                      onClick={() => {
+                        posthog.capture("upgrade_modal_opened", {
+                          trigger: "c2pa_limit_reached",
+                        });
+                        setIsGuestLimitModalOpen(false);
+                        setIsBillingModalOpen(true);
+                      }}
+                      className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
+                    >
+                      Upgrade to Pro
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       <Footer />
     </div>

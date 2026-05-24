@@ -35,6 +35,14 @@
         "include_in_jwt": true,
         "jwt_value": "",
         "publicly_visible": true
+      },
+      "unlimited_c2pa_scans": {
+        "name": "Unlimited C2PA Scans",
+        "description": "No daily limit on the number of C2PA credentials scans",
+        "avatar_url": "",
+        "include_in_jwt": true,
+        "jwt_value": "",
+        "publicly_visible": true
       }
     },
     "plans": {
@@ -66,7 +74,8 @@
           "batch_processing",
           "unlimited_daily",
           "priority_support",
-          "increased_file_size"
+          "increased_file_size",
+          "unlimited_c2pa_scans"
         ]
       }
     }
