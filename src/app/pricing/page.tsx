@@ -248,14 +248,14 @@ export default function PricingPage() {
                     planId={PRO_PLAN_ID}
                     planPeriod={billingPeriod}
                     newSubscriptionRedirectUrl="/thank-you"
+                    onSubscriptionComplete={() =>
+                      posthog.capture("checkout_completed", {
+                        plan: "pro",
+                        period: billingPeriod,
+                      })
+                    }
                   >
                     <button
-                      onClick={() =>
-                        posthog.capture("checkout_started", {
-                          plan: "pro",
-                          period: billingPeriod,
-                        })
-                      }
                       className="w-full bg-accent text-white border-2 border-accent py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors duration-150 shadow-sm"
                     >
                       {getProCtaText()}
