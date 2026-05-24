@@ -40,7 +40,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ScrubAI — Bypass AI Reach Suppression & Clean Image Metadata",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.com",
+  ),
+  title: {
+    default: "ScrubAI — Bypass AI Reach Suppression & Clean Image Metadata",
+    template: "%s | ScrubAI",
+  },
   description:
     "100% client-side local image metadata cleaner. Strip EXIF, IPTC, XMP, and cryptographically signed C2PA credentials to bypass algorithmic reach suppression and 'Made with AI' tags.",
   keywords: [
@@ -53,6 +59,23 @@ export const metadata: Metadata = {
     "Pinterest SEO tool",
     "photography privacy",
   ],
+  openGraph: {
+    type: "website",
+    siteName: "ScrubAI",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "ScrubAI — Strip AI Metadata & Bypass Reach Suppression",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

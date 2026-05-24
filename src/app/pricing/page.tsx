@@ -247,7 +247,7 @@ export default function PricingPage() {
                   <CheckoutButton
                     planId={PRO_PLAN_ID}
                     planPeriod={billingPeriod}
-                    newSubscriptionRedirectUrl="/dashboard"
+                    newSubscriptionRedirectUrl="/thank-you"
                   >
                     <button
                       onClick={() =>

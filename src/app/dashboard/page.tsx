@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { SignOutButton, useClerk } from "@clerk/nextjs";
 import { useAppAuth, useAppUser } from "../../hooks/useAppAuth";
@@ -116,9 +116,6 @@ export default function Dashboard() {
   const [cleanCount, setCleanCount] = useState(0);
   const [scanCount, setScanCount] = useState(0);
 
-  // Track previous Pro state to detect fresh upgrades
-  const prevIsPro = useRef(isPro);
-
   useEffect(() => {
     if (isPro) {
       setActiveTier("pro");
@@ -136,14 +133,6 @@ export default function Dashboard() {
   useEffect(() => {
     posthog.capture("viewed_dashboard", { tier: activeTier });
   }, [activeTier]);
-
-  // Detect fresh upgrade via Clerk state change (secure — not URL param)
-  useEffect(() => {
-    if (isPro && !prevIsPro.current) {
-      alert("✨ Payment Successful! Your session has been secured and Pro features are fully unlocked.");
-    }
-    prevIsPro.current = isPro;
-  }, [isPro]);
 
   const cleanPercentage = Math.min((cleanCount / 5) * 100, 100);
   const scanPercentage = Math.min((scanCount / 5) * 100, 100);
