@@ -19,7 +19,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-ink/75 backdrop-blur-xs transition-opacity duration-200" 
@@ -27,7 +27,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
       />
       
       {/* Modal Content */}
-      <div className="relative bg-bg border-4 border-ink w-full max-w-[480px] p-8 md:p-10 z-10 shadow-2xl transition-colors duration-255 select-none">
+      <div className="relative bg-bg border-4 border-ink w-full max-w-[480px] p-6 md:p-8 z-10 shadow-2xl transition-colors duration-255 select-none max-h-full overflow-y-auto">
         {/* Close Button */}
         <button 
           onClick={onClose}

@@ -841,10 +841,10 @@ export default function C2paScannerPage() {
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn overflow-y-auto"
             style={{ zIndex: 999999 }}
           >
-            <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
+            <div className="bg-bg border-4 border-ink p-6 md:p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp max-h-full overflow-y-auto">
               {/* Close button */}
               <button
                 onClick={() => setIsGuestLimitModalOpen(false)}

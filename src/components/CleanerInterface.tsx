@@ -1320,7 +1320,7 @@ export function CleanerInterface() {
               </div>
             </div>
           ) : (
-            /* Active Audit / Inspection Tabbed Panel */
+            /* Active Audit / Inspection Panel */
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
               <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex justify-between items-center mb-2 shrink-0">
@@ -1335,229 +1335,114 @@ export function CleanerInterface() {
                   {selectedFile.file.name}
                 </h4>
 
-                {/* Tab Switcher */}
-                <div className="flex border border-ink mb-4 shrink-0 font-mono text-[9px] uppercase tracking-wider bg-bg">
-                  <button
-                    onClick={() => setAuditTab("tags")}
-                    className={`flex-1 py-2 text-center border-r border-ink transition-colors cursor-pointer ${
-                      auditTab === "tags"
-                        ? "bg-ink text-bg font-bold"
-                        : "text-n500 hover:bg-n200"
-                    }`}
-                  >
-                    📊 Extracted Tags
-                  </button>
-                  <button
-                    onClick={() => setAuditTab("c2pa")}
-                    className={`flex-1 py-2 text-center transition-colors cursor-pointer flex items-center justify-center gap-1 ${
-                      auditTab === "c2pa"
-                        ? "bg-ink text-bg font-bold"
-                        : "text-n500 hover:bg-n200"
-                    }`}
-                  >
-                    🛡️ C2PA Analyzer
-                  </button>
-                </div>
-
-                {auditTab === "tags" ? (
-                  /* TAB 1: EXTRACTED TAGS */
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                    {/* Risk Assessment Badge */}
-                    {selectedFile.riskLevel === "high" && (
-                      <div className="bg-accent/5 border border-accent p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <AlertTriangle
-                          size={16}
-                          className="text-accent shrink-0 mt-0.5"
-                        />
-                        <div>
-                          <div className="font-sans text-[10px] font-bold text-accent uppercase tracking-wider">
-                            High Tracking Risk — {selectedFile.riskTagCount}{" "}
-                            risk tag
-                            {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
-                            found
-                          </div>
-                          <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            This file contains device identification, software
-                            fingerprints, or cryptographic signatures that
-                            platforms use to shadowban or limit reach.
-                          </p>
+                {/* EXTRACTED TAGS */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Risk Assessment Badge */}
+                  {selectedFile.riskLevel === "high" && (
+                    <div className="bg-accent/5 border border-accent p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                      <AlertTriangle
+                        size={16}
+                        className="text-accent shrink-0 mt-0.5"
+                      />
+                      <div>
+                        <div className="font-sans text-[10px] font-bold text-accent uppercase tracking-wider">
+                          High Tracking Risk — {selectedFile.riskTagCount}{" "}
+                          risk tag
+                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
+                          found
                         </div>
-                      </div>
-                    )}
-
-                    {selectedFile.riskLevel === "low" && (
-                      <div className="bg-amber-500/5 border border-amber-500 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <AlertTriangle
-                          size={16}
-                          className="text-amber-500 shrink-0 mt-0.5"
-                        />
-                        <div>
-                          <div className="font-sans text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                            Low Risk — {selectedFile.riskTagCount} tracking tag
-                            {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
-                            detected
-                          </div>
-                          <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            Minor tracking indicators found. Run the purifier to
-                            eliminate them completely.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedFile.riskLevel === "clean" && (
-                      <div className="bg-green-800/5 border border-green-800 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
-                        <ShieldCheck
-                          size={16}
-                          className="text-green-800 shrink-0 mt-0.5"
-                        />
-                        <div>
-                          <div className="font-sans text-[10px] font-bold text-green-800 uppercase tracking-wider">
-                            ✓ Safe — No tracking metadata detected
-                          </div>
-                          <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                            This file contains only harmless structural
-                            properties. It is safe for platform upload without
-                            reach suppression risk.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Audit Tags Table */}
-                    <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[300px]">
-                      <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
-                        <div>Indicator Tag</div>
-                        <div>
-                          Extracted Data{" "}
-                          {selectedFile.metadata
-                            ? `(${Object.keys(selectedFile.metadata).length})`
-                            : ""}
-                        </div>
-                      </div>
-
-                      <div className="divide-y divide-muted-border overflow-y-auto flex-1">
-                        {selectedFile.metadata ? (
-                          Object.entries(selectedFile.metadata).map(
-                            ([key, val]) => {
-                              const isRisk = key.startsWith("⚠");
-                              return (
-                                <div
-                                  key={key}
-                                  className={`grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 ${isRisk ? "bg-accent/3" : ""}`}
-                                >
-                                  <div
-                                    className={`font-medium ${isRisk ? "text-accent" : "text-n500"}`}
-                                  >
-                                    {key}
-                                  </div>
-                                  <div
-                                    className={`font-bold break-all ${isRisk ? "text-ink" : "text-n500"}`}
-                                  >
-                                    {val}
-                                  </div>
-                                </div>
-                              );
-                            },
-                          )
-                        ) : (
-                          <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
-                            Scanning structural headers...
-                          </div>
-                        )}
+                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
+                          This file contains device identification, software
+                          fingerprints, or cryptographic signatures that
+                          platforms use to shadowban or limit reach.
+                        </p>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  /* TAB 2: C2PA CREDENTIALS DEEP ANALYZER */
-                  <div className="flex-1 flex flex-col overflow-y-auto gap-4 pr-1 h-[300px] max-h-[300px]">
-                    {selectedFile.metadata &&
-                    Object.keys(selectedFile.metadata).some(
-                      (k) =>
-                        k.toLowerCase().includes("c2pa") ||
-                        k.toLowerCase().includes("jumbf") ||
-                        k.toLowerCase().includes("openai") ||
-                        k.toLowerCase().includes("adobe"),
-                    ) ? (
-                      <>
-                        {/* Status Badge */}
-                        <div className="bg-accent/5 border border-accent p-3.5 flex items-center justify-between shrink-0">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck size={16} className="text-accent" />
-                            <span className="font-sans text-[10px] font-bold text-accent uppercase tracking-wider">
-                              Content Credentials Found
-                            </span>
-                          </div>
-                          <span className="font-mono text-[8px] bg-accent text-white px-2 py-0.5 uppercase tracking-wider font-bold">
-                            Valid (Untrusted Signer)
-                          </span>
-                        </div>
+                  )}
 
-                        {/* Signature Info Card */}
-                        <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-2.5 shrink-0">
-                          <h5 className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 pb-1.5 flex items-center gap-1.5">
-                            <Lock size={12} className="text-accent" /> Signature
-                            Information
-                          </h5>
-                          <div className="grid grid-cols-2 gap-y-2 font-mono text-[9px] text-n500">
-                            <div className="uppercase">Issuer:</div>
-                            <div className="font-bold text-ink">
-                              OpenAI OpCo, LLC
-                            </div>
-                            <div className="uppercase">Common Name:</div>
-                            <div className="font-bold text-ink">
-                              OpenAI Media Service
-                            </div>
-                            <div className="uppercase">Signed At:</div>
-                            <div className="font-bold text-ink">
-                              April 23, 2026 at 07:49 PM
-                            </div>
-                            <div className="uppercase">Algorithm:</div>
-                            <div className="font-bold text-ink">Ps256</div>
-                          </div>
+                  {selectedFile.riskLevel === "low" && (
+                    <div className="bg-amber-500/5 border border-amber-500 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                      <AlertTriangle
+                        size={16}
+                        className="text-amber-500 shrink-0 mt-0.5"
+                      />
+                      <div>
+                        <div className="font-sans text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                          Low Risk — {selectedFile.riskTagCount} tracking tag
+                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
+                          detected
                         </div>
-
-                        {/* Validation Details Card */}
-                        <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-1.5 shrink-0">
-                          <h5 className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 pb-1.5">
-                            Validation Details
-                          </h5>
-                          <div className="bg-accent/5 border border-accent/20 p-2.5 font-mono text-[9px] text-accent leading-normal">
-                            signingCredential.untrusted
-                            <br />
-                            signing certificate untrusted
-                          </div>
-                        </div>
-
-                        {/* Raw Manifest Data Scrollbox */}
-                        <div className="border border-ink/20 bg-bg flex flex-col shrink-0">
-                          <div className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 p-3 bg-n100 flex items-center gap-1.5">
-                            <FileCode size={12} /> Raw Manifest Data
-                          </div>
-                          <div className="p-3 bg-[#1e1e1e] text-[#c5c8c6] font-mono text-[9px] overflow-x-auto max-h-[180px] select-text border-t border-ink/20">
-                            <pre className="whitespace-pre-wrap">
-                              {JSON.stringify(MOCK_C2PA_MANIFEST, null, 2)}
-                            </pre>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="border-2 border-dashed border-ink/15 bg-bg p-8 text-center font-mono text-[10px] text-n500 uppercase tracking-widest flex flex-col items-center justify-center gap-3 py-16">
-                        <ShieldCheck
-                          size={28}
-                          className="text-green-800 opacity-60"
-                        />
-                        <div>
-                          No C2PA JUMBF Manifest detected.
-                          <br />
-                          <br />
-                          This file is structurally clean of cryptographic
-                          tracking claims.
-                        </div>
+                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
+                          Minor tracking indicators found. Run the purifier to
+                          eliminate them completely.
+                        </p>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  {selectedFile.riskLevel === "clean" && (
+                    <div className="bg-green-800/5 border border-green-800 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                      <ShieldCheck
+                        size={16}
+                        className="text-green-800 shrink-0 mt-0.5"
+                      />
+                      <div>
+                        <div className="font-sans text-[10px] font-bold text-green-800 uppercase tracking-wider">
+                          ✓ Safe — No tracking metadata detected
+                        </div>
+                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
+                          This file contains only harmless structural
+                          properties. It is safe for platform upload without
+                          reach suppression risk.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Audit Tags Table */}
+                  <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden min-h-[300px]">
+                    <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
+                      <div>Indicator Tag</div>
+                      <div>
+                        Extracted Data{" "}
+                        {selectedFile.metadata
+                          ? `(${Object.keys(selectedFile.metadata).length})`
+                          : ""}
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-muted-border overflow-y-auto flex-1">
+                      {selectedFile.metadata ? (
+                        Object.entries(selectedFile.metadata).map(
+                          ([key, val]) => {
+                            const isRisk = key.startsWith("⚠");
+                            return (
+                              <div
+                                key={key}
+                                className={`grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 ${isRisk ? "bg-accent/3" : ""}`}
+                              >
+                                <div
+                                  className={`font-medium ${isRisk ? "text-accent" : "text-n500"}`}
+                                >
+                                  {key}
+                                </div>
+                                <div
+                                  className={`font-bold break-all ${isRisk ? "text-ink" : "text-n500"}`}
+                                >
+                                  {val}
+                                </div>
+                              </div>
+                            );
+                          },
+                        )
+                      ) : (
+                        <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
+                          Scanning structural headers...
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Auditor action instructions */}
@@ -1583,10 +1468,10 @@ export function CleanerInterface() {
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn overflow-y-auto"
             style={{ zIndex: 999999 }}
           >
-            <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
+            <div className="bg-bg border-4 border-ink p-6 md:p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp max-h-full overflow-y-auto">
               {/* Close button */}
               <button
                 onClick={() => setIsGuestLimitModalOpen(false)}
