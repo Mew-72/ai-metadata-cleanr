@@ -41,7 +41,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.com",
+    process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.app",
   ),
   title: {
     default: "ScrubAI — Bypass AI Reach Suppression & Clean Image Metadata",

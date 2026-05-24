@@ -48,3 +48,6 @@ policies.md
 # Clerk billing configuration (synced via CLI, not version controlled)
 billing.json
 billing-current.json
+
+# clerk configuration (can include secrets)
+/.clerk/

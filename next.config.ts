@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.clerk.com https://img.clerk.com https://*.stripe.com",
-              "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.scrubai.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.stripe.com https://merchant-ui-api.stripe.com",
+              "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.scrubai.app https://us.i.posthog.com https://us-assets.i.posthog.com https://api.stripe.com https://merchant-ui-api.stripe.com",
               "frame-src https://*.clerk.accounts.dev https://challenges.cloudflare.com https://js.stripe.com https://*.stripe.com",
               "worker-src 'self' blob:",
             ].join("; "),

@@ -23,7 +23,7 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     },
 
     // ── Privacy safeguards ──────────────────────────────────────────
-    // NOTE: The privacy policy (scrubai.com/privacy) MUST disclose PostHog
+    // NOTE: The privacy policy (scrubai.app/privacy) MUST disclose PostHog
     // usage, data types collected, and PostHog's data residency (US).
     // As a privacy-focused tool, this is a reputational requirement.
     mask_all_text: false,                  // Keep text visible for heatmaps

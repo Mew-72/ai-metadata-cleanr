@@ -28,6 +28,6 @@
 ## Ongoing Recommendations
 
 - **Rate limiting:** Current obfuscation is a deterrent, not absolute prevention. For production scale, migrate to server-side enforcement with Redis/Upstash.
-- **Privacy policy:** Verify that scrubai.com/privacy explicitly discloses PostHog data collection (event types, file metadata, Core Web Vitals).
+- **Privacy policy:** Verify that scrubai.app/privacy explicitly discloses PostHog data collection (event types, file metadata, Core Web Vitals).
 - **CSP tuning:** The current Content-Security-Policy allows `unsafe-inline` and `unsafe-eval` for compatibility. Tighten these as the app matures.
 - **Git history:** Run `git filter-branch` or BFG Repo-Cleaner to remove billing.json from git history if the repo is public.
