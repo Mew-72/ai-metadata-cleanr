@@ -288,7 +288,329 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="border-4 border-ink overflow-x-auto bg-bg max-w-4xl mx-auto shadow-heavy select-none">
+          {/* ─── MOBILE COMPARISON CARDS (visible below md) ─── */}
+          <div className="md:hidden border-4 border-ink bg-bg max-w-4xl mx-auto shadow-heavy select-none">
+            {/* Column Labels Header */}
+            <div className="bg-n100 border-b-2 border-ink">
+              <div className="px-4 pt-3 pb-1.5 font-mono text-[8px] uppercase tracking-[0.15em] text-n500 font-bold">
+                FEATURE / SPECIFICATION
+              </div>
+              <div className="grid grid-cols-2 divide-x-2 divide-ink/20 border-t-2 border-ink/20">
+                <div className="p-2.5 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-n500 font-bold">
+                  FREE EDITION
+                </div>
+                <div className="p-2.5 text-center font-mono text-[8px] uppercase tracking-[0.1em] text-accent font-black">
+                  PRO
+                </div>
+              </div>
+            </div>
+
+            {/* SYSTEM CAPABILITIES */}
+            <div className="px-4 py-2.5 bg-n100/60 border-y border-ink/10 font-mono text-[8px] uppercase tracking-[0.15em] text-ink font-black">
+              SYSTEM CAPABILITIES
+            </div>
+
+            {/* Canvas Purification Engine */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Canvas Purification Engine
+                </div>
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
+                  Re-draws image pixels on sandboxed browser canvas to destroy
+                  deep tracking signatures
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-green-700 stroke-[3px]"
+                  />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Image Privacy Analyzer */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Image Privacy Analyzer
+                </div>
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
+                  Inspects inbound EXIF, IPTC, XMP metadata structures and tags
+                  before stripping
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-green-700 stroke-[3px]"
+                  />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* C2PA Credentials Inspector */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  C2PA Credentials Inspector
+                </div>
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
+                  Scans for JUMBF block signatures and cryptographically signed
+                  provenance manifests
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-green-700 stroke-[3px]"
+                  />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Resolution Profile Presets */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Resolution Profile Presets
+                </div>
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
+                  Select standard resolutions (e.g. 1080p, 4K) to optimize load
+                  speed and scale images
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-green-700 stroke-[3px]"
+                  />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* USAGE & ENTITLEMENTS */}
+            <div className="px-4 py-2.5 bg-n100/60 border-y border-ink/10 font-mono text-[8px] uppercase tracking-[0.15em] text-ink font-black">
+              USAGE &amp; ENTITLEMENTS
+            </div>
+
+            {/* Batch Processing Queue */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Batch Processing Queue
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Process multiple files simultaneously in one drag-and-drop
+                  batch
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <span className="bg-n100 border border-ink/20 px-2 py-1 font-mono text-[8px] font-bold text-n600">
+                    1 AT ONCE
+                  </span>
+                </div>
+                <div className="p-3 text-center">
+                  <span className="bg-accent/10 border border-accent/30 text-accent px-2 py-1 font-mono text-[8px] font-black uppercase tracking-wider">
+                    50 AT ONCE
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Purification Capacity */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Daily Purification Capacity
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Max processed images allowed per day
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <span className="bg-n100 border border-ink/20 px-2 py-1 font-mono text-[8px] font-bold text-n600">
+                    5 / DAY
+                  </span>
+                </div>
+                <div className="p-3 text-center">
+                  <span className="bg-green-800/10 border border-green-800/30 text-green-800 px-2 py-1 font-mono text-[8px] font-black uppercase tracking-wider">
+                    UNLIMITED
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Daily C2PA Scans */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Daily C2PA Scans
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Max verified images via C2PA scanner per day
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <span className="bg-n100 border border-ink/20 px-2 py-1 font-mono text-[8px] font-bold text-n600">
+                    5 / DAY
+                  </span>
+                </div>
+                <div className="p-3 text-center">
+                  <span className="bg-green-800/10 border border-green-800/30 text-green-800 px-2 py-1 font-mono text-[8px] font-black uppercase tracking-wider">
+                    UNLIMITED
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Max File Size Limit */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Max File Size Limit
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Maximum permitted binary upload size per individual image
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center font-mono text-[10px] text-n600 font-bold">
+                  10 MB
+                </div>
+                <div className="p-3 text-center font-mono text-[10px] text-accent font-black">
+                  20 MB
+                </div>
+              </div>
+            </div>
+
+            {/* Batch ZIP Exports */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Batch ZIP Exports
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Compile purified batches into compressed ZIP packages in
+                  seconds
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SUPPORT & EXPANSIONS */}
+            <div className="px-4 py-2.5 bg-n100/60 border-y border-ink/10 font-mono text-[8px] uppercase tracking-[0.15em] text-ink font-black">
+              SUPPORT &amp; EXPANSIONS
+            </div>
+
+            {/* Priority Developer Support */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Priority Developer Support
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Direct developer assistance and high-priority feature requests
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Future Tool Expansions */}
+            <div className="border-b border-ink/10">
+              <div className="px-4 py-3">
+                <div className="font-bold text-ink text-xs">
+                  Future Tool Expansions
+                </div>
+                <div className="text-[10px] text-n500 mt-0.5">
+                  Complementary early-adopters access to all future tool
+                  expansions (e.g. spatial watermarks, DIFF sliders)
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
+                <div className="p-3 text-center">
+                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
+                </div>
+                <div className="p-3 text-center">
+                  <Check
+                    size={14}
+                    className="mx-auto text-accent stroke-[3px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Footer */}
+            <div className="p-5 bg-n100 border-t-2 border-ink font-mono text-[9px] text-n500 uppercase tracking-widest flex flex-col items-center gap-3 text-center">
+              <span>
+                ALREADY HAVE AN ACCOUNT?{" "}
+                <Link
+                  href="/dashboard"
+                  className="text-ink font-black hover:underline hover:text-accent transition-colors"
+                >
+                  SIGN IN
+                </Link>
+              </span>
+              <span className="flex items-center gap-1.5 font-black text-ink">
+                ● SECURE PAYMENTS POWERED BY STRIPE
+              </span>
+            </div>
+          </div>
+
+          {/* ─── DESKTOP TABLE (hidden below md) ─── */}
+          <div className="hidden md:block border-4 border-ink overflow-x-auto bg-bg max-w-4xl mx-auto shadow-heavy select-none">
             <table className="w-full min-w-[550px] text-left border-collapse font-sans text-xs">
               <thead>
                 <tr className="bg-n100 border-b-2 border-ink font-mono text-[9px] uppercase tracking-[0.15em] text-n500 font-bold">
@@ -314,7 +636,8 @@ export default function PricingPage() {
                       Canvas Purification Engine
                     </div>
                     <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                      Re-draws image pixels on sandboxed browser canvas to destroy deep tracking signatures
+                      Re-draws image pixels on sandboxed browser canvas to
+                      destroy deep tracking signatures
                     </div>
                   </td>
                   <td className="p-4 text-center text-green-800">
@@ -337,7 +660,8 @@ export default function PricingPage() {
                       Image Privacy Analyzer
                     </div>
                     <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                      Inspects inbound EXIF, IPTC, XMP metadata structures and tags before stripping
+                      Inspects inbound EXIF, IPTC, XMP metadata structures and
+                      tags before stripping
                     </div>
                   </td>
                   <td className="p-4 text-center text-green-800">
@@ -360,7 +684,8 @@ export default function PricingPage() {
                       C2PA Credentials Inspector
                     </div>
                     <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                      Scans for JUMBF block signatures and cryptographically signed provenance manifests
+                      Scans for JUMBF block signatures and cryptographically
+                      signed provenance manifests
                     </div>
                   </td>
                   <td className="p-4 text-center text-green-800">
@@ -383,7 +708,8 @@ export default function PricingPage() {
                       Resolution Profile Presets
                     </div>
                     <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                      Select standard resolutions (e.g. 1080p, 4K) to optimize load speed and scale images
+                      Select standard resolutions (e.g. 1080p, 4K) to optimize
+                      load speed and scale images
                     </div>
                   </td>
                   <td className="p-4 text-center text-green-800">
@@ -409,9 +735,12 @@ export default function PricingPage() {
 
                 <tr className="hover:bg-n100/30">
                   <td className="p-4">
-                    <div className="font-bold text-ink">Batch Processing Queue</div>
+                    <div className="font-bold text-ink">
+                      Batch Processing Queue
+                    </div>
                     <div className="text-[10px] text-n500 mt-0.5">
-                      Process multiple files simultaneously in one drag-and-drop batch (Clerk: batch_processing)
+                      Process multiple files simultaneously in one drag-and-drop
+                      batch (Clerk: batch_processing)
                     </div>
                   </td>
                   <td className="p-4 text-center">
@@ -428,7 +757,9 @@ export default function PricingPage() {
 
                 <tr className="hover:bg-n100/30">
                   <td className="p-4">
-                    <div className="font-bold text-ink">Daily Purification Capacity</div>
+                    <div className="font-bold text-ink">
+                      Daily Purification Capacity
+                    </div>
                     <div className="text-[10px] text-n500 mt-0.5">
                       Max processed images allowed per day
                     </div>
@@ -466,9 +797,12 @@ export default function PricingPage() {
 
                 <tr className="hover:bg-n100/30">
                   <td className="p-4">
-                    <div className="font-bold text-ink">Max File Size Limit</div>
+                    <div className="font-bold text-ink">
+                      Max File Size Limit
+                    </div>
                     <div className="text-[10px] text-n500 mt-0.5">
-                      Maximum permitted binary upload size per individual image (Clerk: increased_file_size)
+                      Maximum permitted binary upload size per individual image
+                      (Clerk: increased_file_size)
                     </div>
                   </td>
                   <td className="p-4 text-center font-mono text-[10px] text-n600 font-bold">
@@ -483,7 +817,8 @@ export default function PricingPage() {
                   <td className="p-4">
                     <div className="font-bold text-ink">Batch ZIP Exports</div>
                     <div className="text-[10px] text-n500 mt-0.5">
-                      Compile purified batches into compressed ZIP packages in seconds
+                      Compile purified batches into compressed ZIP packages in
+                      seconds
                     </div>
                   </td>
                   <td className="p-4 text-center text-n400">
@@ -506,9 +841,12 @@ export default function PricingPage() {
 
                 <tr className="hover:bg-n100/30">
                   <td className="p-4">
-                    <div className="font-bold text-ink">Priority Developer Support</div>
+                    <div className="font-bold text-ink">
+                      Priority Developer Support
+                    </div>
                     <div className="text-[10px] text-n500 mt-0.5">
-                      Direct developer assistance and high-priority feature requests (Clerk: priority_support)
+                      Direct developer assistance and high-priority feature
+                      requests (Clerk: priority_support)
                     </div>
                   </td>
                   <td className="p-4 text-center text-n400">
@@ -524,9 +862,12 @@ export default function PricingPage() {
 
                 <tr className="hover:bg-n100/30">
                   <td className="p-4">
-                    <div className="font-bold text-ink">Future Tool Expansions</div>
+                    <div className="font-bold text-ink">
+                      Future Tool Expansions
+                    </div>
                     <div className="text-[10px] text-n500 mt-0.5">
-                      Complementary early-adopters access to all future tool expansions (e.g. spatial watermarks, DIFF sliders)
+                      Complementary early-adopters access to all future tool
+                      expansions (e.g. spatial watermarks, DIFF sliders)
                     </div>
                   </td>
                   <td className="p-4 text-center text-n400">
