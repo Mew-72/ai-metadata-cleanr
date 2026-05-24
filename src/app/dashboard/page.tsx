@@ -2,42 +2,100 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton, useClerk } from "@clerk/nextjs";
 import { useAppAuth, useAppUser } from "../../hooks/useAppAuth";
-
-const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-import { Ticker } from "../../components/Ticker";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { 
   ShieldCheck, 
-  Database, 
-  History, 
   CreditCard, 
   User, 
   ArrowLeft,
   Sparkles,
   Zap,
-  UserX
+  UserX,
+  Lock,
+  ExternalLink,
+  ChevronRight,
+  ScanEye,
+  Eraser
 } from "lucide-react";
 import posthog from "posthog-js";
 
-interface BatchHistoryItem {
-  id: string;
-  date: string;
-  filesCount: number;
-  sizeSaved: string;
-  status: string;
-}
+const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+// Real-time daily local trackers
+const getPersistedCleanCount = (): number => {
+  if (typeof window === "undefined") return 0;
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  let localCount = 0;
+  let cookieCount = 0;
+
+  try {
+    const lastDate = localStorage.getItem("scrubai_purified_date");
+    if (lastDate !== today) {
+      localCount = 0;
+    } else {
+      const localVal = localStorage.getItem("scrubai_purified_count");
+      if (localVal) localCount = parseInt(localVal, 10) || 0;
+    }
+  } catch (e) {}
+
+  try {
+    const cookies = document.cookie.split(";");
+    let lastDate = "";
+    for (const c of cookies) {
+      const [name, val] = c.trim().split("=");
+      if (name === "scrubai_purified_date") lastDate = val;
+      if (name === "scrubai_purified_count")
+        cookieCount = parseInt(val, 10) || 0;
+    }
+    if (lastDate !== today) cookieCount = 0;
+  } catch (e) {}
+
+  return Math.max(localCount, cookieCount);
+};
+
+const getPersistedC2paScanCount = (): number => {
+  if (typeof window === "undefined") return 0;
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  let localCount = 0;
+  let cookieCount = 0;
+
+  try {
+    const lastDate = localStorage.getItem("scrubai_c2pa_scanned_date");
+    if (lastDate !== today) {
+      localCount = 0;
+    } else {
+      const localVal = localStorage.getItem("scrubai_c2pa_scanned_count");
+      if (localVal) localCount = parseInt(localVal, 10) || 0;
+    }
+  } catch (e) {}
+
+  try {
+    const cookies = document.cookie.split(";");
+    let lastDate = "";
+    for (const c of cookies) {
+      const [name, val] = c.trim().split("=");
+      if (name === "scrubai_c2pa_scanned_date") lastDate = val;
+      if (name === "scrubai_c2pa_scanned_count")
+        cookieCount = parseInt(val, 10) || 0;
+    }
+    if (lastDate !== today) cookieCount = 0;
+  } catch (e) {}
+
+  return Math.max(localCount, cookieCount);
+};
 
 export default function Dashboard() {
   const { user } = useAppUser();
   const { has } = useAppAuth();
+  const { openUserProfile } = useClerk();
   
-  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "batch_processing" })) : false;
-
+  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "unlimited_daily" })) : false;
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
+  const [cleanCount, setCleanCount] = useState(0);
+  const [scanCount, setScanCount] = useState(0);
 
   useEffect(() => {
     if (isPro) {
@@ -47,17 +105,15 @@ export default function Dashboard() {
     }
   }, [isPro]);
 
+  useEffect(() => {
+    setCleanCount(getPersistedCleanCount());
+    setScanCount(getPersistedC2paScanCount());
+  }, []);
+
   // Log PostHog dashboard visit
   useEffect(() => {
     posthog.capture("viewed_dashboard", { tier: activeTier });
   }, [activeTier]);
-
-  const [history] = useState<BatchHistoryItem[]>([
-    { id: "b1", date: "2026-05-20", filesCount: 12, sizeSaved: "3.4 MB", status: "Done" },
-    { id: "b2", date: "2026-05-18", filesCount: 3, sizeSaved: "920 KB", status: "Done" },
-    { id: "b3", date: "2026-05-15", filesCount: 22, sizeSaved: "7.8 MB", status: "Done" },
-    { id: "b4", date: "2026-05-10", filesCount: 1, sizeSaved: "145 KB", status: "Done" },
-  ]);
 
   // Handle post-checkout redirect message
   useEffect(() => {
@@ -69,6 +125,9 @@ export default function Dashboard() {
       }
     }
   }, []);
+
+  const cleanPercentage = Math.min((cleanCount / 5) * 100, 100);
+  const scanPercentage = Math.min((scanCount / 5) * 100, 100);
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-200">
@@ -93,8 +152,9 @@ export default function Dashboard() {
               <div className="font-sans text-xs font-bold text-ink truncate">
                 {user?.primaryEmailAddress?.emailAddress || "user@creator.com"}
               </div>
+              
               <div className="mt-2.5">Subscription Status:</div>
-              <div className={`text-[9px] font-mono px-2.5 py-0.5 border border-ink self-start inline-block ${
+              <div className={`text-[9px] font-mono px-2.5 py-0.5 border border-ink self-start inline-block font-bold ${
                 activeTier === "pro" ? "bg-accent text-white" : "bg-bg text-ink"
               }`}>
                 {activeTier === "pro" ? "PRO MEMBER" : "FREE PLAN"}
@@ -103,12 +163,20 @@ export default function Dashboard() {
 
             <hr className="border-t border-ink/15 my-6" />
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               <Link
-                href="/#workspace"
-                className="font-mono text-[9px] uppercase tracking-wider bg-ink text-bg px-4 py-2.5 hover:bg-accent hover:text-white transition-colors text-center cursor-pointer select-none"
+                href="/"
+                className="font-mono text-[9px] uppercase tracking-wider bg-ink text-bg px-4 py-2.5 hover:bg-accent hover:text-white transition-colors text-center cursor-pointer select-none flex items-center justify-center gap-1"
               >
-                Go to Sanitizer Workspace
+                Go to Purifier Workspace
+                <ChevronRight size={10} />
+              </Link>
+              <Link
+                href="/c2pa-scanner"
+                className="font-mono text-[9px] uppercase tracking-wider border border-ink bg-bg text-ink px-4 py-2.5 hover:bg-n100 transition-colors text-center cursor-pointer select-none flex items-center justify-center gap-1"
+              >
+                Go to C2PA Scanner
+                <ChevronRight size={10} />
               </Link>
             </div>
           </div>
@@ -133,11 +201,11 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* Center column: Dashboard controls & statistics (Span 3) */}
+        {/* Center column: Dashboard controls (Span 3) */}
         <div className="lg:col-span-3 p-8 md:p-10 select-none">
           <div className="flex items-center justify-between pb-4 border-b border-ink mb-8">
             <h2 className="font-serif text-3xl font-black text-ink uppercase tracking-tight">
-              ScrubAI Profile Dashboard
+              Dashboard Hub
             </h2>
             <Link
               href="/"
@@ -148,135 +216,138 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Quick Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="border border-ink p-5 bg-bg flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-n500">Purified Batches</span>
-                <History size={14} className="text-accent" />
-              </div>
+          {/* Real-time Dynamic Usage Limits Tracker */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            {/* Card 1: Canvas Cleans */}
+            <div className="border border-ink p-6 bg-bg flex flex-col justify-between">
               <div>
-                <div className="font-serif text-3xl font-black text-ink">38</div>
-                <span className="font-mono text-[8px] text-accent uppercase font-bold mt-1 block">▲ +4 this week</span>
-              </div>
-            </div>
-
-            <div className="border border-ink p-5 bg-bg flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-n500">Data Weight Purged</span>
-                <Database size={14} className="text-accent" />
-              </div>
-              <div>
-                <div className="font-serif text-3xl font-black text-ink">12.26 MB</div>
-                <span className="font-mono text-[8px] text-accent uppercase font-bold mt-1 block">▲ Wiped permanently</span>
-              </div>
-            </div>
-
-            <div className="border border-ink p-5 bg-bg flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-n500">Average Sanitization</span>
-                <ShieldCheck size={14} className="text-accent" />
-              </div>
-              <div>
-                <div className="font-serif text-3xl font-black text-ink">100%</div>
-                <span className="font-mono text-[8px] text-accent uppercase font-bold mt-1 block">✓ Complete Header Wipe</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Clerk Billing Stripe Integration panel */}
-          <div className="border border-ink p-6 md:p-8 bg-n100 mb-10">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 border border-ink flex items-center justify-center bg-bg">
-                <CreditCard size={18} className="text-ink" />
-              </div>
-              <div className="flex-1">
-                <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold mb-1">
-                  ✦ Subscription Management
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-n500">Purifier Processing</span>
+                  <Eraser size={14} className="text-accent" />
                 </div>
-                <h4 className="font-serif text-xl font-bold text-ink">
-                  Manage Subscription & Billing
+                <h4 className="font-serif text-lg font-bold text-ink uppercase tracking-tight mb-2">
+                  Canvas Cleans Limit
                 </h4>
-                <p className="font-body text-xs text-n500 mt-2 mb-6 max-w-xl leading-relaxed">
-                  Update your billing details, modify your plan, check your billing history, or view your receipts and invoices securely.
+                <p className="font-body text-[11px] text-n500 leading-normal mb-5">
+                  Client-side metadata purifications processed in the current daily period.
                 </p>
+              </div>
 
-                {activeTier === "free" ? (
-                  <div className="bg-bg border border-ink p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-start gap-3">
-                      <Zap size={18} className="text-accent shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-sans text-xs font-bold text-ink">Upgrade to Pro Batch Plan</div>
-                        <div className="font-mono text-[9px] text-n500 mt-0.5">
-                          Unlocks up to 50 concurrent image cleans, JSZip exports, and priority local queues.
-                        </div>
-                      </div>
-                    </div>
-                    <Link 
-                      href="/pricing"
-                      className="bg-ink text-bg px-6 py-2.5 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:text-white transition-colors shrink-0 text-center"
-                    >
-                      Unlock Pro — $5/mo
-                    </Link>
+              <div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="font-serif text-2xl font-black text-ink">
+                    {activeTier === "pro" ? "Unlimited" : `${cleanCount} / 5`}
+                  </span>
+                  {activeTier !== "pro" && (
+                    <span className="font-mono text-[8px] text-n400 uppercase">
+                      {5 - cleanCount} remaining today
+                    </span>
+                  )}
+                </div>
+                {activeTier !== "pro" ? (
+                  <div className="w-full h-2 bg-n100 border border-ink/20 overflow-hidden">
+                    <div 
+                      className="h-full bg-accent transition-all duration-300"
+                      style={{ width: `${cleanPercentage}%` }}
+                    />
                   </div>
                 ) : (
-                  <div className="bg-bg border border-accent p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-start gap-3">
-                      <Sparkles size={18} className="text-accent shrink-0 mt-0.5 animate-pulse" />
-                      <div>
-                        <div className="font-sans text-xs font-bold text-accent">Pro Plan Currently Active</div>
-                        <div className="font-mono text-[9px] text-n500 mt-0.5">
-                          Your Pro subscription is fully active. You have full access to unlimited batch image processing and high-performance queues.
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3.5">
-                      <Link 
-                        href="/pricing"
-                        className="font-mono text-[9px] uppercase tracking-wider text-accent border border-accent/20 px-4 py-2 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none"
-                      >
-                        Manage Billing
-                      </Link>
-                    </div>
+                  <div className="w-full h-2 bg-green-800/10 border border-green-800/20 overflow-hidden">
+                    <div className="h-full bg-green-800 w-full" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Card 2: C2PA Scans */}
+            <div className="border border-ink p-6 bg-bg flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-n500">C2PA Verification</span>
+                  <ScanEye size={14} className="text-accent" />
+                </div>
+                <h4 className="font-serif text-lg font-bold text-ink uppercase tracking-tight mb-2">
+                  C2PA Scans Limit
+                </h4>
+                <p className="font-body text-[11px] text-n500 leading-normal mb-5">
+                  Client-side cryptographical signature audits executed today.
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="font-serif text-2xl font-black text-ink">
+                    {activeTier === "pro" ? "Unlimited" : `${scanCount} / 5`}
+                  </span>
+                  {activeTier !== "pro" && (
+                    <span className="font-mono text-[8px] text-n400 uppercase">
+                      {5 - scanCount} remaining today
+                    </span>
+                  )}
+                </div>
+                {activeTier !== "pro" ? (
+                  <div className="w-full h-2 bg-n100 border border-ink/20 overflow-hidden">
+                    <div 
+                      className="h-full bg-accent transition-all duration-300"
+                      style={{ width: `${scanPercentage}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-2 bg-green-800/10 border border-green-800/20 overflow-hidden">
+                    <div className="h-full bg-green-800 w-full" />
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Batch History logs table */}
-          <div>
-            <h3 className="font-serif text-xl font-bold text-ink mb-4 pb-2 border-b border-muted-border">
-              Offline Purification Batch History
-            </h3>
-            
-            <div className="border border-ink bg-bg overflow-x-auto">
-              <table className="w-full text-left border-collapse font-mono text-[10px]">
-                <thead>
-                  <tr className="bg-n100 border-b border-ink font-bold uppercase tracking-wider text-n500">
-                    <th className="p-3">Batch ID</th>
-                    <th className="p-3">Completion Date</th>
-                    <th className="p-3 text-center">Files Cleaned</th>
-                    <th className="p-3 text-right">Data Saved</th>
-                    <th className="p-3 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-muted-border">
-                  {history.map((item) => (
-                    <tr key={item.id} className="hover:bg-n100/50">
-                      <td className="p-3 font-bold text-ink">#{item.id}</td>
-                      <td className="p-3 text-n500">{item.date}</td>
-                      <td className="p-3 text-center text-ink font-bold">{item.filesCount}</td>
-                      <td className="p-3 text-right font-bold text-ink">{item.sizeSaved}</td>
-                      <td className="p-3 text-center">
-                        <span className="bg-green-800/10 border border-green-800 text-green-800 text-[8px] font-bold px-1.5 py-0.5">
-                          {item.status.toUpperCase()}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Clerk Account Management & Billing Portal */}
+          <div className="border border-ink p-6 md:p-8 bg-n100">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 border border-ink flex items-center justify-center bg-bg shrink-0">
+                <CreditCard size={18} className="text-ink" />
+              </div>
+              <div className="flex-1">
+                <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold mb-1">
+                  ✦ Unified User Settings
+                </div>
+                <h4 className="font-serif text-xl font-bold text-ink">
+                  Billing, Security & Receipts Portal
+                </h4>
+                <p className="font-body text-xs text-n500 mt-2 mb-6 max-w-xl leading-relaxed">
+                  ScrubAI routes all account credentials and subscription processes directly through secure Clerk modules. Open your account modal below to download invoices, check Stripe receipts, change billing cards, switch subscription tiers, configure MFA, or update profiles.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {hasClerkKey ? (
+                    <button
+                      onClick={() => openUserProfile()}
+                      className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <ExternalLink size={12} />
+                      Manage Account & Billing
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => alert("MVP Simulated Mode: Dynamic UserProfile triggers require active Clerk Credentials.")}
+                      className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <ExternalLink size={12} />
+                      Manage Account & Billing
+                    </button>
+                  )}
+
+                  {activeTier === "free" && (
+                    <Link
+                      href="/pricing"
+                      className="bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink hover:text-bg transition-colors flex items-center justify-center gap-1.5 shadow-sm text-center"
+                    >
+                      <Zap size={12} />
+                      Upgrade To Premium Pro
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
