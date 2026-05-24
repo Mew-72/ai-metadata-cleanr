@@ -5,12 +5,12 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-ink text-bg border-t-4 border-ink mt-auto w-full">
-      <div className="max-w-[1280px] mx-auto w-full border-x border-bg/10 bg-ink">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-b border-bg/8">
+    <footer className="footer-theme mt-auto w-full">
+      <div className="max-w-[1280px] mx-auto w-full border-x footer-inner">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-b footer-border-subtle">
           {/* Main Info */}
-          <div className="p-10 border-b lg:border-b-0 lg:border-r border-bg/7 lg:col-span-2">
-            <Link href="/" className="font-serif text-2xl font-black tracking-tighter uppercase text-bg select-none decoration-none">
+          <div className="p-10 border-b lg:border-b-0 lg:border-r footer-border-subtle lg:col-span-2">
+            <Link href="/" className="font-serif text-2xl font-black tracking-tighter uppercase footer-title-link select-none decoration-none">
               Scrub<span>AI</span>
               <span className="text-accent font-black font-sans">.</span>
             </Link>
@@ -23,7 +23,7 @@ export function Footer() {
                 href="https://x.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-9 h-9 border border-bg/20 flex items-center justify-center text-n400 hover:bg-accent hover:border-accent hover:text-bg transition-all select-none"
+                className="w-9 h-9 border flex items-center justify-center footer-social-icon transition-all select-none"
                 title="Follow us on X"
               >
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
@@ -36,7 +36,7 @@ export function Footer() {
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-9 h-9 border border-bg/20 flex items-center justify-center text-n400 hover:bg-accent hover:border-accent hover:text-bg transition-all select-none"
+                className="w-9 h-9 border flex items-center justify-center footer-social-icon transition-all select-none"
                 title="Follow us on Instagram"
               >
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
@@ -58,7 +58,7 @@ export function Footer() {
                 href="https://linkedin.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-9 h-9 border border-bg/20 flex items-center justify-center text-n400 hover:bg-accent hover:border-accent hover:text-bg transition-all select-none"
+                className="w-9 h-9 border flex items-center justify-center footer-social-icon transition-all select-none"
                 title="Connect with us on LinkedIn"
               >
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
@@ -78,7 +78,7 @@ export function Footer() {
                 href="https://github.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-9 h-9 border border-bg/20 flex items-center justify-center text-n400 hover:bg-accent hover:border-accent hover:text-bg transition-all select-none"
+                className="w-9 h-9 border flex items-center justify-center footer-social-icon transition-all select-none"
                 title="View our source code on GitHub"
               >
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
@@ -96,32 +96,32 @@ export function Footer() {
           </div>
 
           {/* Product Links */}
-          <div className="p-10 border-b md:border-b-0 md:border-r border-bg/7">
-            <div className="font-mono text-[9px] tracking-widest uppercase text-n500 mb-3.5 pb-2 border-b border-bg/7">Product</div>
+          <div className="p-10 border-b md:border-b-0 md:border-r footer-border-subtle">
+            <div className="font-mono text-[9px] tracking-widest uppercase mb-3.5 pb-2 border-b footer-border-subtle footer-label">Product</div>
             <ul className="list-none flex flex-col gap-2.5">
-              <li><Link href="/#features" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Features</Link></li>
-              <li><Link href="/c2pa-scanner" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">C2PA Scanner</Link></li>
-              <li><Link href="/pricing" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Pricing</Link></li>
-              <li><a href="#" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Changelog</a></li>
-              <li><a href="#" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">API Docs</a></li>
+              <li><Link href="/#features" className="font-sans text-[12px] footer-link-item transition-colors">Features</Link></li>
+              <li><Link href="/c2pa-scanner" className="font-sans text-[12px] footer-link-item transition-colors">C2PA Scanner</Link></li>
+              <li><Link href="/pricing" className="font-sans text-[12px] footer-link-item transition-colors">Pricing</Link></li>
+              <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">Changelog</a></li>
+              <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">API Docs</a></li>
             </ul>
           </div>
 
 
           {/* Legal Links */}
           <div className="p-10">
-            <div className="font-mono text-[9px] tracking-widest uppercase text-n500 mb-3.5 pb-2 border-b border-bg/7">Legal</div>
+            <div className="font-mono text-[9px] tracking-widest uppercase mb-3.5 pb-2 border-b footer-border-subtle footer-label">Legal</div>
             <ul className="list-none flex flex-col gap-2.5">
-              <li><Link href="/privacy" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Terms of Service</Link></li>
-              <li><Link href="/cookies" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Cookie Policy</Link></li>
-              <li><Link href="/security" className="font-sans text-[12px] text-n400 hover:text-bg transition-colors">Security Policy</Link></li>
+              <li><Link href="/privacy" className="font-sans text-[12px] footer-link-item transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="font-sans text-[12px] footer-link-item transition-colors">Terms of Service</Link></li>
+              <li><Link href="/cookies" className="font-sans text-[12px] footer-link-item transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/security" className="font-sans text-[12px] footer-link-item transition-colors">Security Policy</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Footer Bottom */}
-        <div className="flex flex-col md:flex-row justify-between items-center px-10 py-4.5 font-mono text-[9px] tracking-wider uppercase text-n500 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center px-10 py-4.5 font-mono text-[9px] tracking-wider uppercase footer-label gap-4">
           <span>© 2026 ScrubAI Inc. All rights reserved.</span>
           <span className="hidden md:inline">Vol. 1 &nbsp;·&nbsp; Local First Edition &nbsp;·&nbsp; Est. 2026</span>
           <span className="text-right">Built for Privacy</span>

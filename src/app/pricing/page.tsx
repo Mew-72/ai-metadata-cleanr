@@ -104,7 +104,7 @@ export default function PricingPage() {
               }`}
             >
               ANNUAL
-              <span className="absolute -top-2.5 -right-2 bg-accent text-white font-mono text-[7px] font-black px-1.5 py-0.5 tracking-wider">
+              <span className="absolute -top-3 -right-4 bg-accent text-white font-mono text-[9.5px] font-black px-2 py-0.5 tracking-wider">
                 -45%
               </span>
             </button>

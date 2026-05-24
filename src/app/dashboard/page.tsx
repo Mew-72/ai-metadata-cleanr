@@ -205,7 +205,7 @@ export default function Dashboard() {
         <div className="lg:col-span-3 p-8 md:p-10 select-none">
           <div className="flex items-center justify-between pb-4 border-b border-ink mb-8">
             <h2 className="font-serif text-3xl font-black text-ink uppercase tracking-tight">
-              Dashboard Hub
+              Dashboard
             </h2>
             <Link
               href="/"
