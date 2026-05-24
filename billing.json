@@ -1,0 +1,74 @@
+{
+  "billing": {
+    "user_enabled": true,
+    "organization_enabled": false,
+    "free_trial_requires_payment_method": true,
+    "features": {
+      "batch_processing": {
+        "name": "Batch Processing (up to 50 images)",
+        "description": "Clean up to 50 images simultaneously in a single drag-and-drop batch",
+        "avatar_url": "",
+        "include_in_jwt": true,
+        "jwt_value": "",
+        "publicly_visible": true
+      },
+      "unlimited_daily": {
+        "name": "Unlimited Daily Processing",
+        "description": "No daily limit on the number of images processed",
+        "avatar_url": "",
+        "include_in_jwt": true,
+        "jwt_value": "",
+        "publicly_visible": true
+      },
+      "priority_support": {
+        "name": "Priority Support",
+        "description": "Direct developer assistance and high-priority feature requests",
+        "avatar_url": "",
+        "include_in_jwt": true,
+        "jwt_value": "",
+        "publicly_visible": true
+      },
+      "increased_file_size": {
+        "name": "Increased File Size (20 MB)",
+        "description": "Upload images up to 20 MB (vs 10 MB on the free tier)",
+        "avatar_url": "",
+        "include_in_jwt": true,
+        "jwt_value": "",
+        "publicly_visible": true
+      }
+    },
+    "plans": {
+      "free_user": {
+        "name": "Free",
+        "description": "Standard local metadata analysis and single-file canvas purification. For hobbyist creators and single uploads.",
+        "amount": 0,
+        "annual_monthly_amount": 0,
+        "currency": "",
+        "payer_type": "user",
+        "is_recurring": true,
+        "free_trial_enabled": false,
+        "free_trial_days": null,
+        "publicly_visible": true,
+        "features": []
+      },
+      "pro": {
+        "name": "Pro Monthly",
+        "description": "Batch metadata stripping, 50-image queues, ZIP exports, and camera profile bypass. Cancel anytime.",
+        "amount": 500,
+        "annual_monthly_amount": 275,
+        "currency": "usd",
+        "payer_type": "user",
+        "is_recurring": true,
+        "free_trial_enabled": false,
+        "free_trial_days": null,
+        "publicly_visible": true,
+        "features": [
+          "batch_processing",
+          "unlimited_daily",
+          "priority_support",
+          "increased_file_size"
+        ]
+      }
+    }
+  }
+}

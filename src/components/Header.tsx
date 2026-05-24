@@ -7,7 +7,7 @@ import { UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
 import { Sun, Moon } from "lucide-react";
 
-const hasClerkKey = false;
+const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");

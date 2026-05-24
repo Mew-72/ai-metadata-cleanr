@@ -5,7 +5,7 @@ import Link from "next/link";
 import { SignOutButton } from "@clerk/nextjs";
 import { useAppAuth, useAppUser } from "../../hooks/useAppAuth";
 
-const hasClerkKey = false;
+const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 import { Ticker } from "../../components/Ticker";
 import { Header } from "../../components/Header";
@@ -35,10 +35,7 @@ export default function Dashboard() {
   const { user } = useAppUser();
   const { has } = useAppAuth();
   
-  const isPro = 
-    user?.publicMetadata?.tier === "pro" || 
-    user?.publicMetadata?.role === "pro" ||
-    (has ? has({ role: "pro" }) || has({ permission: "org:pro:access" }) : false);
+  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "batch_processing" })) : false;
 
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
 
@@ -62,17 +59,16 @@ export default function Dashboard() {
     { id: "b4", date: "2026-05-10", filesCount: 1, sizeSaved: "145 KB", status: "Done" },
   ]);
 
-  const handleSimulateUpgrade = () => {
-    setActiveTier("pro");
-    posthog.capture("user_upgraded", { tier: "pro", simulated: true, location: "dashboard" });
-    alert("✓ Subscription simulated! Pro features are now unlocked.");
-  };
-
-  const handleSimulateCancel = () => {
-    setActiveTier("free");
-    posthog.capture("user_downgraded", { tier: "free", simulated: true });
-    alert("✓ Subscription cancelled. Reverted back to free tier.");
-  };
+  // Handle post-checkout redirect message
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("upgraded") === "true") {
+        alert("✨ Payment Successful! Your session has been secured and Pro features are fully unlocked.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-200">
@@ -216,12 +212,12 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <button 
-                      onClick={handleSimulateUpgrade}
-                      className="bg-ink text-bg px-6 py-2.5 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:text-white transition-colors shrink-0"
+                    <Link 
+                      href="/pricing"
+                      className="bg-ink text-bg px-6 py-2.5 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:text-white transition-colors shrink-0 text-center"
                     >
                       Unlock Pro — $5/mo
-                    </button>
+                    </Link>
                   </div>
                 ) : (
                   <div className="bg-bg border border-accent p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -235,12 +231,12 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3.5">
-                      <button 
-                        onClick={handleSimulateCancel}
+                      <Link 
+                        href="/pricing"
                         className="font-mono text-[9px] uppercase tracking-wider text-accent border border-accent/20 px-4 py-2 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none"
                       >
-                        Cancel Plan
-                      </button>
+                        Manage Billing
+                      </Link>
                     </div>
                   </div>
                 )}

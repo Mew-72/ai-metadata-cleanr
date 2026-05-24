@@ -1,3 +1,4 @@
+import {ClerkProvider} from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Playfair_Display, Lora, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
@@ -51,7 +52,9 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${lora.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <ClerkProvider>
+          <Providers>{children}</Providers>
+        </ClerkProvider>
       </body>
     </html>
   );

@@ -160,7 +160,7 @@ export default function PrivacyPolicyPage() {
                       <strong>Authentication:</strong> We use Clerk to secure your account. When you create an account, Clerk registers your email address, name, and profile details.
                     </li>
                     <li className="mt-1">
-                      <strong>Billing Details:</strong> If you purchase a subscription ($5/month) or a lifetime plan ($20), your payment is processed directly by Stripe via Clerk Billing. Your credit credentials are processed entirely on Stripe’s PCI-compliant servers.
+                      <strong>Billing Details:</strong> If you purchase a Pro subscription ($5/month or $33/year), your payment is processed directly by Stripe via Clerk Billing. Your credit credentials are processed entirely on Stripe's PCI-compliant servers.
                     </li>
                   </ul>
                 </div>

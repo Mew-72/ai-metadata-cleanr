@@ -1,19 +1,19 @@
 "use client";
 
 import React from "react";
+import posthog from "posthog-js";
 import { X } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
 
-const hasClerkKey = false;
+const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 interface BillingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSimulateUpgrade: () => void;
 }
 
-export function BillingModal({ isOpen, onClose, onSimulateUpgrade }: BillingModalProps) {
+export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   const { isSignedIn } = useAppAuth();
 
   if (!isOpen) return null;
@@ -67,11 +67,17 @@ export function BillingModal({ isOpen, onClose, onSimulateUpgrade }: BillingModa
                 Batch processing up to 50 files. Dedicated local-first engine and priority offline ZIP exports. Cancel anytime.
               </p>
             </div>
-            
             <div className="mt-4">
               {isSignedIn ? (
-                <button 
-                  onClick={onSimulateUpgrade}
+                <button
+                  onClick={() => {
+                    posthog.capture("upgrade_clicked", { plan: "pro" });
+                    if (hasClerkKey) {
+                      window.location.href = "/pricing";
+                    } else {
+                      alert("Billing gateway offline.");
+                    }
+                  }}
                   className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none"
                 >
                   Upgrade to Pro
@@ -95,27 +101,34 @@ export function BillingModal({ isOpen, onClose, onSimulateUpgrade }: BillingModa
             </div>
           </div>
 
-          {/* Lifetime Tier */}
+          {/* Pro Annual Tier */}
           <div className="border border-ink p-5 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <span className="font-mono text-[9px] tracking-widest uppercase text-n500">Lifetime Pass</span>
+                <span className="font-mono text-[9px] tracking-widest uppercase text-n500">Pro Annual (Save 45%)</span>
               </div>
               <div className="font-serif text-3xl font-black text-ink mb-1">
-                $20<span className="text-xs font-normal text-n500"> one-time</span>
+                $33<span className="text-xs font-normal text-n500"> / year</span>
               </div>
               <p className="font-body text-[11px] text-n500 leading-snug">
-                Get all Pro benefits forever. One-time payment, no recurring billing. Secure digital ownership.
+                Get all Pro batch processing benefits at a heavy discount. Billed annually at $33, saving you $27 per year!
               </p>
             </div>
 
             <div className="mt-4">
               {isSignedIn ? (
-                <button 
-                  onClick={onSimulateUpgrade}
+                <button
+                  onClick={() => {
+                    posthog.capture("upgrade_clicked", { plan: "pro_annual" });
+                    if (hasClerkKey) {
+                      window.location.href = "/pricing";
+                    } else {
+                      alert("Billing gateway offline.");
+                    }
+                  }}
                   className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none"
                 >
-                  Buy Lifetime
+                  Acquire Pro Annual
                 </button>
               ) : (
                 hasClerkKey ? (

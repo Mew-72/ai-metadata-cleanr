@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import ExifReader from "exifreader";
 import JSZip from "jszip";
 import posthog from "posthog-js";
 import { useAppAuth, useAppUser } from "../hooks/useAppAuth";
 import { BillingModal } from "./BillingModal";
+import { SignUpButton, SignInButton } from "@clerk/nextjs";
 import { 
   Upload, 
   Trash2, 
@@ -16,7 +18,8 @@ import {
   Sparkles,
   HelpCircle,
   Lock,
-  FileCode
+  FileCode,
+  X
 } from "lucide-react";
 
 interface UploadedFile {
@@ -74,6 +77,46 @@ const MOCK_C2PA_MANIFEST = {
   }
 };
 
+const getPersistedCleanCount = (): number => {
+  if (typeof window === "undefined") return 0;
+  
+  let localCount = 0;
+  let cookieCount = 0;
+  
+  try {
+    const localVal = localStorage.getItem("scrubai_purified_count");
+    if (localVal) localCount = parseInt(localVal, 10) || 0;
+  } catch (e) {}
+  
+  try {
+    const cookies = document.cookie.split(";");
+    for (const c of cookies) {
+      const [name, val] = c.trim().split("=");
+      if (name === "scrubai_purified_count") {
+        cookieCount = parseInt(val, 10) || 0;
+        break;
+      }
+    }
+  } catch (e) {}
+  
+  const maxCount = Math.max(localCount, cookieCount);
+  setPersistedCleanCount(maxCount);
+  return maxCount;
+};
+
+const setPersistedCleanCount = (count: number) => {
+  if (typeof window === "undefined") return;
+  
+  try {
+    localStorage.setItem("scrubai_purified_count", String(count));
+  } catch (e) {}
+  
+  try {
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1);
+    document.cookie = `scrubai_purified_count=${count}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+  } catch (e) {}
+};
 
 export function CleanerInterface() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -83,17 +126,17 @@ export function CleanerInterface() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+  const [isGuestLimitModalOpen, setIsGuestLimitModalOpen] = useState(false);
+  const [cleanCount, setCleanCount] = useState<number>(0);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Clerk Auth and Billing Gating Checks
-  const { has } = useAppAuth();
+  const { has, isSignedIn, isLoaded } = useAppAuth();
   const { user } = useAppUser();
   
-  // A user is Pro if Clerk publicMetadata has role/tier as pro, or by organizations helper has()
-  const isPro = 
-    user?.publicMetadata?.tier === "pro" || 
-    user?.publicMetadata?.role === "pro" ||
-    (has ? has({ role: "pro" }) || has({ permission: "org:pro:access" }) : false);
+  // A user is Pro if they have the active 'pro' Clerk subscription plan
+  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "batch_processing" })) : false;
 
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
 
@@ -106,14 +149,32 @@ export function CleanerInterface() {
     }
   }, [isPro]);
 
-  // Simulate Upgrade (Client-side bypass/mocking for smooth demoing)
-  const handleSimulateUpgrade = () => {
-    setActiveTier("pro");
-    setIsBillingModalOpen(false);
-    // Log PostHog upgrade event
-    posthog.capture("user_upgraded", { tier: "pro", simulated: true });
-    alert("✓ Subscription simulated! You now have Pro batch capabilities.");
-  };
+  // Set mounted status on load
+  useEffect(() => {
+    setMounted(true);
+    setCleanCount(getPersistedCleanCount());
+  }, []);
+
+  // Close guest limit modal if user signs in
+  useEffect(() => {
+    if (isSignedIn) {
+      setIsGuestLimitModalOpen(false);
+    }
+  }, [isSignedIn]);
+
+  // Prevent page scroll when modals are open
+  useEffect(() => {
+    if (isGuestLimitModalOpen || isBillingModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isGuestLimitModalOpen, isBillingModalOpen]);
+
+  // handleSimulateUpgrade has been completely removed in favor of strict, secure Clerk Billing.
 
   // Helper to load image dimensions
   const getImageDimensions = (file: File): Promise<string> => {
@@ -254,8 +315,15 @@ export function CleanerInterface() {
       fileInputRef.current.value = "";
     }
     
+    // Free tier limit check
+    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+      setIsGuestLimitModalOpen(true);
+      return;
+    }
+
     // Feature gating check
     if (activeTier === "free" && (files.length + list.length > 1)) {
+      posthog.capture("upgrade_modal_opened", { trigger: "batch_upload_limit" });
       setIsBillingModalOpen(true);
       return;
     }
@@ -277,6 +345,12 @@ export function CleanerInterface() {
         setSelectedFileId(combined[0].id);
       }
       return combined;
+    });
+
+    posthog.capture("image_uploaded", {
+      file_count: list.length,
+      is_batch: list.length > 1,
+      tier: activeTier,
     });
 
     // Run auditing
@@ -313,6 +387,10 @@ export function CleanerInterface() {
   };
 
   const handleBrowseFiles = () => {
+    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+      setIsGuestLimitModalOpen(true);
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -422,14 +500,10 @@ export function CleanerInterface() {
             return;
           }
 
-          // Generate file name — user-controlled custom filename or keep original
-          let cleanedName = item.file.name;
+          // Always generate a randomized neutral filename to strip AI-detectable naming patterns
           const ext = item.file.name.split(".").pop() || "png";
-          if (customFilename.trim()) {
-            // Use custom name; for batch, append index suffix
-            const baseName = customFilename.trim().replace(/\.[^/.]+$/, ""); // strip extension if user typed one
-            cleanedName = files.length > 1 ? `${baseName}_${index + 1}.${ext}` : `${baseName}.${ext}`;
-          }
+          const rand = Math.random().toString(36).substring(2, 8);
+          const cleanedName = `img_${rand}_${index + 1}.${ext}`;
 
           const cleanedUrl = URL.createObjectURL(blob);
 
@@ -468,6 +542,12 @@ export function CleanerInterface() {
   const handleCleanImages = async () => {
     if (files.length === 0) return;
 
+    // Free tier limit check
+    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+      setIsGuestLimitModalOpen(true);
+      return;
+    }
+
     // Set files to cleaning state
     setFiles((prev) => prev.map((f) => ({ ...f, status: "cleaning" })));
 
@@ -475,6 +555,16 @@ export function CleanerInterface() {
 
     for (let idx = 0; idx < files.length; idx++) {
       const item = files[idx];
+
+      // Secondary safety check inside loop
+      if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+        setIsGuestLimitModalOpen(true);
+        setFiles((prev) =>
+          prev.map((f, i) => (i >= idx && f.status === "cleaning" ? { ...f, status: "idle" } : f))
+        );
+        break;
+      }
+
       const cleaned = await cleanSingleFile(item, idx);
       cleanedResults.push(cleaned);
 
@@ -482,6 +572,19 @@ export function CleanerInterface() {
       setFiles((prev) =>
         prev.map((f) => (f.id === item.id ? cleaned : f))
       );
+
+      // Increment persistent clean count for Free tier
+      if (activeTier === "free") {
+        const nextCount = getPersistedCleanCount() + 1;
+        setPersistedCleanCount(nextCount);
+        setCleanCount(nextCount);
+        if (nextCount >= 5) {
+          setFiles((prev) =>
+            prev.map((f, i) => (i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f))
+          );
+          break;
+        }
+      }
     }
   };
 
@@ -491,7 +594,7 @@ export function CleanerInterface() {
     if (doneFiles.length === 0) return;
 
     if (doneFiles.length === 1) {
-      // Single Download
+      // Single Download — always uses the randomized cleaned name
       const f = doneFiles[0];
       const link = document.createElement("a");
       link.href = f.cleanedUrl!;
@@ -502,9 +605,14 @@ export function CleanerInterface() {
     } else {
       // Pro ZIP Batch Download
       if (activeTier === "free") {
+        posthog.capture("upgrade_modal_opened", { trigger: "zip_download_gate" });
         setIsBillingModalOpen(true);
         return;
       }
+
+      posthog.capture("batch_download_initiated", {
+        file_count: doneFiles.length,
+      });
 
       const zip = new JSZip();
       doneFiles.forEach((f) => {
@@ -515,7 +623,13 @@ export function CleanerInterface() {
       const zipUrl = URL.createObjectURL(zipBlob);
       const link = document.createElement("a");
       link.href = zipUrl;
-      link.download = "scrubai_purified_images.zip";
+
+      // ZIP name: scrubai_cleaned_images_{user_suffix}.zip or default
+      const userSuffix = customFilename.trim().replace(/\.[^/.]+$/, "");
+      link.download = userSuffix
+        ? `scrubai_cleaned_images_${userSuffix}.zip`
+        : "scrubai_cleaned_images.zip";
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -525,6 +639,11 @@ export function CleanerInterface() {
 
   // Use Mock Sample Image
   const handleUseSample = async () => {
+    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+      setIsGuestLimitModalOpen(true);
+      return;
+    }
+
     // Generate simulated image file loaded with custom dummy EXIF/C2PA tracking markers
     // Creating a transparent 1x1 base64 GIF is simple, then add simulated tags
     const mockFile = new File([new Blob()], "DALL·E 2026_Camera_Studio_Export.jpg", {
@@ -581,15 +700,20 @@ export function CleanerInterface() {
           
           {/* Top Panel Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-6 border-b border-ink bg-n100 gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="font-serif text-lg font-bold tracking-tight text-ink">
-                Purification Workspace
+                Scrubbing Workspace
               </span>
               <span className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${
                 activeTier === "pro" ? "bg-accent text-white" : "bg-bg text-ink"
               }`}>
                 {activeTier === "pro" ? "PRO TIER ACTIVATED" : "FREE TIER (1 FILE LIMIT)"}
               </span>
+              {activeTier === "free" && (
+                <span className="text-[9px] font-mono px-2 py-0.5 border border-ink bg-accent/5 text-accent font-bold animate-pulse">
+                  {isSignedIn ? "FREE MEMBER SCRUBS" : "GUEST SCRUBS"}: {cleanCount} / 5 IMAGES
+                </span>
+              )}
             </div>
             
             <div className="flex items-center gap-3.5">
@@ -724,7 +848,7 @@ export function CleanerInterface() {
                     {/* Filename Input */}
                     <div className="flex flex-col gap-1">
                       <label htmlFor="output-filename" className="font-mono text-[9px] tracking-widest uppercase text-n500">
-                        Output Filename (optional)
+                        {files.length > 1 ? "ZIP Archive Name (optional)" : "Output Filename (optional)"}
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -732,22 +856,24 @@ export function CleanerInterface() {
                           type="text"
                           value={customFilename}
                           onChange={(e) => setCustomFilename(e.target.value)}
-                          placeholder={files.length === 1 ? files[0]?.name?.replace(/\.[^/.]+$/, "") || "purified_image" : "purified_batch"}
+                          placeholder={files.length > 1 ? "my_batch" : files[0]?.name?.replace(/\.[^/.]+$/, "") || "cleaned_image"}
                           className="flex-1 bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent select-text placeholder:text-n400"
                         />
                         <button
                           onClick={() => {
                             const rand = Math.random().toString(36).substring(2, 8);
-                            setCustomFilename(`img_${rand}`);
+                            setCustomFilename(`batch_${rand}`);
                           }}
                           className="shrink-0 border border-ink px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-n500 hover:bg-ink hover:text-bg transition-colors cursor-pointer select-none"
-                          title="Generate a neutral random filename to bypass AI detection patterns"
+                          title="Generate a random suffix for the archive name"
                         >
                           ↻ Randomize
                         </button>
                       </div>
                       <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
-                        Leave empty to keep original name
+                        {files.length > 1
+                          ? "Files inside ZIP are always auto-renamed to neutral names"
+                          : "Files are always auto-renamed to neutral names"}
                       </div>
                     </div>
 
@@ -773,27 +899,43 @@ export function CleanerInterface() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-
-                  {/* Clean and Export Actions */}
-                  <div className="flex items-center gap-3.5 w-full sm:w-auto">
-                    {!allPurified ? (
-                      <button
-                        onClick={handleCleanImages}
-                        className="w-full sm:w-auto bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
-                      >
-                        Sanitize Metadata ({files.length} {files.length === 1 ? "File" : "Files"})
-                      </button>
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
+                    
+                    {/* Free Tier / Guest Usage real-time counter */}
+                    {activeTier === "free" ? (
+                      <div className="text-left py-1">
+                        <div className="font-mono text-[9px] text-n500 uppercase tracking-widest">
+                          {isSignedIn ? "Free Account Usage" : "Guest Cleaning Usage"}
+                        </div>
+                        <div className="font-sans text-[11px] font-bold text-ink uppercase tracking-wider mt-0.5">
+                          {cleanCount} of 5 free cleans used
+                        </div>
+                      </div>
                     ) : (
-                      <button
-                        onClick={handleDownload}
-                        className="w-full sm:w-auto bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Download size={14} />
-                        Download {files.length > 1 ? "ZIP Bundle" : "Purified Image"}
-                      </button>
+                      <div className="font-mono text-[9px] text-green-800 uppercase tracking-widest font-bold">
+                        ✓ PRO Member Session (Unlimited Client-side Cleans)
+                      </div>
                     )}
-                  </div>
+
+                    {/* Clean and Export Actions */}
+                    <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end">
+                      {!allPurified ? (
+                        <button
+                          onClick={handleCleanImages}
+                          className="w-full sm:w-auto bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
+                        >
+                          Sanitize Metadata ({files.length} {files.length === 1 ? "File" : "Files"})
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleDownload}
+                          className="w-full sm:w-auto bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Download size={14} />
+                          Download {files.length > 1 ? "ZIP Bundle" : "Cleaned Image"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -806,7 +948,7 @@ export function CleanerInterface() {
           <div className="flex items-center gap-2 mb-4 pb-2.5 border-b border-ink shrink-0">
             <ShieldCheck size={18} className="text-accent" />
             <h3 className="font-serif text-xl font-bold tracking-tight text-ink">
-              {selectedFile?.status === "done" ? "Purification Report" : "Auditing Briefing"}
+              {selectedFile?.status === "done" ? "Scrubbing Report" : "Auditing Briefing"}
             </h3>
           </div>
 
@@ -837,7 +979,7 @@ export function CleanerInterface() {
                 {/* Grid stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Purified</span>
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">Scrubbed</span>
                     <span className="font-serif text-lg font-bold text-ink mt-0.5">1 Image</span>
                   </div>
                   <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
@@ -859,7 +1001,7 @@ export function CleanerInterface() {
                 {/* File Details / Cleaning Report */}
                 <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-3">
                   <h5 className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 pb-1.5">
-                    Purification Details & Actions
+                    Scrubbing Details & Actions
                   </h5>
                   <div className="flex flex-col gap-2 font-mono text-[9px] text-n500">
                     <div className="flex items-center gap-2 text-ink">
@@ -985,7 +1127,7 @@ export function CleanerInterface() {
                     )}
 
                     {/* Audit Tags Table */}
-                    <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden">
+                    <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[300px]">
                       <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
                         <div>Indicator Tag</div>
                         <div>Extracted Data {selectedFile.metadata ? `(${Object.keys(selectedFile.metadata).length})` : ""}</div>
@@ -1012,7 +1154,7 @@ export function CleanerInterface() {
                   </div>
                 ) : (
                   /* TAB 2: C2PA CREDENTIALS DEEP ANALYZER */
-                  <div className="flex-1 flex flex-col overflow-y-auto gap-4 pr-1">
+                  <div className="flex-1 flex flex-col overflow-y-auto gap-4 pr-1 h-[300px] max-h-[300px]">
                     {selectedFile.metadata &&
                     Object.keys(selectedFile.metadata).some(k => k.toLowerCase().includes("c2pa") || k.toLowerCase().includes("jumbf") || k.toLowerCase().includes("openai") || k.toLowerCase().includes("adobe")) ? (
                       <>
@@ -1093,8 +1235,116 @@ export function CleanerInterface() {
       <BillingModal
         isOpen={isBillingModalOpen}
         onClose={() => setIsBillingModalOpen(false)}
-        onSimulateUpgrade={handleSimulateUpgrade}
       />
+
+      {/* Guest Limit annoying popup */}
+      {isGuestLimitModalOpen && mounted && typeof document !== "undefined" && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn"
+          style={{ zIndex: 999999 }}
+        >
+          <div className="bg-bg border-4 border-ink p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp">
+            {/* Close button */}
+            <button
+              onClick={() => setIsGuestLimitModalOpen(false)}
+              className="absolute top-4 right-4 text-n400 hover:text-ink transition-colors cursor-pointer select-none"
+              title="Close"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Warning header */}
+            <div className="flex items-center gap-3 border-b-2 border-ink pb-4 mb-6">
+              <AlertTriangle className="text-accent shrink-0 animate-bounce" size={24} />
+              <div>
+                <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold">
+                  {isSignedIn ? "✦ Free Tier Limit Reached ✦" : "✦ Guest Limit Reached ✦"}
+                </div>
+                <h3 className="font-serif text-xl font-bold text-ink uppercase tracking-tight mt-0.5">
+                  Scrubbing Limit
+                </h3>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="font-body text-xs text-n500 leading-relaxed mb-6">
+              You have scrubbed <strong>5 / 5 free images</strong> in this {isSignedIn ? "account session" : "guest session"}. 
+            </p>
+            
+            <p className="font-sans text-[11px] font-bold text-ink uppercase tracking-wide bg-n100 border border-ink/10 p-3 mb-6 flex items-center gap-2">
+              {isSignedIn 
+                ? "✦ Upgrade to Pro to unlock unlimited daily processing and up to 50 files concurrently."
+                : "✦ Create a free account to unlock your personal workspace or acquire a Pro plan for unlimited cleanups."
+              }
+            </p>
+
+            {/* Action buttons */}
+            <div className="flex flex-col gap-3">
+              {isSignedIn ? (
+                <>
+                  <button
+                    onClick={() => {
+                      posthog.capture("upgrade_modal_opened", { trigger: "guest_limit_reached" });
+                      setIsGuestLimitModalOpen(false);
+                      setIsBillingModalOpen(true);
+                    }}
+                    className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                    style={{ transition: "all 0.15s ease" }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--bg)";
+                      e.currentTarget.style.color = "var(--accent)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--accent)";
+                      e.currentTarget.style.color = "#ffffff";
+                    }}
+                  >
+                    Upgrade to Pro Tiers
+                  </button>
+                  <button 
+                    onClick={() => setIsGuestLimitModalOpen(false)}
+                    className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
+                  >
+                    Dismiss Workspace
+                  </button>
+                </>
+              ) : (
+                <>
+                  <SignUpButton mode="modal">
+                    <button 
+                      className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                      style={{ transition: "all 0.15s ease" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--bg)";
+                        e.currentTarget.style.color = "var(--accent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--accent)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                    >
+                      Create Free Account
+                    </button>
+                  </SignUpButton>
+                  <SignInButton mode="modal">
+                    <button className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2">
+                      Sign In to Existing Account
+                    </button>
+                  </SignInButton>
+                </>
+              )}
+            </div>
+
+            {/* Subtext info */}
+            <div className="mt-6 text-center border-t border-ink/10 pt-4">
+              <span className="font-mono text-[9px] text-n500 uppercase tracking-widest">
+                ScrubAI · Client-Side Protection Service
+              </span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

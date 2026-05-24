@@ -181,10 +181,10 @@ export default function TermsOfServicePage() {
 
                 <div className="border border-ink/15 p-5 bg-bg flex flex-col gap-2">
                   <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold pb-1.5 border-b border-ink/10">
-                    Lifetime ($20)
+                    Pro Annual ($33/yr)
                   </div>
                   <p className="font-body text-[12px] text-n600">
-                    One-time fee. Unlocks all current and future Pro batching and custom file export capabilities permanently.
+                    Billed annually at $33 (equivalent to $2.75/mo). All Pro features at a 45% discount. Cancel anytime.
                   </p>
                 </div>
               </div>
