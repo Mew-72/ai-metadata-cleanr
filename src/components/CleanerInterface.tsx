@@ -1400,7 +1400,7 @@ export function CleanerInterface() {
                   )}
 
                   {/* Audit Tags Table */}
-                  <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden min-h-[300px]">
+                  <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[400px]">
                     <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
                       <div>Indicator Tag</div>
                       <div>
