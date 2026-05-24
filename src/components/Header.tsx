@@ -5,12 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Menu, X } from "lucide-react";
 
 const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { isSignedIn } = useAppAuth();
 
@@ -40,9 +41,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-bg border-b-3 border-ink transition-colors duration-200 w-full">
-      <div className="max-w-[1280px] mx-auto w-full border-x border-ink flex items-center justify-between px-8 h-14 gap-6 bg-bg">
+      <div className="max-w-[1280px] mx-auto w-full border-x border-ink flex items-center justify-between px-4 sm:px-8 h-14 gap-4 sm:gap-6 bg-bg">
         {/* Logo */}
-        <Link href="/" className="font-serif text-2xl font-black tracking-tighter uppercase text-ink select-none decoration-none shrink-0">
+        <Link href="/" className="font-serif text-xl sm:text-2xl font-black tracking-tighter uppercase text-ink select-none decoration-none shrink-0">
           Scrub<span>AI</span>
           <span className="text-accent font-black font-sans">.</span>
         </Link>
@@ -52,8 +53,8 @@ export function Header() {
           Vol. 1 &nbsp;|&nbsp; {todayString} &nbsp;|&nbsp; Local First Edition
         </div>
 
-        {/* Navigation */}
-        <nav className="flex gap-0 ml-auto h-full" aria-label="Main navigation">
+        {/* Navigation (Desktop) */}
+        <nav className="hidden md:flex gap-0 ml-auto h-full" aria-label="Main navigation">
           <Link
             href="/#features"
             className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${
@@ -105,7 +106,7 @@ export function Header() {
         </nav>
 
         {/* Action Row */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto md:ml-0">
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -115,24 +116,33 @@ export function Header() {
             {theme === "light" ? <Moon size={14} className="stroke-[2.5px]" /> : <Sun size={14} className="stroke-[2.5px]" />}
           </button>
 
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex md:hidden w-9 h-9 border border-ink items-center justify-center text-ink hover:bg-ink hover:text-bg transition-all cursor-pointer select-none"
+            title="Toggle Menu"
+          >
+            {mobileMenuOpen ? <X size={14} className="stroke-[2.5px]" /> : <Menu size={14} className="stroke-[2.5px]" />}
+          </button>
+
           {/* Clerk Auth Gating */}
           {!isSignedIn ? (
             hasClerkKey ? (
               <SignInButton mode="modal">
-                <button className="bg-ink text-bg border-2 border-ink px-5.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center">
+                <button className="bg-ink text-bg border-2 border-ink px-3 sm:px-5.5 font-sans text-[10px] sm:text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center">
                   Log In
                 </button>
               </SignInButton>
             ) : (
               <button 
                 onClick={() => alert("MVP mode: Auto-logged in.")}
-                className="bg-ink text-bg border-2 border-ink px-5.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center"
+                className="bg-ink text-bg border-2 border-ink px-3 sm:px-5.5 font-sans text-[10px] sm:text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center"
               >
                 Log In
               </button>
             )
           ) : (
-            <div className="flex items-center gap-2 border-l border-muted-border pl-3">
+            <div className="flex items-center gap-2 border-l border-muted-border pl-2 sm:pl-3">
               {hasClerkKey ? (
                 <UserButton
                   appearance={{
@@ -153,6 +163,49 @@ export function Header() {
           )}
         </div>
       </div>
+
+      {/* Mobile Drawer (Collapsible) */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t-3 border-ink bg-bg w-full flex flex-col items-stretch divide-y divide-ink/20 animate-fadeIn">
+          <Link
+            href="/#features"
+            onClick={() => setMobileMenuOpen(false)}
+            className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+          >
+            Features
+          </Link>
+          <Link
+            href="/pricing"
+            onClick={() => setMobileMenuOpen(false)}
+            className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/#faq"
+            onClick={() => setMobileMenuOpen(false)}
+            className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+          >
+            FAQ
+          </Link>
+          <Link
+            href="/c2pa-scanner"
+            onClick={() => setMobileMenuOpen(false)}
+            className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+          >
+            C2PA Scanner
+          </Link>
+          {isSignedIn && (
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+            >
+              Dashboard
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 }

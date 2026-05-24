@@ -288,8 +288,8 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="border-4 border-ink overflow-hidden bg-bg max-w-4xl mx-auto shadow-heavy select-none">
-            <table className="w-full text-left border-collapse font-sans text-xs">
+          <div className="border-4 border-ink overflow-x-auto bg-bg max-w-4xl mx-auto shadow-heavy select-none">
+            <table className="w-full min-w-[550px] text-left border-collapse font-sans text-xs">
               <thead>
                 <tr className="bg-n100 border-b-2 border-ink font-mono text-[9px] uppercase tracking-[0.15em] text-n500 font-bold">
                   <th className="p-4 w-1/2">FEATURE / SPECIFICATION</th>
