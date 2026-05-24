@@ -10,7 +10,7 @@ import { useAppAuth } from "../../hooks/useAppAuth";
 import { SignInButton } from "@clerk/nextjs";
 import { CheckoutButton, useSubscription } from "@clerk/nextjs/experimental";
 
-const PRO_PLAN_ID = "cplan_3E8abrF3w9d3015ds749d5IHUaT";
+const PRO_PLAN_ID = process.env.NEXT_PUBLIC_CLERK_PRO_PLAN_ID!;
 
 export default function PricingPage() {
   const { isSignedIn, has } = useAppAuth();
@@ -247,7 +247,7 @@ export default function PricingPage() {
                   <CheckoutButton
                     planId={PRO_PLAN_ID}
                     planPeriod={billingPeriod}
-                    newSubscriptionRedirectUrl="/dashboard?upgraded=true"
+                    newSubscriptionRedirectUrl="/dashboard"
                   >
                     <button
                       onClick={() =>

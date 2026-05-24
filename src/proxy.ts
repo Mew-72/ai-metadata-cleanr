@@ -1,11 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Routes that require authentication — users must be signed in
-const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
-]);
-
 // Public routes — accessible to everyone (signed in or not)
+// All other routes are protected by default (inverted security model)
 const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
@@ -18,11 +14,12 @@ const isPublicRoute = createRouteMatcher([
   '/c2pa-scanner(.*)',
   '/robots.txt',
   '/sitemap.xml',
+  '/ingest(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Protect authenticated routes — redirects to sign-in if not logged in
-  if (isProtectedRoute(req)) {
+  // Default-protect: if a route is NOT explicitly public, require authentication
+  if (!isPublicRoute(req)) {
     await auth.protect();
   }
 });

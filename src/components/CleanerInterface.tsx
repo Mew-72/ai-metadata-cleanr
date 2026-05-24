@@ -58,7 +58,7 @@ const MOCK_C2PA_MANIFEST = {
         {
           label: "c2pa.certificate-status",
           data: {
-            ocspVals: ["MIITIBwBAKCCBBMwggFIBgkrBgEFBQcwAQEEgge5MIIH..."],
+            ocspVals: ["MOCK_OCSP_RESPONSE_PLACEHOLDER"],
             created: true,
           },
         },
@@ -75,38 +75,101 @@ const MOCK_C2PA_MANIFEST = {
   },
 };
 
+// ── Obfuscated Rate-Limit Storage ──────────────────────────────────────────
+// Storage keys and values are scrambled so users cannot trivially find
+// or edit them via DevTools. A daily rotating salt + integrity hash
+// ensures that manually changing any value invalidates the entire record.
+
+const _RK = {
+  // Base64-encoded storage key prefixes — not human-searchable in DevTools
+  a: atob("X19zY3JiX3g5X2Q="),        // __scrb_x9_d  (date slot)
+  b: atob("X19zY3JiX3g5X3Y="),        // __scrb_x9_v  (value slot)
+  c: atob("X19zY3JiX3g5X2g="),        // __scrb_x9_h  (hash slot)
+  ck: atob("X194OWNr"),               // _x9ck         (cookie prefix)
+};
+
+// Simple numeric XOR scramble with a daily-rotating salt
+const _salt = (): number => {
+  const d = new Date();
+  return ((d.getFullYear() * 397) ^ ((d.getMonth() + 1) * 53) ^ (d.getDate() * 31)) >>> 0;
+};
+
+const _encode = (n: number): string => {
+  const s = _salt();
+  const scrambled = (n * 7 + 3) ^ s;
+  return btoa(String(scrambled));
+};
+
+const _decode = (encoded: string): number => {
+  try {
+    const s = _salt();
+    const scrambled = Number(atob(encoded));
+    if (isNaN(scrambled)) return 0;
+    return ((scrambled ^ s) - 3) / 7;
+  } catch { return 0; }
+};
+
+// HMAC-like integrity hash — if any stored value is edited, this fails
+const _hash = (date: string, count: number): string => {
+  const payload = `${date}|${count}|${_salt()}|scrb`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < payload.length; i++) {
+    h ^= payload.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+};
+
 const getPersistedCleanCount = (): number => {
   if (typeof window === "undefined") return 0;
 
-  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const today = new Date().toLocaleDateString("en-CA");
   let localCount = 0;
   let cookieCount = 0;
 
+  // ── localStorage (obfuscated) ──
   try {
-    const lastDate = localStorage.getItem("scrubai_purified_date");
-    if (lastDate !== today) {
-      localStorage.setItem("scrubai_purified_date", today);
-      localStorage.setItem("scrubai_purified_count", "0");
+    const storedDate = localStorage.getItem(_RK.a);
+    if (storedDate !== today) {
       localCount = 0;
     } else {
-      const localVal = localStorage.getItem("scrubai_purified_count");
-      if (localVal) localCount = parseInt(localVal, 10) || 0;
+      const raw = localStorage.getItem(_RK.b);
+      const storedHash = localStorage.getItem(_RK.c);
+      if (raw) {
+        const decoded = _decode(raw);
+        // Verify integrity — reject if hash was tampered with
+        if (storedHash === _hash(today, decoded) && decoded >= 0 && decoded <= 999) {
+          localCount = decoded;
+        } else {
+          localCount = 5; // Tamper detected — lock out
+        }
+      }
     }
-  } catch (e) {}
+  } catch {}
 
+  // ── Cookie (obfuscated) ──
   try {
     const cookies = document.cookie.split(";");
-    let lastDate = "";
+    let cDate = "";
+    let cVal = "";
+    let cHash = "";
     for (const c of cookies) {
       const [name, val] = c.trim().split("=");
-      if (name === "scrubai_purified_date") lastDate = val;
-      if (name === "scrubai_purified_count")
-        cookieCount = parseInt(val, 10) || 0;
+      if (name === `${_RK.ck}d`) cDate = val;
+      if (name === `${_RK.ck}v`) cVal = val;
+      if (name === `${_RK.ck}h`) cHash = val;
     }
-    if (lastDate !== today) {
+    if (cDate !== today) {
       cookieCount = 0;
+    } else if (cVal) {
+      const decoded = _decode(cVal);
+      if (cHash === _hash(today, decoded) && decoded >= 0 && decoded <= 999) {
+        cookieCount = decoded;
+      } else {
+        cookieCount = 5; // Tamper detected
+      }
     }
-  } catch (e) {}
+  } catch {}
 
   const maxCount = Math.max(localCount, cookieCount);
   setPersistedCleanCount(maxCount);
@@ -117,20 +180,27 @@ const setPersistedCleanCount = (count: number) => {
   if (typeof window === "undefined") return;
 
   const today = new Date().toLocaleDateString("en-CA");
+  const encoded = _encode(count);
+  const integrity = _hash(today, count);
 
+  // ── localStorage ──
   try {
-    localStorage.setItem("scrubai_purified_date", today);
-    localStorage.setItem("scrubai_purified_count", String(count));
-  } catch (e) {}
+    localStorage.setItem(_RK.a, today);
+    localStorage.setItem(_RK.b, encoded);
+    localStorage.setItem(_RK.c, integrity);
+  } catch {}
 
+  // ── Cookie (with Secure flag) ──
   try {
-    // Set cookie to expire at the end of the current day
     const expires = new Date();
     expires.setHours(23, 59, 59, 999);
+    const expStr = expires.toUTCString();
+    const flags = `expires=${expStr}; path=/; SameSite=Lax; Secure`;
 
-    document.cookie = `scrubai_purified_date=${today}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-    document.cookie = `scrubai_purified_count=${count}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-  } catch (e) {}
+    document.cookie = `${_RK.ck}d=${today}; ${flags}`;
+    document.cookie = `${_RK.ck}v=${encoded}; ${flags}`;
+    document.cookie = `${_RK.ck}h=${integrity}; ${flags}`;
+  } catch {}
 };
 
 export function CleanerInterface() {

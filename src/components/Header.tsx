@@ -7,8 +7,6 @@ import { UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
 import { Sun, Moon, Menu, X } from "lucide-react";
 
-const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
 export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -125,40 +123,22 @@ export function Header() {
             {mobileMenuOpen ? <X size={14} className="stroke-[2.5px]" /> : <Menu size={14} className="stroke-[2.5px]" />}
           </button>
 
-          {/* Clerk Auth Gating */}
+          {/* Clerk Auth — always real, no MVP fallback */}
           {!isSignedIn ? (
-            hasClerkKey ? (
-              <SignInButton mode="modal">
-                <button className="bg-ink text-bg border-2 border-ink px-3 sm:px-5.5 font-sans text-[10px] sm:text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center">
-                  Log In
-                </button>
-              </SignInButton>
-            ) : (
-              <button 
-                onClick={() => alert("MVP mode: Auto-logged in.")}
-                className="bg-ink text-bg border-2 border-ink px-3 sm:px-5.5 font-sans text-[10px] sm:text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center"
-              >
+            <SignInButton mode="modal">
+              <button className="bg-ink text-bg border-2 border-ink px-3 sm:px-5.5 font-sans text-[10px] sm:text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-all duration-150 h-9 flex items-center">
                 Log In
               </button>
-            )
+            </SignInButton>
           ) : (
             <div className="flex items-center gap-2 border-l border-muted-border pl-2 sm:pl-3">
-              {hasClerkKey ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: "w-8 h-8 rounded-none border border-ink",
-                    },
-                  }}
-                />
-              ) : (
-                <div 
-                  className="w-8 h-8 border border-ink bg-ink text-bg flex items-center justify-center font-mono text-[10px] font-bold uppercase select-none cursor-help"
-                  title="MVP Simulated Session: mvp-test@scrubai.com"
-                >
-                  M
-                </div>
-              )}
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "w-8 h-8 rounded-none border border-ink",
+                  },
+                }}
+              />
             </div>
           )}
         </div>

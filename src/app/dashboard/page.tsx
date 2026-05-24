@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SignOutButton, useClerk } from "@clerk/nextjs";
 import { useAppAuth, useAppUser } from "../../hooks/useAppAuth";
@@ -22,43 +22,62 @@ import {
 } from "lucide-react";
 import posthog from "posthog-js";
 
-const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+// ── Obfuscated Rate-Limit Storage (mirrors CleanerInterface logic) ──
+const _RK = {
+  a: atob("X19zY3JiX3g5X2Q="),
+  b: atob("X19zY3JiX3g5X3Y="),
+  c: atob("X19zY3JiX3g5X2g="),
+};
 
-// Real-time daily local trackers
+const _salt = (): number => {
+  const d = new Date();
+  return ((d.getFullYear() * 397) ^ ((d.getMonth() + 1) * 53) ^ (d.getDate() * 31)) >>> 0;
+};
+
+const _decode = (encoded: string): number => {
+  try {
+    const s = _salt();
+    const scrambled = Number(atob(encoded));
+    if (isNaN(scrambled)) return 0;
+    return ((scrambled ^ s) - 3) / 7;
+  } catch { return 0; }
+};
+
+const _hash = (date: string, count: number): string => {
+  const payload = `${date}|${count}|${_salt()}|scrb`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < payload.length; i++) {
+    h ^= payload.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+};
+
 const getPersistedCleanCount = (): number => {
   if (typeof window === "undefined") return 0;
-  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-  let localCount = 0;
-  let cookieCount = 0;
+  const today = new Date().toLocaleDateString("en-CA");
 
   try {
-    const lastDate = localStorage.getItem("scrubai_purified_date");
-    if (lastDate !== today) {
-      localCount = 0;
-    } else {
-      const localVal = localStorage.getItem("scrubai_purified_count");
-      if (localVal) localCount = parseInt(localVal, 10) || 0;
-    }
-  } catch (e) {}
+    const storedDate = localStorage.getItem(_RK.a);
+    if (storedDate !== today) return 0;
 
-  try {
-    const cookies = document.cookie.split(";");
-    let lastDate = "";
-    for (const c of cookies) {
-      const [name, val] = c.trim().split("=");
-      if (name === "scrubai_purified_date") lastDate = val;
-      if (name === "scrubai_purified_count")
-        cookieCount = parseInt(val, 10) || 0;
+    const raw = localStorage.getItem(_RK.b);
+    const storedHash = localStorage.getItem(_RK.c);
+    if (raw) {
+      const decoded = _decode(raw);
+      if (storedHash === _hash(today, decoded) && decoded >= 0 && decoded <= 999) {
+        return decoded;
+      }
+      return 5; // Tamper detected
     }
-    if (lastDate !== today) cookieCount = 0;
-  } catch (e) {}
+  } catch {}
 
-  return Math.max(localCount, cookieCount);
+  return 0;
 };
 
 const getPersistedC2paScanCount = (): number => {
   if (typeof window === "undefined") return 0;
-  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const today = new Date().toLocaleDateString("en-CA");
   let localCount = 0;
   let cookieCount = 0;
 
@@ -70,7 +89,7 @@ const getPersistedC2paScanCount = (): number => {
       const localVal = localStorage.getItem("scrubai_c2pa_scanned_count");
       if (localVal) localCount = parseInt(localVal, 10) || 0;
     }
-  } catch (e) {}
+  } catch {}
 
   try {
     const cookies = document.cookie.split(";");
@@ -82,7 +101,7 @@ const getPersistedC2paScanCount = (): number => {
         cookieCount = parseInt(val, 10) || 0;
     }
     if (lastDate !== today) cookieCount = 0;
-  } catch (e) {}
+  } catch {}
 
   return Math.max(localCount, cookieCount);
 };
@@ -96,6 +115,9 @@ export default function Dashboard() {
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
   const [cleanCount, setCleanCount] = useState(0);
   const [scanCount, setScanCount] = useState(0);
+
+  // Track previous Pro state to detect fresh upgrades
+  const prevIsPro = useRef(isPro);
 
   useEffect(() => {
     if (isPro) {
@@ -115,16 +137,13 @@ export default function Dashboard() {
     posthog.capture("viewed_dashboard", { tier: activeTier });
   }, [activeTier]);
 
-  // Handle post-checkout redirect message
+  // Detect fresh upgrade via Clerk state change (secure — not URL param)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      if (searchParams.get("upgraded") === "true") {
-        alert("✨ Payment Successful! Your session has been secured and Pro features are fully unlocked.");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    if (isPro && !prevIsPro.current) {
+      alert("✨ Payment Successful! Your session has been secured and Pro features are fully unlocked.");
     }
-  }, []);
+    prevIsPro.current = isPro;
+  }, [isPro]);
 
   const cleanPercentage = Math.min((cleanCount / 5) * 100, 100);
   const scanPercentage = Math.min((scanCount / 5) * 100, 100);
@@ -182,22 +201,12 @@ export default function Dashboard() {
           </div>
 
           <div className="pt-6 border-t border-ink/15 mt-8">
-            {hasClerkKey ? (
-              <SignOutButton>
-                <button className="w-full flex items-center justify-center gap-2 border border-accent/20 text-accent font-mono text-[9px] uppercase tracking-widest py-2.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none">
-                  <UserX size={10} />
-                  Sign Out
-                </button>
-              </SignOutButton>
-            ) : (
-              <button 
-                onClick={() => alert("MVP mode: Simulated session cannot sign out.")}
-                className="w-full flex items-center justify-center gap-2 border border-accent/20 text-accent font-mono text-[9px] uppercase tracking-widest py-2.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none"
-              >
+            <SignOutButton>
+              <button className="w-full flex items-center justify-center gap-2 border border-accent/20 text-accent font-mono text-[9px] uppercase tracking-widest py-2.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none">
                 <UserX size={10} />
                 Sign Out
               </button>
-            )}
+            </SignOutButton>
           </div>
         </aside>
 
@@ -319,23 +328,13 @@ export default function Dashboard() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  {hasClerkKey ? (
-                    <button
-                      onClick={() => openUserProfile()}
-                      className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <ExternalLink size={12} />
-                      Manage Account & Billing
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => alert("MVP Simulated Mode: Dynamic UserProfile triggers require active Clerk Credentials.")}
-                      className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <ExternalLink size={12} />
-                      Manage Account & Billing
-                    </button>
-                  )}
+                  <button
+                    onClick={() => openUserProfile()}
+                    className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <ExternalLink size={12} />
+                    Manage Account & Billing
+                  </button>
 
                   {activeTier === "free" && (
                     <Link

@@ -6,8 +6,6 @@ import { X } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
 
-const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
 interface BillingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -72,31 +70,18 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                 <button
                   onClick={() => {
                     posthog.capture("upgrade_clicked", { plan: "pro" });
-                    if (hasClerkKey) {
-                      window.location.href = "/pricing";
-                    } else {
-                      alert("Billing gateway offline.");
-                    }
+                    window.location.href = "/pricing";
                   }}
                   className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none"
                 >
                   Upgrade to Pro
                 </button>
               ) : (
-                hasClerkKey ? (
-                  <SignInButton mode="modal">
-                    <button className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none">
-                      Log In to Upgrade
-                    </button>
-                  </SignInButton>
-                ) : (
-                  <button 
-                    onClick={() => alert("MVP mode: Auto-signed in.")}
-                    className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none"
-                  >
+                <SignInButton mode="modal">
+                  <button className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none">
                     Log In to Upgrade
                   </button>
-                )
+                </SignInButton>
               )}
             </div>
           </div>
@@ -120,31 +105,18 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                 <button
                   onClick={() => {
                     posthog.capture("upgrade_clicked", { plan: "pro_annual" });
-                    if (hasClerkKey) {
-                      window.location.href = "/pricing";
-                    } else {
-                      alert("Billing gateway offline.");
-                    }
+                    window.location.href = "/pricing";
                   }}
                   className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none"
                 >
                   Acquire Pro Annual
                 </button>
               ) : (
-                hasClerkKey ? (
-                  <SignInButton mode="modal">
-                    <button className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none">
-                      Log In to Purchase
-                    </button>
-                  </SignInButton>
-                ) : (
-                  <button 
-                    onClick={() => alert("MVP mode: Auto-signed in.")}
-                    className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none"
-                  >
+                <SignInButton mode="modal">
+                  <button className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none">
                     Log In to Purchase
                   </button>
-                )
+                </SignInButton>
               )}
             </div>
           </div>

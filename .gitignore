@@ -44,3 +44,7 @@ next-env.d.ts
 acme-inc.html
 policies.md
 .env.local
+
+# Clerk billing configuration (synced via CLI, not version controlled)
+billing.json
+billing-current.json
