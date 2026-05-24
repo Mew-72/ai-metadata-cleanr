@@ -19,11 +19,10 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     capture_performance: {
       web_vitals: true,          // Track Core Web Vitals (LCP, INP, CLS)
       network_timing: true,     // Track network request timing
-      web_vitals_allowed_metrics: ["LCP", "INP", "CLS", "FCP", "TTFB"],
+      web_vitals_allowed_metrics: ["CLS", "FCP", "INP", "LCP"],
     },
 
-    // ── Scroll depth ────────────────────────────────────────────────
-    scroll_depth: true,        // Track how far users scroll on each page
+
 
     // ── Storage & reliability ───────────────────────────────────────
     persistence: "localStorage+cookie",
