@@ -4,9 +4,9 @@ import React from "react";
 import Link from "next/link";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { Calendar, ArrowLeft, RefreshCw } from "lucide-react";
 
-export default function SecurityPolicyPage() {
+export default function RefundPolicyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-bg text-ink font-body transition-colors duration-200">
       <Header />
@@ -59,7 +59,7 @@ export default function SecurityPolicyPage() {
               <li>
                 <Link
                   href="/security"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-accent border-l-2 border-accent pl-2.5"
+                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
                 >
                   Security Policy
                 </Link>
@@ -67,7 +67,7 @@ export default function SecurityPolicyPage() {
               <li>
                 <Link
                   href="/refund"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
+                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-accent border-l-2 border-accent pl-2.5"
                 >
                   Refund Policy
                 </Link>
@@ -85,16 +85,16 @@ export default function SecurityPolicyPage() {
           {/* Header Block */}
           <div className="pb-8 mb-8 double-border-bottom">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar size={12} className="text-accent" />
+              <RefreshCw size={12} className="text-accent" />
               <span className="font-mono text-[9px] uppercase tracking-widest text-n500">
-                Last Updated: May 23, 2026
+                Last Updated: May 25, 2026
               </span>
             </div>
             <h1 className="font-serif text-3xl lg:text-6xl font-black uppercase tracking-tight text-ink mb-1.5 leading-none">
-              Security Policy
+              Refund Policy
             </h1>
             <p className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
-              Security by Absence &middot; Client-Side Isolation Protocols
+              Digital Goods &middot; Strict No-Refund Framework
             </p>
           </div>
 
@@ -104,13 +104,10 @@ export default function SecurityPolicyPage() {
             <div>
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">01.</span>
-                Data Minimization: Security by Absence
+                Strict No-Refund Standard
               </h2>
               <p className="font-body text-[14px] leading-relaxed text-n700 drop-cap">
-                The ultimate security standard is data minimization: we cannot lose, leak, or compromise data we do not collect. Because ScrubAI runs entirely inside your browser's local sandbox memory, there is no centralized database of user images for malicious actors to breach or intercept.
-              </p>
-              <p className="font-body text-[14px] leading-relaxed text-n700 mt-4">
-                If a hacker targeted our backend hosting provider, they would find only static, pre-compiled HTML, CSS, and client-side JavaScript—containing absolutely zero user files, media assets, or personal archives.
+                All purchases, upgrades, and subscription renewals made on ScrubAI are final, legally binding, and <strong>strictly non-refundable</strong>. By subscribing to our Pro Tier (monthly or annual plan) and completing checkout via our secure billing portal, you acknowledge and agree that you waive any right to a refund or chargeback.
               </p>
             </div>
 
@@ -118,53 +115,48 @@ export default function SecurityPolicyPage() {
             <div className="border border-ink bg-n100 p-6 flex flex-col gap-4">
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight border-b border-ink/10 pb-2.5 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">02.</span>
-                Authentication & Session Integrity (Clerk)
+                Why We Enforce a Strict Policy
               </h2>
               <p className="font-body text-[13px] leading-relaxed text-n600">
-                We delegate our complete identity management to Clerk, a leading developer-focused security framework. Clerk maintains state-of-the-art defenses to protect your profile:
+                ScrubAI operates on a unique "local-first" client-side model. We do not store your images, and we do not utilize remote server queues to process your files. Once you upgrade your account:
               </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">Brute-Force Protection</div>
-                  <p className="font-body text-[12px] text-n600">Monitored continuously against login threshold abuses and suspicious endpoint inquiries.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">XSS Mitigation</div>
-                  <p className="font-body text-[12px] text-n600">Secure, encrypted, <code>HttpOnly</code> cookies prevent client-side script cross-site hacking tokens access.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">CSRF Mitigation</div>
-                  <p className="font-body text-[12px] text-n600">Protected against cross-site request forgery through strict deployment of <code>SameSite</code> cookie tags.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">Session Fixation Prevention</div>
-                  <p className="font-body text-[12px] text-n600">Every sign in/out session token is completely regenerated and the old session immediately invalidated.</p>
-                </div>
-              </div>
+              <ul className="list-none flex flex-col gap-3 font-sans text-[12px] text-ink pl-1">
+                <li className="flex items-start gap-2.5">
+                  <span className="text-accent font-bold mt-0.5">&middot;</span>
+                  <div>
+                    <strong>Instant Value Delivery:</strong> Access to premium features (including large-batch file queues, advanced compression, and customized export options) is unlocked instantly in your browser memory via your Clerk session profile.
+                  </div>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-accent font-bold mt-0.5">&middot;</span>
+                  <div>
+                    <strong>Unlimited Utilization:</strong> Because files are processed purely client-side, subscribed users can instantly process hundreds or thousands of high-fidelity images immediately upon upgrading. There is no physical way to "return" or "revoke" the digital transformations and metadata-stripping actions executed locally on your device.
+                  </div>
+                </li>
+              </ul>
             </div>
 
             {/* Section 3 */}
             <div>
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">03.</span>
-                Financial and Checkout Security (Stripe)
+                Subscription Management & Cancellations
               </h2>
               <p className="font-body text-[14px] leading-relaxed text-n700">
-                Your credit card data is never transmitted, processed, or held on ScrubAI infrastructure. We integrate directly with Stripe (via Clerk Billing) to ensure maximum compliance:
+                While we do not offer refunds, we provide complete, self-serve control over your subscription commitments:
               </p>
               
               <ul className="list-none flex flex-col gap-3 font-sans text-[12px] text-ink mt-4 pl-1">
                 <li className="flex items-start gap-2.5">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
                   <div>
-                    <strong>PCI-DSS Level 1 Compliance:</strong> Stripe is a certified PCI Level 1 Service Provider—the most stringent security standard in the payment processing industry.
+                    <strong>Cancel Anytime:</strong> You can manage or cancel your recurring subscription at any time by clicking the "Manage Billing" link inside your account settings. This will route you to our secure billing portal operated by Clerk and Stripe.
                   </div>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
                   <div>
-                    <strong>Encrypted Handshakes:</strong> Checkout sessions are encrypted in transit via Transport Layer Security (TLS 1.3) directly between your device and Stripe.
+                    <strong>Remaining Period Access:</strong> If you cancel your subscription mid-cycle, your account will remain upgraded, and you will continue to enjoy full access to all Pro features until the end of your current active billing period. Once the cycle completes, your subscription will not renew, and your account will automatically downgrade to the Free Tier with no further charges.
                   </div>
                 </li>
               </ul>
@@ -174,30 +166,19 @@ export default function SecurityPolicyPage() {
             <div className="border border-ink p-6 flex flex-col gap-4">
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight border-b border-ink/10 pb-2.5 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">04.</span>
-                Content Security Policies (CSP) & Invalidation
+                Double-Charges & Technical Errors
               </h2>
               <p className="font-body text-[13px] leading-relaxed text-n600">
-                We implement a strict Content Security Policy (CSP) at our application’s header layer. This prevents malicious code injections and unauthorized network calls by restricting resource loading to a pre-approved list of domains:
+                We are committed to absolute billing accuracy. If you believe there has been a duplicate transaction or a technical credit error:
               </p>
-              
-              <ul className="list-none flex flex-col gap-3 font-mono text-[10px] text-ink pl-1">
+              <ul className="list-none flex flex-col gap-2.5 font-sans text-[12px] text-ink pl-1">
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>connect-src:</strong> Authorized exclusively for first-party assets (<code>'self'</code>), Clerk API endpoints, Stripe's gateway, and our reverse telemetry proxy (<code>/ingest</code>).
-                  </div>
+                  <span><strong>Reporting Double Charges:</strong> If you see a duplicate charge for the exact same billing cycle, contact our billing channel at <code>billing@scrubai.app</code> with your invoice details and Stripe transition IDs.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>img-src:</strong> Authorized exclusively for local blobs (<code>blob:</code>), base64 indicators, and Clerk assets (<code>https://img.clerk.com</code>).
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>worker-src:</strong> Standardized to run secure browser web workers locally.
-                  </div>
+                  <span><strong>Verified Resolution:</strong> If our billing systems verify an administrative or system-level double-charge, we will issue a credit or refund for the extra transaction back to your original payment method.</span>
                 </li>
               </ul>
             </div>
@@ -206,14 +187,29 @@ export default function SecurityPolicyPage() {
             <div className="pb-4">
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">05.</span>
-                Reporting Vulnerabilities
+                No Exceptions
               </h2>
               <p className="font-body text-[14px] leading-relaxed text-n700">
-                We welcome security feedback. If you discover a potential vulnerability in our code, implementation, or setup, please email us immediately at <code>security@scrubai.app</code> with reproducible steps.
+                To guarantee fairness, consistency, and operational simplicity for all creators on our platform, we make <strong>absolutely no exceptions</strong> to this policy. This includes, but is not limited to, claims regarding:
               </p>
-              <p className="font-body text-[14px] leading-relaxed text-n700 mt-4">
-                We promise to review your disclosure within 48 hours and work with you to implement a fix immediately.
-              </p>
+              <ul className="list-none flex flex-col gap-2 font-sans text-[12px] text-n600 mt-3 pl-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-accent font-bold">&bull;</span>
+                  <span>Accidental subscription sign-ups or plan upgrades.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent font-bold">&bull;</span>
+                  <span>Forgotten automatic renewal dates (monthly or annual).</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent font-bold">&bull;</span>
+                  <span>Under-utilization of the service during the billing period.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-accent font-bold">&bull;</span>
+                  <span>Changes in third-party platform algorithms (e.g. reach metrics on Instagram or Pinterest).</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

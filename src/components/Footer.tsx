@@ -116,6 +116,7 @@ export function Footer() {
               <li><Link href="/terms" className="font-sans text-[12px] footer-link-item transition-colors">Terms of Service</Link></li>
               <li><Link href="/cookies" className="font-sans text-[12px] footer-link-item transition-colors">Cookie Policy</Link></li>
               <li><Link href="/security" className="font-sans text-[12px] footer-link-item transition-colors">Security Policy</Link></li>
+              <li><Link href="/refund" className="font-sans text-[12px] footer-link-item transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
         </div>

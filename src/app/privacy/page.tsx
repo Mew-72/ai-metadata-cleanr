@@ -64,6 +64,14 @@ export default function PrivacyPolicyPage() {
                   Security Policy
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/refund"
+                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
+                >
+                  Refund Policy
+                </Link>
+              </li>
             </ul>
           </div>
 

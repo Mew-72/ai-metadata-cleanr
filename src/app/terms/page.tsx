@@ -64,6 +64,14 @@ export default function TermsOfServicePage() {
                   Security Policy
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/refund"
+                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
+                >
+                  Refund Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -191,7 +199,7 @@ export default function TermsOfServicePage() {
 
               <div className="mt-5 p-4 border border-ink/10 bg-n100 font-sans text-[11px] text-n600 flex flex-col gap-1">
                 <div>&bull; <strong>Cancellation & Failures:</strong> You can manage or cancel your subscription at any time via your account portal.</div>
-                <div>&bull; <strong>Refund Policy:</strong> If you are not satisfied with your purchase, you can contact our support channel within 14 days of payment for a full refund.</div>
+                <div>&bull; <strong>Refund Policy:</strong> Due to the digital and client-side nature of our service, we enforce a strict <strong>no-refund policy</strong>. All sales and renewal charges are final. Please review our full <Link href="/refund" className="underline hover:text-accent transition-colors">Refund Policy</Link> for details.</div>
               </div>
             </div>
 
