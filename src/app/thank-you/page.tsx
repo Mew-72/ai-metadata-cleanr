@@ -18,9 +18,8 @@ import {
 } from "lucide-react";
 
 export default function ThankYouPage() {
-  const { has, isLoaded } = useAppAuth();
+  const { isPro, isLoaded } = useAppAuth();
   const router = useRouter();
-  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "unlimited_daily" })) : false;
 
   // Gate: redirect non-Pro users to pricing
   useEffect(() => {
@@ -54,18 +53,18 @@ export default function ThankYouPage() {
             </div>
 
             <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-accent font-black mb-4 flex items-center gap-1.5">
-              <span className="text-[6px]">●</span> SUBSCRIPTION CONFIRMED
+              <span className="text-[6px]">●</span> MEMBERSHIP CONFIRMED
             </div>
 
             <h1 className="font-serif text-[42px] lg:text-[56px] font-black uppercase tracking-tight text-ink mb-6 leading-[0.95]">
-              WELCOME TO <span className="text-accent">PRO</span>
+              WELCOME TO <span className="text-accent">LIFETIME PRO</span>
             </h1>
 
             <div className="h-[3px] bg-ink w-20 mx-auto mb-6 double-border-bottom" />
 
             <p className="font-body text-[14px] md:text-[15px] text-n500 leading-relaxed max-w-xl mx-auto mb-4">
-              Your payment has been processed securely through Stripe. All Pro
-              features are now unlocked on your account — unlimited daily
+              Your payment has been processed securely through PayPal. All Pro
+              features are now unlocked on your account for life — unlimited daily
               cleans, batch processing up to 50 images, ZIP exports, and
               priority support.
             </p>
@@ -153,7 +152,7 @@ export default function ThankYouPage() {
                 </p>
 
                 <p className="font-body text-[13px] text-n500 leading-relaxed">
-                  Your Pro subscription directly funds the continued development
+                  Your Pro purchase directly funds the continued development
                   of this tool. Every dollar goes toward new format support,
                   better detection engines, and keeping ScrubAI independent and
                   ad-free. No VC, no trackers harvesting your uploads, no
@@ -220,8 +219,7 @@ export default function ThankYouPage() {
             </div>
 
             <div className="text-center mt-6 font-mono text-[9px] text-n400 uppercase tracking-widest">
-              🔒 Subscription managed securely via Clerk & Stripe · Cancel
-              anytime
+              🔒 Order processed securely via PayPal · Lifetime Pro Membership
             </div>
           </div>
         </div>

@@ -218,14 +218,9 @@ export function CleanerInterface() {
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Clerk Auth and Billing Gating Checks
-  const { has, isSignedIn, isLoaded } = useAppAuth();
+  // Clerk Auth and PayPal Pro Gating Checks
+  const { isPro, isSignedIn, isLoaded } = useAppAuth();
   const { user } = useAppUser();
-
-  // A user is Pro if they have the active 'pro' Clerk subscription plan
-  const isPro = has
-    ? has({ plan: "pro" }) || has({ feature: "batch_processing" })
-    : false;
 
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
 

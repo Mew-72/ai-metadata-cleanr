@@ -108,10 +108,9 @@ const getPersistedC2paScanCount = (): number => {
 
 export default function Dashboard() {
   const { user } = useAppUser();
-  const { has } = useAppAuth();
+  const { isPro } = useAppAuth();
   const { openUserProfile } = useClerk();
   
-  const isPro = has ? (has({ plan: "pro" }) || has({ feature: "unlimited_daily" })) : false;
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
   const [cleanCount, setCleanCount] = useState(0);
   const [scanCount, setScanCount] = useState(0);
@@ -299,7 +298,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Clerk Account Management & Billing Portal */}
+          {/* Clerk Account Management & Security */}
           <div className="border border-ink p-6 md:p-8 bg-n100">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 border border-ink flex items-center justify-center bg-bg shrink-0">
@@ -310,10 +309,10 @@ export default function Dashboard() {
                   ✦ Unified User Settings
                 </div>
                 <h4 className="font-serif text-xl font-bold text-ink">
-                  Billing, Security & Receipts Portal
+                  Account Management &amp; Security Portal
                 </h4>
                 <p className="font-body text-xs text-n500 mt-2 mb-6 max-w-xl leading-relaxed">
-                  ScrubAI routes all account credentials and subscription processes directly through secure Clerk modules. Open your account modal below to download invoices, check Stripe receipts, change billing cards, switch subscription tiers, configure MFA, or update profiles.
+                  ScrubAI routes all account credentials and session processes directly through secure Clerk modules. Open your account modal below to configure MFA, update your profile info, or manage session security.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -322,7 +321,7 @@ export default function Dashboard() {
                     className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
                   >
                     <ExternalLink size={12} />
-                    Manage Account & Billing
+                    Manage Profile &amp; Security
                   </button>
 
                   {activeTier === "free" && (

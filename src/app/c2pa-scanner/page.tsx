@@ -187,13 +187,8 @@ export default function C2paScannerPage() {
   const [isGuestLimitModalOpen, setIsGuestLimitModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Clerk Auth and Billing Gating Checks
-  const { has, isSignedIn } = useAppAuth();
-
-  // A user is Pro if they have active pro billing credentials
-  const isPro = has
-    ? has({ plan: "pro" }) || has({ feature: "batch_processing" }) || has({ feature: "unlimited_daily" }) || has({ feature: "unlimited_c2pa_scans" })
-    : false;
+  // Clerk Auth and PayPal Pro Gating Checks
+  const { isPro, isSignedIn } = useAppAuth();
 
   const activeTier = isPro ? "pro" : "free";
 

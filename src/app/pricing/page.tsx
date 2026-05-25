@@ -1,61 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { Check, X } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 import { useAppAuth } from "../../hooks/useAppAuth";
 import { SignInButton } from "@clerk/nextjs";
-import { CheckoutButton, useSubscription } from "@clerk/nextjs/experimental";
-
-const PRO_PLAN_ID = process.env.NEXT_PUBLIC_CLERK_PRO_PLAN_ID!;
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function PricingPage() {
-  const { isSignedIn, has } = useAppAuth();
-  const { data: subscription } = useSubscription();
-
-  // Billing period toggle: "month" | "annual"
-  const [billingPeriod, setBillingPeriod] = useState<"month" | "annual">(
-    "month",
-  );
+  const { isSignedIn, isPro, userId, isLoaded } = useAppAuth();
+  const [paypalLoaded, setPaypalLoaded] = useState(false);
 
   useEffect(() => {
     posthog.capture("pricing_page_viewed");
   }, []);
-
-  const isProActive = has
-    ? has({ plan: "pro" }) || has({ feature: "batch_processing" })
-    : false;
-
-  // Determine if active plan is monthly or annual
-  const activePeriod = subscription?.subscriptionItems?.[0]?.planPeriod; // "month" or "annual"
-  const isMonthlyActive = isProActive && activePeriod === "month";
-  const isAnnualActive = isProActive && activePeriod === "annual";
-
-  // Derived pricing for the toggle
-  const proPrice = billingPeriod === "month" ? "$5" : "$33";
-  const proPeriodLabel = billingPeriod === "month" ? "/ month" : "/ year";
-  const proSubtext =
-    billingPeriod === "month"
-      ? "Billed monthly. Cancel anytime."
-      : "Billed annually at $33 ($2.75/mo). Save 45%.";
-
-  const isCurrentPeriodActive =
-    billingPeriod === "month" ? isMonthlyActive : isAnnualActive;
-  const isOtherPeriodActive =
-    billingPeriod === "month" ? isAnnualActive : isMonthlyActive;
-
-  // CTA text logic
-  const getProCtaText = () => {
-    if (isCurrentPeriodActive) return "CURRENT ACTIVE PLAN";
-    if (isOtherPeriodActive)
-      return billingPeriod === "month"
-        ? "SWITCH TO MONTHLY"
-        : "SWITCH TO ANNUAL";
-    return "UPGRADE TO PRO";
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-bg text-ink font-body transition-colors duration-200">
@@ -66,55 +27,22 @@ export default function PricingPage() {
         {/* Editorial Title Section */}
         <div className="p-8 lg:p-16 border-b-4 border-ink text-center max-w-4xl mx-auto flex flex-col items-center">
           <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent font-black mb-3 select-none flex items-center gap-1.5 animate-pulse">
-            <span className="text-[6px]">●</span> SCRUBAI SUBSCRIPTION CATALOG
+            <span className="text-[6px]">●</span> SCRUBAI LIFETIME OFFERS
           </div>
           <h1 className="font-serif text-[42px] lg:text-[62px] font-black uppercase tracking-tight text-ink mb-6 leading-none">
-            CHOOSE YOUR <span className="text-accent">EDITION</span>
+            PAY ONCE, <span className="text-accent">OWN FOREVER</span>
           </h1>
           <p className="font-body text-[13px] md:text-[14px] text-n500 leading-relaxed max-w-xl mx-auto">
-            Maintain complete control of your creative metadata and bypass
-            digital suppressions. Tiers are integrated securely with Clerk
-            Authentication and Stripe Checkout.
+            Say goodbye to monthly subscriptions. Access full client-side batch
+            purification capabilities for a one-time fee. Integrated securely
+            with Clerk Authentication and PayPal Checkout.
           </p>
-
-          {/* Monthly / Annual Toggle */}
-          <div className="mt-8 flex items-center gap-0 border-2 border-ink bg-n100/30 select-none">
-            <button
-              onClick={() => {
-                setBillingPeriod("month");
-                posthog.capture("billing_period_toggled", { period: "month" });
-              }}
-              className={`px-6 py-2.5 font-mono text-[10px] font-black tracking-widest uppercase transition-all duration-150 cursor-pointer ${
-                billingPeriod === "month"
-                  ? "bg-ink text-bg"
-                  : "bg-transparent text-n500 hover:text-ink hover:bg-n100/50"
-              }`}
-            >
-              MONTHLY
-            </button>
-            <button
-              onClick={() => {
-                setBillingPeriod("annual");
-                posthog.capture("billing_period_toggled", { period: "annual" });
-              }}
-              className={`px-6 py-2.5 font-mono text-[10px] font-black tracking-widest uppercase transition-all duration-150 cursor-pointer relative ${
-                billingPeriod === "annual"
-                  ? "bg-ink text-bg"
-                  : "bg-transparent text-n500 hover:text-ink hover:bg-n100/50"
-              }`}
-            >
-              ANNUAL
-              <span className="absolute -top-3 -right-4 bg-accent text-white font-mono text-[9.5px] font-black px-2 py-0.5 tracking-wider">
-                -45%
-              </span>
-            </button>
-          </div>
         </div>
 
-        {/* Two-column pricing: Free + Pro */}
+        {/* Two-column pricing: Free + Lifetime Pro */}
         <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-ink border-b-4 border-ink bg-n100/10">
           {/* Card 1: Free Plan */}
-          <div className="p-10 bg-bg flex flex-col justify-between min-h-[460px] hover:bg-n100/5 transition-colors duration-200">
+          <div className="p-10 bg-bg flex flex-col justify-between min-h-[480px] hover:bg-n100/5 transition-colors duration-200">
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-n400 font-bold mb-2">
                 STANDARD CIRCULATION
@@ -127,7 +55,7 @@ export default function PricingPage() {
                 $0
                 <span className="text-sm font-normal text-n500 tracking-normal">
                   {" "}
-                  / month
+                  / forever
                 </span>
               </div>
               <p className="font-body text-xs text-n500 leading-relaxed mb-6">
@@ -156,7 +84,11 @@ export default function PricingPage() {
                     <span>{feature}</span>
                   </li>
                 ))}
-                {["Batch processing", "Priority support"].map((feature) => (
+                {[
+                  "Batch processing",
+                  "Priority support",
+                  "All future tools",
+                ].map((feature) => (
                   <li
                     key={feature}
                     className="flex items-start gap-2 text-xs text-n400"
@@ -184,33 +116,34 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Card 2: Pro Plan — dynamically switches monthly/annual based on toggle */}
-          <div className="p-10 bg-bg flex flex-col justify-between min-h-[460px] relative hover:bg-n100/5 transition-colors duration-200 border-t-4 md:border-t-0 border-accent">
+          {/* Card 2: Lifetime Pro Plan */}
+          <div className="p-10 bg-bg flex flex-col justify-between min-h-[480px] relative hover:bg-n100/5 transition-colors duration-200 border-t-4 md:border-t-0 border-accent">
             <div className="absolute top-10 right-10 bg-accent text-white font-mono text-[8px] font-black px-2.5 py-1 tracking-widest uppercase shadow-sm">
-              {billingPeriod === "annual" ? "BEST VALUE" : "POPULAR"}
+              LIFETIME DEAL
             </div>
 
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-accent font-black mb-2 flex items-center gap-1">
-                <span className="text-[6px]">●</span> HIGH FREQUENCY
+                <span className="text-[6px]">●</span> UNLIMITED MEMBERSHIP
               </div>
               <h2 className="font-serif text-3xl font-black uppercase text-ink tracking-tight mb-3">
-                PRO {billingPeriod === "annual" ? "ANNUAL" : "MONTHLY"}
+                LIFETIME PRO
               </h2>
               <div className="h-[2px] bg-accent my-4 w-12" />
               <div className="font-serif text-[42px] font-black text-ink mb-1 tracking-tight transition-all duration-200">
-                {proPrice}
+                $24.99
                 <span className="text-sm font-normal text-n500 tracking-normal">
                   {" "}
-                  {proPeriodLabel}
+                  one-time
                 </span>
               </div>
-              <div className="font-mono text-[9px] text-n400 uppercase tracking-wider mb-5">
-                {proSubtext}
+              <div className="font-mono text-[9px] text-accent uppercase tracking-wider mb-5">
+                PAY ONCE. USE FOREVER. NO RECURRING FEES.
               </div>
               <p className="font-body text-xs text-n500 leading-relaxed mb-6">
-                Batch metadata stripping, 50-image queues, ZIP exports, and
-                camera profile bypass. Cancel anytime.
+                Batch metadata stripping, 50-image queues, ZIP exports, camera
+                profile bypass, and early-adopter access to all future tool
+                expansions.
               </p>
 
               {/* Pro features list */}
@@ -238,30 +171,122 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-auto">
-              {isSignedIn ? (
-                isCurrentPeriodActive ? (
-                  <button className="w-full bg-n100 text-n400 border-2 border-ink/20 py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-not-allowed shadow-sm">
-                    {getProCtaText()}
-                  </button>
-                ) : (
-                  <CheckoutButton
-                    planId={PRO_PLAN_ID}
-                    planPeriod={billingPeriod}
-                    newSubscriptionRedirectUrl="/thank-you"
-                    onSubscriptionComplete={() =>
-                      posthog.capture("checkout_completed", {
-                        plan: "pro",
-                        period: billingPeriod,
-                      })
-                    }
-                  >
-                    <button
-                      className="w-full bg-accent text-white border-2 border-accent py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors duration-150 shadow-sm"
+              {!isLoaded ? (
+                <button
+                  disabled
+                  className="w-full bg-n100 text-n400 border-2 border-ink/20 py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-not-allowed shadow-sm animate-pulse"
+                >
+                  Loading…
+                </button>
+              ) : isPro ? (
+                <button className="w-full bg-n100 text-n400 border-2 border-ink/20 py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-not-allowed shadow-sm">
+                  LIFETIME PRO ACTIVE
+                </button>
+              ) : isSignedIn ? (
+                <div className="w-full">
+                  {!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
+                    <div className="w-full border-2 border-ink/20 py-4 px-3 text-center">
+                      <p className="font-sans text-[11px] text-n500 uppercase tracking-wider">
+                        Checkout is temporarily unavailable. Please try again
+                        later.
+                      </p>
+                    </div>
+                  ) : (
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
+                        currency: "USD",
+                        intent: "capture",
+                        components: "buttons",
+                        "disable-funding": "paylater,credit",
+                      }}
                     >
-                      {getProCtaText()}
-                    </button>
-                  </CheckoutButton>
-                )
+                      <div className="relative z-10">
+                        <PayPalButtons
+                          style={{
+                            layout: "vertical",
+                            label: "buynow",
+                            height: 48,
+                          }}
+                          createOrder={async () => {
+                            try {
+                              const response = await fetch(
+                                "/api/paypal/create-order",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                },
+                              );
+                              const orderData = await response.json();
+
+                              if (!orderData.success) {
+                                throw new Error(
+                                  orderData.error || "Failed to create order",
+                                );
+                              }
+
+                              return orderData.orderId;
+                            } catch (err) {
+                              console.error(
+                                "Error creating PayPal order:",
+                                err,
+                              );
+                              alert(
+                                "Failed to initialize PayPal transaction. Please try again.",
+                              );
+                              throw err;
+                            }
+                          }}
+                          onApprove={async (data) => {
+                            try {
+                              const response = await fetch(
+                                "/api/paypal/capture-order",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    orderId: data.orderID,
+                                  }),
+                                },
+                              );
+
+                              const resData = await response.json();
+                              if (resData.success) {
+                                posthog.capture("checkout_completed", {
+                                  plan: "pro",
+                                  period: "lifetime",
+                                  payment_provider: "paypal",
+                                });
+                                window.location.href = "/thank-you";
+                              } else {
+                                alert(
+                                  "Payment could not be completed: " +
+                                    (resData.error ||
+                                      "Unknown error. Please contact support."),
+                                );
+                              }
+                            } catch (err) {
+                              console.error("Payment capture error:", err);
+                              alert(
+                                "An error occurred processing your payment. Please contact support.",
+                              );
+                            }
+                          }}
+                          onError={(err) => {
+                            console.error("[PayPal] Button error:", err);
+                            alert(
+                              "PayPal checkout encountered an error. Please try again or use a different browser.",
+                            );
+                          }}
+                        />
+                      </div>
+                    </PayPalScriptProvider>
+                  )}
+                </div>
               ) : (
                 <SignInButton mode="modal" signUpForceRedirectUrl="/pricing">
                   <button className="w-full bg-accent text-white border-2 border-accent py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors duration-150 shadow-sm">
@@ -270,7 +295,7 @@ export default function PricingPage() {
                 </SignInButton>
               )}
               <div className="text-center font-mono text-[8px] text-n400 uppercase tracking-widest mt-3">
-                SECURE CHECKOUT WITH STRIPE
+                SECURE CHECKOUT WITH PAYPAL
               </div>
             </div>
           </div>
@@ -391,33 +416,6 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Resolution Profile Presets */}
-            <div className="border-b border-ink/10">
-              <div className="px-4 py-3">
-                <div className="font-bold text-ink text-xs">
-                  Resolution Profile Presets
-                </div>
-                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                  Select standard resolutions (e.g. 1080p, 4K) to optimize load
-                  speed and scale images
-                </div>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
-                <div className="p-3 text-center">
-                  <Check
-                    size={14}
-                    className="mx-auto text-green-700 stroke-[3px]"
-                  />
-                </div>
-                <div className="p-3 text-center">
-                  <Check
-                    size={14}
-                    className="mx-auto text-accent stroke-[3px]"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* USAGE & ENTITLEMENTS */}
             <div className="px-4 py-2.5 bg-n100/60 border-y border-ink/10 font-mono text-[8px] uppercase tracking-[0.15em] text-ink font-black">
               USAGE &amp; ENTITLEMENTS
@@ -516,30 +514,6 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Batch ZIP Exports */}
-            <div className="border-b border-ink/10">
-              <div className="px-4 py-3">
-                <div className="font-bold text-ink text-xs">
-                  Batch ZIP Exports
-                </div>
-                <div className="text-[10px] text-n500 mt-0.5">
-                  Compile purified batches into compressed ZIP packages in
-                  seconds
-                </div>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
-                <div className="p-3 text-center">
-                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
-                </div>
-                <div className="p-3 text-center">
-                  <Check
-                    size={14}
-                    className="mx-auto text-accent stroke-[3px]"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* SUPPORT & EXPANSIONS */}
             <div className="px-4 py-2.5 bg-n100/60 border-y border-ink/10 font-mono text-[8px] uppercase tracking-[0.15em] text-ink font-black">
               SUPPORT &amp; EXPANSIONS
@@ -551,13 +525,14 @@ export default function PricingPage() {
                 <div className="font-bold text-ink text-xs">
                   Priority Developer Support
                 </div>
-                <div className="text-[10px] text-n500 mt-0.5">
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
                   Direct developer assistance and high-priority feature requests
+                  (Clerk: priority_support)
                 </div>
               </div>
               <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
                 <div className="p-3 text-center">
-                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
+                  <X size={14} className="mx-auto opacity-40 stroke-[3px]" />
                 </div>
                 <div className="p-3 text-center">
                   <Check
@@ -574,14 +549,14 @@ export default function PricingPage() {
                 <div className="font-bold text-ink text-xs">
                   Future Tool Expansions
                 </div>
-                <div className="text-[10px] text-n500 mt-0.5">
+                <div className="text-[10px] text-n500 mt-1 leading-normal italic">
                   Complementary early-adopters access to all future tool
                   expansions (e.g. spatial watermarks, DIFF sliders)
                 </div>
               </div>
               <div className="grid grid-cols-2 divide-x divide-ink/10 border-t border-ink/10 bg-n100/10">
                 <div className="p-3 text-center">
-                  <X size={13} className="mx-auto opacity-40 stroke-[3px]" />
+                  <X size={14} className="mx-auto opacity-40 stroke-[3px]" />
                 </div>
                 <div className="p-3 text-center">
                   <Check
@@ -592,7 +567,7 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Mobile Footer */}
+            {/* Mobile Comparison Table Footer */}
             <div className="p-5 bg-n100 border-t-2 border-ink font-mono text-[9px] text-n500 uppercase tracking-widest flex flex-col items-center gap-3 text-center">
               <span>
                 ALREADY HAVE AN ACCOUNT?{" "}
@@ -604,7 +579,7 @@ export default function PricingPage() {
                 </Link>
               </span>
               <span className="flex items-center gap-1.5 font-black text-ink">
-                ● SECURE PAYMENTS POWERED BY STRIPE
+                ● SECURE PAYMENTS POWERED BY PAYPAL
               </span>
             </div>
           </div>
@@ -623,7 +598,6 @@ export default function PricingPage() {
               </thead>
 
               <tbody className="divide-y divide-ink/10">
-                {/* CATEGORY 1: SYSTEM CAPABILITIES */}
                 <tr className="bg-n100/50 font-mono text-[9px] uppercase tracking-[0.15em] text-ink font-black border-y border-ink/10">
                   <td colSpan={3} className="p-3.5 pl-4 bg-n100/60 font-black">
                     SYSTEM CAPABILITIES
@@ -702,31 +676,6 @@ export default function PricingPage() {
                   </td>
                 </tr>
 
-                <tr className="hover:bg-n100/30">
-                  <td className="p-4">
-                    <div className="font-bold text-ink">
-                      Resolution Profile Presets
-                    </div>
-                    <div className="text-[10px] text-n500 mt-1 leading-normal italic">
-                      Select standard resolutions (e.g. 1080p, 4K) to optimize
-                      load speed and scale images
-                    </div>
-                  </td>
-                  <td className="p-4 text-center text-green-800">
-                    <Check
-                      size={16}
-                      className="mx-auto text-green-700 stroke-[3px]"
-                    />
-                  </td>
-                  <td className="p-4 text-center text-accent">
-                    <Check
-                      size={16}
-                      className="mx-auto text-accent stroke-[3px]"
-                    />
-                  </td>
-                </tr>
-
-                {/* CATEGORY 2: USAGE & ENTITLEMENTS (CLERK BILLING) */}
                 <tr className="bg-n100/50 font-mono text-[9px] uppercase tracking-[0.15em] text-ink font-black border-y border-ink/10">
                   <td colSpan={3} className="p-3.5 pl-4 bg-n100/60 font-black">
                     USAGE &amp; ENTITLEMENTS
@@ -740,7 +689,7 @@ export default function PricingPage() {
                     </div>
                     <div className="text-[10px] text-n500 mt-0.5">
                       Process multiple files simultaneously in one drag-and-drop
-                      batch (Clerk: batch_processing)
+                      batch
                     </div>
                   </td>
                   <td className="p-4 text-center">
@@ -802,7 +751,6 @@ export default function PricingPage() {
                     </div>
                     <div className="text-[10px] text-n500 mt-0.5">
                       Maximum permitted binary upload size per individual image
-                      (Clerk: increased_file_size)
                     </div>
                   </td>
                   <td className="p-4 text-center font-mono text-[10px] text-n600 font-bold">
@@ -813,26 +761,6 @@ export default function PricingPage() {
                   </td>
                 </tr>
 
-                <tr className="hover:bg-n100/30">
-                  <td className="p-4">
-                    <div className="font-bold text-ink">Batch ZIP Exports</div>
-                    <div className="text-[10px] text-n500 mt-0.5">
-                      Compile purified batches into compressed ZIP packages in
-                      seconds
-                    </div>
-                  </td>
-                  <td className="p-4 text-center text-n400">
-                    <X size={14} className="mx-auto opacity-40 stroke-[3px]" />
-                  </td>
-                  <td className="p-4 text-center text-accent">
-                    <Check
-                      size={16}
-                      className="mx-auto text-accent stroke-[3px]"
-                    />
-                  </td>
-                </tr>
-
-                {/* CATEGORY 3: SUPPORT & EXPANSIONS */}
                 <tr className="bg-n100/50 font-mono text-[9px] uppercase tracking-[0.15em] text-ink font-black border-y border-ink/10">
                   <td colSpan={3} className="p-3.5 pl-4 bg-n100/60 font-black">
                     SUPPORT &amp; EXPANSIONS
@@ -844,15 +772,15 @@ export default function PricingPage() {
                     <div className="font-bold text-ink">
                       Priority Developer Support
                     </div>
-                    <div className="text-[10px] text-n500 mt-0.5">
+                    <div className="text-[10px] text-n500 mt-1 leading-normal italic">
                       Direct developer assistance and high-priority feature
                       requests (Clerk: priority_support)
                     </div>
                   </td>
-                  <td className="p-4 text-center text-n400">
-                    <X size={14} className="mx-auto opacity-40 stroke-[3px]" />
+                  <td className="p-4 text-center">
+                    <X size={16} className="mx-auto opacity-40 stroke-[3px]" />
                   </td>
-                  <td className="p-4 text-center text-accent">
+                  <td className="p-4 text-center">
                     <Check
                       size={16}
                       className="mx-auto text-accent stroke-[3px]"
@@ -865,15 +793,15 @@ export default function PricingPage() {
                     <div className="font-bold text-ink">
                       Future Tool Expansions
                     </div>
-                    <div className="text-[10px] text-n500 mt-0.5">
+                    <div className="text-[10px] text-n500 mt-1 leading-normal italic">
                       Complementary early-adopters access to all future tool
                       expansions (e.g. spatial watermarks, DIFF sliders)
                     </div>
                   </td>
-                  <td className="p-4 text-center text-n400">
-                    <X size={14} className="mx-auto opacity-40 stroke-[3px]" />
+                  <td className="p-4 text-center">
+                    <X size={16} className="mx-auto opacity-40 stroke-[3px]" />
                   </td>
-                  <td className="p-4 text-center text-accent">
+                  <td className="p-4 text-center">
                     <Check
                       size={16}
                       className="mx-auto text-accent stroke-[3px]"
@@ -895,14 +823,13 @@ export default function PricingPage() {
                 </Link>
               </span>
               <span className="flex items-center gap-1.5 font-black text-ink">
-                ● SECURE PAYMENTS POWERED BY STRIPE
+                ● SECURE PAYMENTS POWERED BY PAYPAL
               </span>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer Accents */}
       <Footer />
     </div>
   );

@@ -107,7 +107,7 @@ export default function RefundPolicyPage() {
                 Strict No-Refund Standard
               </h2>
               <p className="font-body text-[14px] leading-relaxed text-n700 drop-cap">
-                All purchases, upgrades, and subscription renewals made on ScrubAI are final, legally binding, and <strong>strictly non-refundable</strong>. By subscribing to our Pro Tier (monthly or annual plan) and completing checkout via our secure billing portal, you acknowledge and agree that you waive any right to a refund or chargeback.
+                All purchases and upgrades made on ScrubAI are final, legally binding, and <strong>strictly non-refundable</strong>. By purchasing our Pro Tier lifetime membership and completing checkout via our secure PayPal payment processor, you acknowledge and agree that you waive any right to a refund or chargeback.
               </p>
             </div>
 
@@ -140,23 +140,23 @@ export default function RefundPolicyPage() {
             <div>
               <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
                 <span className="font-mono text-[10px] text-accent">03.</span>
-                Subscription Management & Cancellations
+                Lifetime Membership &amp; Permanent Access
               </h2>
               <p className="font-body text-[14px] leading-relaxed text-n700">
-                While we do not offer refunds, we provide complete, self-serve control over your subscription commitments:
+                Because ScrubAI Pro is a one-time purchase, there are no cancellation procedures or monthly cycles to manage:
               </p>
               
               <ul className="list-none flex flex-col gap-3 font-sans text-[12px] text-ink mt-4 pl-1">
                 <li className="flex items-start gap-2.5">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
                   <div>
-                    <strong>Cancel Anytime:</strong> You can manage or cancel your recurring subscription at any time by clicking the "Manage Billing" link inside your account settings. This will route you to our secure billing portal operated by Clerk and Stripe.
+                    <strong>No Recurring Billing:</strong> Once purchased, your account is marked as a Pro Member for life. You will never be billed again, and no automatic card payments will occur.
                   </div>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
                   <div>
-                    <strong>Remaining Period Access:</strong> If you cancel your subscription mid-cycle, your account will remain upgraded, and you will continue to enjoy full access to all Pro features until the end of your current active billing period. Once the cycle completes, your subscription will not renew, and your account will automatically downgrade to the Free Tier with no further charges.
+                    <strong>Permanent Core Access:</strong> Your Pro features (including batch image purification, ZIP exports, and large size capabilities) remain permanently active on your account as long as your Clerk credentials remain active.
                   </div>
                 </li>
               </ul>
@@ -174,7 +174,7 @@ export default function RefundPolicyPage() {
               <ul className="list-none flex flex-col gap-2.5 font-sans text-[12px] text-ink pl-1">
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <span><strong>Reporting Double Charges:</strong> If you see a duplicate charge for the exact same billing cycle, contact our billing channel at <code>billing@scrubai.app</code> with your invoice details and Stripe transition IDs.</span>
+                  <span><strong>Reporting Double Charges:</strong> If you see a duplicate charge, contact our billing channel at <code>billing@scrubai.app</code> with your invoice details and PayPal transaction IDs.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-bold mt-0.5">&middot;</span>
@@ -195,15 +195,11 @@ export default function RefundPolicyPage() {
               <ul className="list-none flex flex-col gap-2 font-sans text-[12px] text-n600 mt-3 pl-1">
                 <li className="flex items-center gap-2">
                   <span className="text-accent font-bold">&bull;</span>
-                  <span>Accidental subscription sign-ups or plan upgrades.</span>
+                  <span>Accidental purchase or upgrade.</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-accent font-bold">&bull;</span>
-                  <span>Forgotten automatic renewal dates (monthly or annual).</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent font-bold">&bull;</span>
-                  <span>Under-utilization of the service during the billing period.</span>
+                  <span>Unused features or under-utilization of the service.</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-accent font-bold">&bull;</span>
