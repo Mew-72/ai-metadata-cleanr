@@ -51,8 +51,8 @@ export default function Home() {
       a: "Never. ScrubAI is a 100% local-first tool. Under no circumstances are your files or images sent to a server. All canvas drawing, ExifReader parsing, and JSZip compilation happen entirely locally inside your browser's sandboxed environment."
     },
     {
-      q: "How do I upgrade to a premium subscription and manage my billing?",
-      a: "We offer secure and frictionless payment processing for all plan upgrades. You can easily upgrade directly from your workspace to unlock batch image cleaning. Managing, updating, or canceling your subscription can be done instantly from your account profile dashboard, with a hassle-free 14-day money-back guarantee."
+      q: "How do I upgrade to Lifetime Pro and is it a one-time fee?",
+      a: "Yes! Lifetime Pro is a strictly one-time fee of $24.99 processed securely via PayPal. There are absolutely no monthly subscription charges or hidden recurring costs. Upgrading instantly unlocks batch image processing up to 50 files, ZIP exports, and priority support forever."
     }
   ];
 

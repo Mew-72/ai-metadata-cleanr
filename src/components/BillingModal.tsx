@@ -49,32 +49,31 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
           </p>
         </div>
 
-        {/* Pricing Cards inside Modal */}
-        <div className="grid grid-cols-1 gap-4 mb-6">
-          {/* Pro Monthly */}
+        {/* Pricing Card — Lifetime Pro */}
+        <div className="mb-6">
           <div className="border border-ink p-5 bg-n100 relative group flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <span className="font-mono text-[9px] tracking-widest uppercase text-n500 font-bold">Pro Monthly</span>
-                <span className="bg-accent text-white font-mono text-[9px] font-bold px-2 py-0.5 tracking-wider">POPULAR</span>
+                <span className="font-mono text-[9px] tracking-widest uppercase text-n500 font-bold">Lifetime Pro</span>
+                <span className="bg-accent text-white font-mono text-[9px] font-bold px-2 py-0.5 tracking-wider">PAY ONCE</span>
               </div>
               <div className="font-serif text-3xl font-black text-ink mb-1">
-                $5<span className="text-sm font-normal text-n500"> / month</span>
+                $24.99<span className="text-sm font-normal text-n500"> one-time</span>
               </div>
               <p className="font-body text-[11px] text-n500 leading-snug">
-                Batch processing up to 50 files. Dedicated local-first engine and priority offline ZIP exports. Cancel anytime.
+                Batch processing up to 50 files. Unlimited daily cleans &amp; C2PA scans. ZIP exports. All future tools included. Pay once, own forever.
               </p>
             </div>
             <div className="mt-4">
               {isSignedIn ? (
                 <button
                   onClick={() => {
-                    posthog.capture("upgrade_clicked", { plan: "pro" });
+                    posthog.capture("upgrade_clicked", { plan: "lifetime_pro" });
                     window.location.href = "/pricing";
                   }}
                   className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none"
                 >
-                  Upgrade to Pro
+                  Get Lifetime Pro — $24.99
                 </button>
               ) : (
                 <SignInButton mode="modal">
@@ -85,46 +84,11 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
               )}
             </div>
           </div>
-
-          {/* Pro Annual Tier */}
-          <div className="border border-ink p-5 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-mono text-[9px] tracking-widest uppercase text-n500">Pro Annual (Save 45%)</span>
-              </div>
-              <div className="font-serif text-3xl font-black text-ink mb-1">
-                $33<span className="text-xs font-normal text-n500"> / year</span>
-              </div>
-              <p className="font-body text-[11px] text-n500 leading-snug">
-                Get all Pro batch processing benefits at a heavy discount. Billed annually at $33, saving you $27 per year!
-              </p>
-            </div>
-
-            <div className="mt-4">
-              {isSignedIn ? (
-                <button
-                  onClick={() => {
-                    posthog.capture("upgrade_clicked", { plan: "pro_annual" });
-                    window.location.href = "/pricing";
-                  }}
-                  className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none"
-                >
-                  Acquire Pro Annual
-                </button>
-              ) : (
-                <SignInButton mode="modal">
-                  <button className="w-full border-2 border-ink text-ink bg-transparent py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:text-bg transition-colors select-none">
-                    Log In to Purchase
-                  </button>
-                </SignInButton>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}
         <div className="text-center font-mono text-[9px] text-n400 uppercase tracking-widest">
-          🔒 100% secure Checkout with Stripe & Clerk Billing
+          🔒 100% Secure Checkout with PayPal
         </div>
       </div>
     </div>

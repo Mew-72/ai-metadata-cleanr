@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
   '/robots.txt',
   '/sitemap.xml',
   '/ingest(.*)',
+  '/api/paypal(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
