@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 
 // Use explicit PAYPAL_MODE env var for consistency with client-side SDK
@@ -172,12 +173,22 @@ async function verifyExistingCapture(
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { orderId, userId } = body;
-
-    if (!orderId || !userId) {
+    // Verify the caller is authenticated and get userId from session
+    // — never trust a client-provided userId for privilege escalation
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
-        { success: false, error: "Missing orderId or userId" },
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const body = await req.json();
+    const { orderId } = body;
+
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, error: "Missing orderId" },
         { status: 400 },
       );
     }

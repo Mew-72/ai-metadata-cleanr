@@ -11,7 +11,7 @@ import { SignInButton } from "@clerk/nextjs";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function PricingPage() {
-  const { isSignedIn, isPro, userId } = useAppAuth();
+  const { isSignedIn, isPro, userId, isLoaded } = useAppAuth();
   const [paypalLoaded, setPaypalLoaded] = useState(false);
 
   useEffect(() => {
@@ -171,103 +171,121 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-auto">
-              {isPro ? (
+              {!isLoaded ? (
+                <button
+                  disabled
+                  className="w-full bg-n100 text-n400 border-2 border-ink/20 py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-not-allowed shadow-sm animate-pulse"
+                >
+                  Loading…
+                </button>
+              ) : isPro ? (
                 <button className="w-full bg-n100 text-n400 border-2 border-ink/20 py-4 font-sans text-[11px] font-black tracking-widest uppercase cursor-not-allowed shadow-sm">
                   LIFETIME PRO ACTIVE
                 </button>
               ) : isSignedIn ? (
                 <div className="w-full">
-                  <PayPalScriptProvider
-                    options={{
-                      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
-                      currency: "USD",
-                      intent: "capture",
-                      components: "buttons",
-                      "disable-funding": "paylater,credit",
-                    }}
-                  >
-                    <div className="relative z-10">
-                      <PayPalButtons
-                        style={{
-                          layout: "vertical",
-                          label: "buynow",
-                          height: 48,
-                        }}
-                        createOrder={async () => {
-                          try {
-                            const response = await fetch(
-                              "/api/paypal/create-order",
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                              },
-                            );
-                            const orderData = await response.json();
-
-                            if (!orderData.success) {
-                              throw new Error(
-                                orderData.error || "Failed to create order",
-                              );
-                            }
-
-                            return orderData.orderId;
-                          } catch (err) {
-                            console.error("Error creating PayPal order:", err);
-                            alert(
-                              "Failed to initialize PayPal transaction. Please try again.",
-                            );
-                            throw err;
-                          }
-                        }}
-                        onApprove={async (data) => {
-                          try {
-                            const response = await fetch(
-                              "/api/paypal/capture-order",
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                  orderId: data.orderID,
-                                  userId: userId,
-                                }),
-                              },
-                            );
-
-                            const resData = await response.json();
-                            if (resData.success) {
-                              posthog.capture("checkout_completed", {
-                                plan: "pro",
-                                period: "lifetime",
-                                payment_provider: "paypal",
-                              });
-                              window.location.href = "/thank-you";
-                            } else {
-                              alert(
-                                "Payment could not be completed: " +
-                                  (resData.error ||
-                                    "Unknown error. Please contact support."),
-                              );
-                            }
-                          } catch (err) {
-                            console.error("Payment capture error:", err);
-                            alert(
-                              "An error occurred processing your payment. Please contact support.",
-                            );
-                          }
-                        }}
-                        onError={(err) => {
-                          console.error("[PayPal] Button error:", err);
-                          alert(
-                            "PayPal checkout encountered an error. Please try again or use a different browser.",
-                          );
-                        }}
-                      />
+                  {!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
+                    <div className="w-full border-2 border-ink/20 py-4 px-3 text-center">
+                      <p className="font-sans text-[11px] text-n500 uppercase tracking-wider">
+                        Checkout is temporarily unavailable. Please try again
+                        later.
+                      </p>
                     </div>
-                  </PayPalScriptProvider>
+                  ) : (
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
+                        currency: "USD",
+                        intent: "capture",
+                        components: "buttons",
+                        "disable-funding": "paylater,credit",
+                      }}
+                    >
+                      <div className="relative z-10">
+                        <PayPalButtons
+                          style={{
+                            layout: "vertical",
+                            label: "buynow",
+                            height: 48,
+                          }}
+                          createOrder={async () => {
+                            try {
+                              const response = await fetch(
+                                "/api/paypal/create-order",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                },
+                              );
+                              const orderData = await response.json();
+
+                              if (!orderData.success) {
+                                throw new Error(
+                                  orderData.error || "Failed to create order",
+                                );
+                              }
+
+                              return orderData.orderId;
+                            } catch (err) {
+                              console.error(
+                                "Error creating PayPal order:",
+                                err,
+                              );
+                              alert(
+                                "Failed to initialize PayPal transaction. Please try again.",
+                              );
+                              throw err;
+                            }
+                          }}
+                          onApprove={async (data) => {
+                            try {
+                              const response = await fetch(
+                                "/api/paypal/capture-order",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    orderId: data.orderID,
+                                  }),
+                                },
+                              );
+
+                              const resData = await response.json();
+                              if (resData.success) {
+                                posthog.capture("checkout_completed", {
+                                  plan: "pro",
+                                  period: "lifetime",
+                                  payment_provider: "paypal",
+                                });
+                                window.location.href = "/thank-you";
+                              } else {
+                                alert(
+                                  "Payment could not be completed: " +
+                                    (resData.error ||
+                                      "Unknown error. Please contact support."),
+                                );
+                              }
+                            } catch (err) {
+                              console.error("Payment capture error:", err);
+                              alert(
+                                "An error occurred processing your payment. Please contact support.",
+                              );
+                            }
+                          }}
+                          onError={(err) => {
+                            console.error("[PayPal] Button error:", err);
+                            alert(
+                              "PayPal checkout encountered an error. Please try again or use a different browser.",
+                            );
+                          }}
+                        />
+                      </div>
+                    </PayPalScriptProvider>
+                  )}
                 </div>
               ) : (
                 <SignInButton mode="modal" signUpForceRedirectUrl="/pricing">
