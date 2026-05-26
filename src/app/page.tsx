@@ -343,12 +343,12 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-ink bg-bg">
             <div className="p-8 flex flex-col gap-2 hover:bg-n100 transition-colors">
               <div className="inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-ink">
-                <span className="text-accent">▮</span> Stripe Secure Checkout
+                <span className="text-accent">▮</span> PayPal Secure Checkout
               </div>
               <p className="font-body text-[13px] leading-relaxed text-n700">
-                Enjoy absolute peace of mind. Stripe-encrypted checkout handles
-                all SaaS billing securely. We never store credit cards, and
-                Clerk Auth syncs credentials locally.
+                Enjoy absolute peace of mind. PayPal-encrypted checkout handles
+                payments securely. We never store payment details, and Clerk
+                Auth syncs credentials locally.
               </p>
             </div>
 
@@ -442,7 +442,7 @@ export default function Home() {
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify mb-6">
                   Social algorithms are trained to search image uploads for
                   cryptographic signs of generative origin. In order to tag
-                  posts as "Made with AI" and build copyright catalogs, their
+                  posts as &quot;Made with AI&quot; and build copyright catalogs, their
                   servers examine inbound binary data for signatures from
                   OpenAI, Midjourney, and Adobe.
                 </p>

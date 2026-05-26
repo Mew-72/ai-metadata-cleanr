@@ -105,9 +105,11 @@ async function capturePayPalOrder(
   // Verify the captured amount
   const capturedAmount =
     order.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
+  const capturedValue = Number(capturedAmount?.value);
   if (
     !capturedAmount ||
-    parseFloat(capturedAmount.value) < PRICING.minCaptureAmount ||
+    !Number.isFinite(capturedValue) ||
+    capturedValue < PRICING.minCaptureAmount ||
     capturedAmount.currency_code !== PRICING.currency
   ) {
     return {
@@ -148,9 +150,11 @@ async function verifyExistingCapture(
   if (order.status === "COMPLETED") {
     const capturedAmount =
       order.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
+    const capturedValue = Number(capturedAmount?.value);
     if (
       capturedAmount &&
-      parseFloat(capturedAmount.value) >= PRICING.minCaptureAmount &&
+      Number.isFinite(capturedValue) &&
+      capturedValue >= PRICING.minCaptureAmount &&
       capturedAmount.currency_code === PRICING.currency
     ) {
       return { success: true, capture: order };
