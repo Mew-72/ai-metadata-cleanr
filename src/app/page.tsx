@@ -6,16 +6,17 @@ import { Ticker } from "../components/Ticker";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { CleanerInterface } from "../components/CleanerInterface";
-import { 
-  Sparkles, 
-  HelpCircle, 
-  Flame, 
+import {
+  Sparkles,
+  HelpCircle,
+  Flame,
   ArrowRight,
   UserCheck,
   Zap,
   Fingerprint,
-  TrendingDown
+  TrendingDown,
 } from "lucide-react";
+import { PRICING } from "../config/pricing";
 
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -36,41 +37,41 @@ export default function Home() {
   const faqs = [
     {
       q: "How does the browser-only metadata purification work?",
-      a: "When you load an image, ScrubAI draws its raw pixels onto an invisible HTML5 canvas element. We then re-export these pixels to create a completely new binary file structure. This process naturally acts as a total sanitizer—since the new file is built entirely from scratch, it is completely devoid of original EXIF, XMP, IPTC, and cryptographically signed C2PA credentials."
+      a: "When you load an image, ScrubAI draws its raw pixels onto an invisible HTML5 canvas element. We then re-export these pixels to create a completely new binary file structure. This process naturally acts as a total sanitizer—since the new file is built entirely from scratch, it is completely devoid of original EXIF, XMP, IPTC, and cryptographically signed C2PA credentials.",
     },
     {
       q: "Does this affect the quality or visual integrity of my photos?",
-      a: "No! ScrubAI handles images directly in your browser sandboxed memory without compressing or degrading them. We export standard JPEG, PNG, or WebP files at a premium 95% quality threshold, maintaining beautiful sharp lines and pixel-perfect details while ensuring absolute sanitization."
+      a: "No! ScrubAI handles images directly in your browser sandboxed memory without compressing or degrading them. We export standard JPEG, PNG, or WebP files at a premium 95% quality threshold, maintaining beautiful sharp lines and pixel-perfect details while ensuring absolute sanitization.",
     },
     {
       q: "Will this bypass the 'Made with AI' labels on social platforms?",
-      a: "Yes! Platforms like Instagram, Facebook, and Pinterest scan image binary headers for specific software signatures, AI generation metadata (e.g. DALL-E or Midjourney tags), and cryptographically signed Content Credentials (C2PA/JUMBF). By stripping these headers entirely and renaming the file randomly, ScrubAI allows you to bypass these algorithmic suppression patterns."
+      a: "Yes! Platforms like Instagram, Facebook, and Pinterest scan image binary headers for specific software signatures, AI generation metadata (e.g. DALL-E or Midjourney tags), and cryptographically signed Content Credentials (C2PA/JUMBF). By stripping these headers entirely and renaming the file randomly, ScrubAI allows you to bypass these algorithmic suppression patterns.",
     },
     {
       q: "Are my images uploaded to a database or backend server?",
-      a: "Never. ScrubAI is a 100% local-first tool. Under no circumstances are your files or images sent to a server. All canvas drawing, ExifReader parsing, and JSZip compilation happen entirely locally inside your browser's sandboxed environment."
+      a: "Never. ScrubAI is a 100% local-first tool. Under no circumstances are your files or images sent to a server. All canvas drawing, ExifReader parsing, and JSZip compilation happen entirely locally inside your browser's sandboxed environment.",
     },
     {
       q: "How do I upgrade to Lifetime Pro and is it a one-time fee?",
-      a: "Yes! Lifetime Pro is a strictly one-time fee of $24.99 processed securely via PayPal. There are absolutely no monthly subscription charges or hidden recurring costs. Upgrading instantly unlocks batch image processing up to 50 files, ZIP exports, and priority support forever."
-    }
+      a: `Yes! Lifetime Pro is a strictly one-time fee of ${PRICING.displayPrice} processed securely via PayPal. There are absolutely no monthly subscription charges or hidden recurring costs. Upgrading instantly unlocks batch image processing up to 50 files, ZIP exports, and priority support forever.`,
+    },
   ];
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-200">
       {/* Navigation Header */}
-      <Header />      {/* HERO SECTION */}
+      <Header /> {/* HERO SECTION */}
       <section className="w-full border-b-4 border-ink bg-bg">
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-ink">
-            
             {/* Main Hero Column (Left) */}
             <div className="p-10 md:p-14 lg:p-20 flex flex-col justify-between h-full bg-bg">
               <div className="flex-1 flex flex-col justify-center">
                 <div className="inline-flex items-center gap-2 font-mono text-[10px] font-black tracking-widest uppercase text-ink mb-6 select-none">
-                  <span className="text-accent">■</span> Breaking System Briefing
+                  <span className="text-accent">■</span> Breaking System
+                  Briefing
                 </div>
-                
+
                 <h1 className="font-serif text-[42px] md:text-[54px] lg:text-[68px] font-black leading-[0.9] tracking-tighter text-ink mb-8 uppercase select-none flex flex-col">
                   <span>RECLAIM YOUR</span>
                   <span>REACH BYPASS</span>
@@ -82,7 +83,10 @@ export default function Home() {
                 </h1>
 
                 <p className="font-body text-[14px] md:text-[15px] leading-relaxed text-n700 mb-8 max-w-[520px]">
-                  ScrubAI is a high-performance, browser-only metadata purifier that neutralizes algorithmic reach suppression. Actively scans images for hidden EXIF, tracking, and C2PA data—so your content reaches further, without hidden penalties.
+                  ScrubAI is a high-performance, browser-only metadata purifier
+                  that neutralizes algorithmic reach suppression. Actively scans
+                  images for hidden EXIF, tracking, and C2PA data—so your
+                  content reaches further, without hidden penalties.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3.5 max-w-[520px] mb-8">
@@ -101,9 +105,13 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[9px] text-n500 uppercase tracking-widest select-none">
-                  <span className="flex items-center gap-1">🛡️ 100% Local Execution</span>
+                  <span className="flex items-center gap-1">
+                    🛡️ 100% Local Execution
+                  </span>
                   <span className="text-n300 hidden sm:inline">|</span>
-                  <span className="flex items-center gap-1">🔒 Your data never leaves your browser</span>
+                  <span className="flex items-center gap-1">
+                    🔒 Your data never leaves your browser
+                  </span>
                 </div>
               </div>
             </div>
@@ -128,34 +136,56 @@ export default function Home() {
                   <div className="w-9 h-9 rounded-full border border-ink/20 flex items-center justify-center bg-bg">
                     <span className="text-accent text-[15px] font-bold">+</span>
                   </div>
-                  <span className="font-sans text-[11px] font-bold text-ink">Drop images here to scan</span>
-                  <span className="font-mono text-[8px] text-n500 uppercase tracking-widest">or click to browse</span>
+                  <span className="font-sans text-[11px] font-bold text-ink">
+                    Drop images here to scan
+                  </span>
+                  <span className="font-mono text-[8px] text-n500 uppercase tracking-widest">
+                    or click to browse
+                  </span>
                 </div>
 
                 {/* Summarized metrics counters grid */}
                 <div className="grid grid-cols-4 divide-x divide-ink/10 border-y border-ink/10 py-3.5 select-none">
                   <div className="flex flex-col items-center text-center px-1">
-                    <span className="font-serif text-lg md:text-xl font-black text-ink">24</span>
-                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">Files Scanned</span>
+                    <span className="font-serif text-lg md:text-xl font-black text-ink">
+                      24
+                    </span>
+                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">
+                      Files Scanned
+                    </span>
                   </div>
                   <div className="flex flex-col items-center text-center px-1">
-                    <span className="font-serif text-lg md:text-xl font-black text-ink">18</span>
-                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">Metadata Removed</span>
+                    <span className="font-serif text-lg md:text-xl font-black text-ink">
+                      18
+                    </span>
+                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">
+                      Metadata Removed
+                    </span>
                   </div>
                   <div className="flex flex-col items-center text-center px-1">
-                    <span className="font-serif text-lg md:text-xl font-black text-ink">6</span>
-                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">Tracking Endpoints</span>
+                    <span className="font-serif text-lg md:text-xl font-black text-ink">
+                      6
+                    </span>
+                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">
+                      Tracking Endpoints
+                    </span>
                   </div>
                   <div className="flex flex-col items-center text-center px-1">
-                    <span className="font-serif text-lg md:text-xl font-black text-ink">0</span>
-                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">C2PA Signatures</span>
+                    <span className="font-serif text-lg md:text-xl font-black text-ink">
+                      0
+                    </span>
+                    <span className="font-mono text-[7px] text-n500 uppercase tracking-tight mt-1 leading-none">
+                      C2PA Signatures
+                    </span>
                   </div>
                 </div>
 
                 {/* Recent files list mockup */}
                 <div className="flex flex-col gap-2.5 select-none">
-                  <span className="font-mono text-[8px] tracking-widest uppercase text-n500 mb-0.5">Recent Files</span>
-                  
+                  <span className="font-mono text-[8px] tracking-widest uppercase text-n500 mb-0.5">
+                    Recent Files
+                  </span>
+
                   <div className="flex items-center justify-between font-mono text-[8px] text-ink border-b border-ink/5 pb-1.5">
                     <span className="flex items-center gap-1.5">
                       <span className="text-n400">📷</span> campaign_shot_01.jpg
@@ -165,20 +195,22 @@ export default function Home() {
                       <span className="text-green-600 font-bold">✓ CLEAN</span>
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between font-mono text-[8px] text-ink border-b border-ink/5 pb-1.5">
                     <span className="flex items-center gap-1.5">
-                      <span className="text-n400">🖼️</span> product_launch_hero.png
+                      <span className="text-n400">🖼️</span>{" "}
+                      product_launch_hero.png
                     </span>
                     <span className="flex items-center gap-2">
                       <span className="text-n500">2.4 MB</span>
                       <span className="text-green-600 font-bold">✓ CLEAN</span>
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between font-mono text-[8px] text-ink">
                     <span className="flex items-center gap-1.5">
-                      <span className="text-n400">👤</span> influencer_post_v2.jpg
+                      <span className="text-n400">👤</span>{" "}
+                      influencer_post_v2.jpg
                     </span>
                     <span className="flex items-center gap-2">
                       <span className="text-n500">1.8 MB</span>
@@ -193,18 +225,22 @@ export default function Home() {
                     <span className="text-accent text-[15px]">🛡️</span>
                   </div>
                   <div>
-                    <span className="font-mono text-[7px] tracking-widest uppercase text-n500 block mb-0.5">Security Assurance</span>
-                    <h5 className="font-serif text-[10px] font-black text-ink leading-tight mb-0.5">100% Local-First & GDPR Compliant</h5>
-                    <p className="font-mono text-[7px] tracking-tight text-n500 uppercase leading-none">No Data Leaves Your Sandbox</p>
+                    <span className="font-mono text-[7px] tracking-widest uppercase text-n500 block mb-0.5">
+                      Security Assurance
+                    </span>
+                    <h5 className="font-serif text-[10px] font-black text-ink leading-tight mb-0.5">
+                      100% Local-First & GDPR Compliant
+                    </h5>
+                    <p className="font-mono text-[7px] tracking-tight text-n500 uppercase leading-none">
+                      No Data Leaves Your Sandbox
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
-
       {/* METADATA CLEANER WORKSPACE */}
       <section id="workspace" className="w-full border-b-4 border-ink bg-bg">
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
@@ -214,9 +250,11 @@ export default function Home() {
           <CleanerInterface />
         </div>
       </section>
-
       {/* CORE FEATURES */}
-      <section id="features" className="w-full border-b-4 border-ink select-none bg-n100">
+      <section
+        id="features"
+        className="w-full border-b-4 border-ink select-none bg-n100"
+      >
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end p-10 md:p-14 border-b border-ink select-none bg-bg">
             <div>
@@ -224,7 +262,8 @@ export default function Home() {
                 Core Features
               </h2>
               <p className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-                Reclaim complete design privacy with state-of-the-art canvas purification
+                Reclaim complete design privacy with state-of-the-art canvas
+                purification
               </p>
             </div>
             <div className="border border-ink px-4.5 py-1.5 font-mono text-[9px] tracking-widest uppercase text-n500 mt-4 md:mt-0">
@@ -243,7 +282,9 @@ export default function Home() {
                   100% Client-Side
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Images never leave your browser sandbox. ScrubAI parses Exif headers and operates Canvas RGB redraw locally, keeping your source data completely protected from databases.
+                  Images never leave your browser sandbox. ScrubAI parses Exif
+                  headers and operates Canvas RGB redraw locally, keeping your
+                  source data completely protected from databases.
                 </p>
               </div>
             </div>
@@ -257,7 +298,9 @@ export default function Home() {
                   Complete Annihilation
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Redrawing image pixels on an offline HTML5 canvas wipes all EXIF, XMP, IPTC headers and cryptographically signed C2PA Content Credentials manifestations naturally from scratch.
+                  Redrawing image pixels on an offline HTML5 canvas wipes all
+                  EXIF, XMP, IPTC headers and cryptographically signed C2PA
+                  Content Credentials manifestations naturally from scratch.
                 </p>
               </div>
             </div>
@@ -271,7 +314,10 @@ export default function Home() {
                   Identifier Bypass
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Activate the randomized filename toggle to wipe platform-identifiable default labels (like DALL-E or Midjourney) and bypass automatic algorithmic suppressing checks.
+                  Activate the randomized filename toggle to wipe
+                  platform-identifiable default labels (like DALL-E or
+                  Midjourney) and bypass automatic algorithmic suppressing
+                  checks.
                 </p>
               </div>
             </div>
@@ -285,7 +331,9 @@ export default function Home() {
                   Batch Queuing (Pro)
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Supercharge your workflow. Drag up to 50 photos into the Purification queue, clean them with single-click ease, and download a compressed ZIP package in seconds.
+                  Supercharge your workflow. Drag up to 50 photos into the
+                  Purification queue, clean them with single-click ease, and
+                  download a compressed ZIP package in seconds.
                 </p>
               </div>
             </div>
@@ -295,10 +343,12 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-ink bg-bg">
             <div className="p-8 flex flex-col gap-2 hover:bg-n100 transition-colors">
               <div className="inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-ink">
-                <span className="text-accent">▮</span> Stripe Secure Checkout
+                <span className="text-accent">▮</span> PayPal Secure Checkout
               </div>
               <p className="font-body text-[13px] leading-relaxed text-n700">
-                Enjoy absolute peace of mind. Stripe-encrypted checkout handles all SaaS billing securely. We never store credit cards, and Clerk Auth syncs credentials locally.
+                Enjoy absolute peace of mind. PayPal-encrypted checkout handles
+                payments securely. We never store payment details, and Clerk
+                Auth syncs credentials locally.
               </p>
             </div>
 
@@ -307,7 +357,9 @@ export default function Home() {
                 <span className="text-accent">▮</span> Zero Data Logging
               </div>
               <p className="font-body text-[13px] leading-relaxed text-n700">
-                Fully GDPR compliant. We do not track image hashes, log processing metrics, or execute background database writes, keeping operations absolutely anonymous.
+                Fully GDPR compliant. We do not track image hashes, log
+                processing metrics, or execute background database writes,
+                keeping operations absolutely anonymous.
               </p>
             </div>
 
@@ -316,26 +368,35 @@ export default function Home() {
                 <span className="text-accent">▮</span> Local-First Speed
               </div>
               <p className="font-body text-[13px] leading-relaxed text-n700">
-                Sanitization is executed locally inside your browser sandbox in under 50ms. No account is required for single operations, allowing instant on-demand privacy.
+                Sanitization is executed locally inside your browser sandbox in
+                under 50ms. No account is required for single operations,
+                allowing instant on-demand privacy.
               </p>
             </div>
           </div>
         </div>
       </section>
-
       {/* PRODUCT DEEP-DIVE: THE MECHANICS OF DIGITAL PRIVACY */}
-      <section id="explain-product" className="w-full border-b-4 border-ink bg-bg">
+      <section
+        id="explain-product"
+        className="w-full border-b-4 border-ink bg-bg"
+      >
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="p-10 md:p-14 border-b border-ink text-center select-none bg-bg">
             <div className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold mb-3">
               ✦ Deep-Dive Product Intel
             </div>
             <h2 className="font-serif text-4xl lg:text-5xl font-black text-ink uppercase tracking-tight">
-              The Physics of Canvas Redrawing<br />
-              <em className="font-serif italic font-light text-accent">Total Provenance Destruction.</em>
+              The Physics of Canvas Redrawing
+              <br />
+              <em className="font-serif italic font-light text-accent">
+                Total Provenance Destruction.
+              </em>
             </h2>
             <p className="font-body text-sm text-n500 mt-4 max-w-lg mx-auto leading-relaxed">
-              Standard file properties tools fail because tag headers represent only a fraction of digital footprints. Learn how ScrubAI guarantees clean creative files.
+              Standard file properties tools fail because tag headers represent
+              only a fraction of digital footprints. Learn how ScrubAI
+              guarantees clean creative files.
             </p>
           </div>
 
@@ -350,10 +411,21 @@ export default function Home() {
                   The Canvas Redraw Advantage
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify mb-6">
-                  Traditional metadata editors simply erase common tag headers like EXIF, XMP, or IPTC. While this removes clear camera settings, it leaves deeper tracking metrics completely untouched. Crucially, cryptographically signed C2PA credentials are woven into nested JUMBF structures which basic tag-removers fail to detect or purge.
+                  Traditional metadata editors simply erase common tag headers
+                  like EXIF, XMP, or IPTC. While this removes clear camera
+                  settings, it leaves deeper tracking metrics completely
+                  untouched. Crucially, cryptographically signed C2PA
+                  credentials are woven into nested JUMBF structures which basic
+                  tag-removers fail to detect or purge.
                 </p>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  ScrubAI takes a fundamentally different path. When you load an image, our offline processor draws the raw pixels onto a sandboxed HTML5 canvas. We then export pure color channels to compile a completely new binary structure from scratch. This process creates a clean break: since the new image features entirely fresh binary markers, all tracking footprints are physically impossible to restore.
+                  ScrubAI takes a fundamentally different path. When you load an
+                  image, our offline processor draws the raw pixels onto a
+                  sandboxed HTML5 canvas. We then export pure color channels to
+                  compile a completely new binary structure from scratch. This
+                  process creates a clean break: since the new image features
+                  entirely fresh binary markers, all tracking footprints are
+                  physically impossible to restore.
                 </p>
               </div>
             </div>
@@ -368,46 +440,64 @@ export default function Home() {
                   Counteracting Platform Suppression
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify mb-6">
-                  Social algorithms are trained to search image uploads for cryptographic signs of generative origin. In order to tag posts as "Made with AI" and build copyright catalogs, their servers examine inbound binary data for signatures from OpenAI, Midjourney, and Adobe.
+                  Social algorithms are trained to search image uploads for
+                  cryptographic signs of generative origin. In order to tag
+                  posts as &quot;Made with AI&quot; and build copyright catalogs, their
+                  servers examine inbound binary data for signatures from
+                  OpenAI, Midjourney, and Adobe.
                 </p>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  ScrubAI acts as an absolute neutralizer. By breaking the cryptographic proof chains and purging custom color markers, your image is perceived by platform servers as standard, natural organic camera work. We restore your natural search and tag distribution, enabling designers and creators to bypass artificial flags and retain 100% of their creative organic reach.
+                  ScrubAI acts as an absolute neutralizer. By breaking the
+                  cryptographic proof chains and purging custom color markers,
+                  your image is perceived by platform servers as standard,
+                  natural organic camera work. We restore your natural search
+                  and tag distribution, enabling designers and creators to
+                  bypass artificial flags and retain 100% of their creative
+                  organic reach.
                 </p>
               </div>
             </div>
-
           </div>
         </div>
       </section>
-
       {/* FAQ SECTION */}
       <section id="faq" className="w-full border-b-4 border-ink bg-bg">
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="p-14 border-b border-ink select-none">
             <h2 className="font-serif text-4xl lg:text-6xl font-black text-ink uppercase tracking-tight text-center">
-              Frequently Asked<br />
-              <em className="font-serif italic font-light text-accent">Questions</em>
+              Frequently Asked
+              <br />
+              <em className="font-serif italic font-light text-accent">
+                Questions
+              </em>
             </h2>
           </div>
-  
+
           <div className="flex flex-col divide-y divide-ink border-b border-ink bg-bg">
             {faqs.map((faq, idx) => {
               const isOpen = activeFaq === idx;
               return (
-                <div key={idx} className="border-b border-ink last:border-b-0 bg-bg">
+                <div
+                  key={idx}
+                  className="border-b border-ink last:border-b-0 bg-bg"
+                >
                   <button
                     onClick={() => toggleFaq(idx)}
                     className="w-full flex justify-between items-center p-6 text-left font-serif text-md font-bold text-ink hover:bg-n100 transition-colors cursor-pointer select-none"
                     aria-expanded={isOpen}
                   >
                     <span>{faq.q}</span>
-                    <span className={`font-mono text-lg text-accent transition-transform duration-150 ${isOpen ? "rotate-45" : ""}`}>
+                    <span
+                      className={`font-mono text-lg text-accent transition-transform duration-150 ${isOpen ? "rotate-45" : ""}`}
+                    >
                       +
                     </span>
                   </button>
-                  <div className={`grid transition-all duration-200 ease-in-out ${
-                    isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                  }`}>
+                  <div
+                    className={`grid transition-all duration-200 ease-in-out ${
+                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+                  >
                     <div className="overflow-hidden bg-bg">
                       <p className="p-6 pt-0 font-body text-[13px] leading-relaxed text-n700">
                         {faq.a}
@@ -420,7 +510,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* NEWSLETTER */}
       <section className="w-full border-b-4 border-ink bg-bg">
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg grid grid-cols-1 md:grid-cols-2">
@@ -429,24 +518,37 @@ export default function Home() {
               ✦ Stay Genuinely Private
             </div>
             <h2 className="font-serif text-3xl md:text-5xl font-black text-ink uppercase tracking-tight leading-none mb-4 bg-bg">
-              Product updates.<br />
+              Product updates.
+              <br />
               No noise. Just signal.
             </h2>
             <p className="font-body text-xs text-n700 leading-relaxed max-w-md bg-bg">
-              Get our weekly briefing on digital privacy: new platform reach updates, local-first workflows, and software guides delivered directly to your inbox.
+              Get our weekly briefing on digital privacy: new platform reach
+              updates, local-first workflows, and software guides delivered
+              directly to your inbox.
             </p>
           </div>
 
-          <form onSubmit={handleSubscribe} className="p-10 md:p-14 flex flex-col justify-center gap-5 bg-bg">
+          <form
+            onSubmit={handleSubscribe}
+            className="p-10 md:p-14 flex flex-col justify-center gap-5 bg-bg"
+          >
             {emailSubscribed ? (
               <div className="bg-green-800/10 border border-green-800 p-5 text-center select-none bg-bg">
-                <span className="font-serif text-md font-bold text-green-800 block">✓ You&apos;re subscribed!</span>
-                <span className="font-mono text-[9px] text-n500 uppercase tracking-widest mt-1 block">Check your inbox this Thursday morning.</span>
+                <span className="font-serif text-md font-bold text-green-800 block">
+                  ✓ You&apos;re subscribed!
+                </span>
+                <span className="font-mono text-[9px] text-n500 uppercase tracking-widest mt-1 block">
+                  Check your inbox this Thursday morning.
+                </span>
               </div>
             ) : (
               <>
                 <div className="flex flex-col gap-1.5 select-none bg-bg">
-                  <label className="font-mono text-[9px] tracking-widest uppercase text-n500 bg-bg" htmlFor="nl-email">
+                  <label
+                    className="font-mono text-[9px] tracking-widest uppercase text-n500 bg-bg"
+                    htmlFor="nl-email"
+                  >
                     Work Email Address
                   </label>
                   <input
@@ -473,7 +575,6 @@ export default function Home() {
           </form>
         </div>
       </section>
-
       {/* FOOTER */}
       <Footer />
     </div>
