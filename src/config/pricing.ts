@@ -9,7 +9,7 @@
 
 export const PRICING = {
   /** The amount charged for Lifetime Pro (in USD). */
-  amount: "0.05",
+  amount: "24.99",
 
   /** Currency code for PayPal orders. */
   currency: "USD",
