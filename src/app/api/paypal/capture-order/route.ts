@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import { PRICING } from "../../../../config/pricing";
 
 // Use explicit PAYPAL_MODE env var for consistency with client-side SDK
 const PAYPAL_MODE =
@@ -106,8 +107,8 @@ async function capturePayPalOrder(
     order.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
   if (
     !capturedAmount ||
-    parseFloat(capturedAmount.value) < 24.99 ||
-    capturedAmount.currency_code !== "USD"
+    parseFloat(capturedAmount.value) < PRICING.minCaptureAmount ||
+    capturedAmount.currency_code !== PRICING.currency
   ) {
     return {
       success: false,
@@ -149,8 +150,8 @@ async function verifyExistingCapture(
       order.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
     if (
       capturedAmount &&
-      parseFloat(capturedAmount.value) >= 24.99 &&
-      capturedAmount.currency_code === "USD"
+      parseFloat(capturedAmount.value) >= PRICING.minCaptureAmount &&
+      capturedAmount.currency_code === PRICING.currency
     ) {
       return { success: true, capture: order };
     }

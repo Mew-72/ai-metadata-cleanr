@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PRICING } from "../../../../config/pricing";
 
 // Use explicit PAYPAL_MODE env var for consistency with client-side SDK
 // Falls back to NODE_ENV detection if not set
@@ -65,10 +66,10 @@ export async function POST() {
         purchase_units: [
           {
             amount: {
-              currency_code: "USD",
-              value: "24.99",
+              currency_code: PRICING.currency,
+              value: PRICING.amount,
             },
-            description: "ScrubAI Lifetime Pro Membership",
+            description: PRICING.description,
           },
         ],
       }),

@@ -9,6 +9,7 @@ import { Check, X, Sparkles } from "lucide-react";
 import { useAppAuth } from "../../hooks/useAppAuth";
 import { SignInButton } from "@clerk/nextjs";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PRICING } from "../../config/pricing";
 
 export default function PricingPage() {
   const { isSignedIn, isPro, userId, isLoaded } = useAppAuth();
@@ -131,7 +132,7 @@ export default function PricingPage() {
               </h2>
               <div className="h-[2px] bg-accent my-4 w-12" />
               <div className="font-serif text-[42px] font-black text-ink mb-1 tracking-tight transition-all duration-200">
-                $24.99
+                {PRICING.displayPrice}
                 <span className="text-sm font-normal text-n500 tracking-normal">
                   {" "}
                   one-time
