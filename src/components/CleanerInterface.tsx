@@ -5,7 +5,12 @@ import { createPortal } from "react-dom";
 import ExifReader from "exifreader";
 import JSZip from "jszip";
 import posthog from "posthog-js";
-import { useAppAuth, useAppUser } from "../hooks/useAppAuth";
+import { useAppAuth, useAppUser, useUpgradeWatcher } from "../hooks/useAppAuth";
+import {
+  useCanvasEngine,
+  type ResizePreset,
+  type ExportFormat,
+} from "../hooks/useCanvasEngine";
 import { BillingModal } from "./BillingModal";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
 import {
@@ -145,7 +150,7 @@ const getPersistedCleanCount = (): number => {
         }
       }
     }
-  } catch {}
+  } catch { }
 
   // ── Cookie (obfuscated) ──
   try {
@@ -169,7 +174,7 @@ const getPersistedCleanCount = (): number => {
         cookieCount = 5; // Tamper detected
       }
     }
-  } catch {}
+  } catch { }
 
   const maxCount = Math.max(localCount, cookieCount);
   setPersistedCleanCount(maxCount);
@@ -188,7 +193,7 @@ const setPersistedCleanCount = (count: number) => {
     localStorage.setItem(_RK.a, today);
     localStorage.setItem(_RK.b, encoded);
     localStorage.setItem(_RK.c, integrity);
-  } catch {}
+  } catch { }
 
   // ── Cookie (with Secure flag) ──
   try {
@@ -200,7 +205,7 @@ const setPersistedCleanCount = (count: number) => {
     document.cookie = `${_RK.ck}d=${today}; ${flags}`;
     document.cookie = `${_RK.ck}v=${encoded}; ${flags}`;
     document.cookie = `${_RK.ck}h=${integrity}; ${flags}`;
-  } catch {}
+  } catch { }
 };
 
 export function CleanerInterface() {
@@ -210,6 +215,9 @@ export function CleanerInterface() {
   const [spoofProfile, setSpoofProfile] = useState<
     "none" | "iphone" | "canon" | "sony"
   >("iphone");
+  const [exportQuality, setExportQuality] = useState<number>(0.95);
+  const [resizePreset, setResizePreset] = useState<ResizePreset>("original");
+  const [exportFormat, setExportFormat] = useState<"auto" | ExportFormat>("auto");
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
@@ -221,6 +229,13 @@ export function CleanerInterface() {
   // Clerk Auth and PayPal Pro Gating Checks
   const { isPro, isSignedIn, isLoaded } = useAppAuth();
   const { user } = useAppUser();
+
+  // Watch for an out-of-band upgrade (PayPal completing in another tab)
+  // so the in-progress queue automatically picks up Pro entitlements.
+  useUpgradeWatcher(isSignedIn === true);
+
+  // Canvas + HEIC purification engine (Agent A)
+  const { purifyImage, normalizeForAudit, isHeic } = useCanvasEngine();
 
   const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
 
@@ -260,11 +275,14 @@ export function CleanerInterface() {
 
   // handleSimulateUpgrade has been completely removed in favor of strict, secure Clerk Billing.
 
-  // Helper to load image dimensions
-  const getImageDimensions = (file: File): Promise<string> => {
+  // Helper to load image dimensions. HEIC files cannot be decoded by <img>
+  // in most browsers, so we transparently convert them to JPEG first via the
+  // canvas engine. Falls back to "Unknown px" on any failure.
+  const getImageDimensions = async (file: File): Promise<string> => {
+    const decodable = await normalizeForAudit(file);
     return new Promise((resolve) => {
       const img = new Image();
-      const url = URL.createObjectURL(file);
+      const url = URL.createObjectURL(decodable);
       img.src = url;
       img.onload = () => {
         resolve(`${img.naturalWidth} x ${img.naturalHeight} px`);
@@ -380,20 +398,41 @@ export function CleanerInterface() {
   const isRiskTag = (tagKey: string, groupName: string): boolean => {
     const lk = tagKey.toLowerCase();
     const lg = groupName.toLowerCase();
+
+    // Whole-group decisions first — these always win, regardless of which
+    // keyword the tag name happens to contain. Without this, "DeviceModel"
+    // inside an ICC profile gets flagged on the "model" risk keyword even
+    // though ICC profile fields are vendor-neutral structural data.
     if (lg === "iptc") return true;
-    if (lg === "xmp" && !STRUCTURAL_KEYWORDS.some((s) => lk.includes(s)))
-      return true;
-    if (RISK_KEYWORDS.some((rk) => lk.includes(rk))) return true;
-    if (STRUCTURAL_KEYWORDS.some((sk) => lk.includes(sk))) return false;
     if (
       lg === "icc" ||
+      lg === "icc_profile" ||
+      lg === "iccp" ||
       lg === "file" ||
       lg === "jfif" ||
       lg === "ihdr" ||
       lg === "png" ||
-      lg === "pngfile"
-    )
+      lg === "pngfile" ||
+      lg === "ph" ||
+      lg === "phys" ||
+      lg === "chrm" ||
+      lg === "gama" ||
+      lg === "srgb" ||
+      lg === "trns" ||
+      lg === "bkgd" ||
+      lg === "sbit" ||
+      lg === "interlace"
+    ) {
       return false;
+    }
+
+    // XMP carries a mix — only structural keywords whitelist it.
+    if (lg === "xmp" && !STRUCTURAL_KEYWORDS.some((s) => lk.includes(s)))
+      return true;
+
+    // Tag-name keyword fallback for everything else (mostly EXIF).
+    if (RISK_KEYWORDS.some((rk) => lk.includes(rk))) return true;
+    if (STRUCTURAL_KEYWORDS.some((sk) => lk.includes(sk))) return false;
     return false;
   };
 
@@ -581,13 +620,13 @@ export function CleanerInterface() {
         prev.map((item) =>
           item.id === f.id
             ? {
-                ...item,
-                metadata: auditResult.metadata,
-                dimensions: auditResult.dimensions,
-                riskLevel: auditResult.riskLevel,
-                riskTagCount: auditResult.riskTagCount,
-                status: "audited",
-              }
+              ...item,
+              metadata: auditResult.metadata,
+              dimensions: auditResult.dimensions,
+              riskLevel: auditResult.riskLevel,
+              riskTagCount: auditResult.riskTagCount,
+              status: "audited",
+            }
             : item,
         ),
       );
@@ -711,76 +750,64 @@ export function CleanerInterface() {
     };
   };
 
-  // Clean a single file utilizing invisible Canvas pixel redrawing
+  // Clean a single file utilizing the canvas engine (HEIC convert → resize → re-export)
   const cleanSingleFile = async (
     item: UploadedFile,
     index: number,
   ): Promise<UploadedFile> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(item.file);
-      img.src = objectUrl;
+    try {
+      const requestedFormat: ExportFormat | undefined =
+        exportFormat === "auto" ? undefined : exportFormat;
 
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d");
+      const result = await purifyImage(item.file, {
+        quality: exportQuality,
+        resize: resizePreset,
+        format: requestedFormat,
+      });
 
-        if (!ctx) {
-          resolve({ ...item, status: "error" });
-          return;
-        }
-
-        // Draw the pure pixels to the canvas, stripping original exif metadata stream completely
-        ctx.drawImage(img, 0, 0);
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              resolve({ ...item, status: "error" });
-              return;
-            }
-
-            // Always generate a randomized neutral filename to strip AI-detectable naming patterns
-            const ext = item.file.name.split(".").pop() || "png";
-            const rand = Math.random().toString(36).substring(2, 8);
-            const cleanedName = `img_${rand}_${index + 1}.${ext}`;
-
-            const cleanedUrl = URL.createObjectURL(blob);
-
-            // Track in PostHog
-            posthog.capture("image_scrubbed", {
-              file_format: item.type,
-              size_kb: Math.round(item.size / 1024),
-              is_batch: files.length > 1,
-              custom_filename: !!customFilename.trim(),
-              spoof_profile: spoofProfile,
-            });
-
-            resolve({
-              ...item,
-              name: cleanedName,
-              cleanedBlob: blob,
-              cleanedUrl,
-              metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name),
-              riskLevel: "clean",
-              riskTagCount: 0,
-              status: "done",
-            });
-          },
-          item.type || "image/png",
-          0.95,
-        );
-
-        URL.revokeObjectURL(objectUrl);
+      // Always generate a randomized neutral filename to strip AI-detectable naming patterns.
+      // Use the *output* mime to pick the extension so format conversions are honored.
+      const extByMime: Record<ExportFormat, string> = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
       };
+      const ext = extByMime[result.format] ?? "png";
+      const rand = Math.random().toString(36).substring(2, 8);
+      const cleanedName = `img_${rand}_${index + 1}.${ext}`;
 
-      img.onerror = () => {
-        resolve({ ...item, status: "error" });
-        URL.revokeObjectURL(objectUrl);
+      const cleanedUrl = URL.createObjectURL(result.blob);
+
+      // Track in PostHog
+      posthog.capture("image_scrubbed", {
+        file_format: item.type,
+        size_kb: Math.round(item.size / 1024),
+        is_batch: files.length > 1,
+        custom_filename: !!customFilename.trim(),
+        spoof_profile: spoofProfile,
+        export_quality: exportQuality,
+        resize_preset: resizePreset,
+        output_format: result.format,
+        output_w: result.width,
+        output_h: result.height,
+        was_heic: isHeic(item.file),
+      });
+
+      return {
+        ...item,
+        name: cleanedName,
+        cleanedBlob: result.blob,
+        cleanedUrl,
+        metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name),
+        riskLevel: "clean",
+        riskTagCount: 0,
+        status: "done",
+        dimensions: `${result.width} x ${result.height} px`,
       };
-    });
+    } catch (err) {
+      console.warn("Canvas purify failed:", err);
+      return { ...item, status: "error" };
+    }
   };
 
   // Trigger Metadata Wipe
@@ -946,7 +973,7 @@ export function CleanerInterface() {
         ref={fileInputRef}
         onChange={(e) => e.target.files && handleFilesAdded(e.target.files)}
         multiple={activeTier === "pro"}
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         className="hidden"
       />
       <div className="grid grid-cols-1 lg:grid-cols-3 border-b-4 border-ink">
@@ -959,11 +986,10 @@ export function CleanerInterface() {
                 Scrubbing Workspace
               </span>
               <span
-                className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${
-                  activeTier === "pro"
-                    ? "bg-accent text-white"
-                    : "bg-bg text-ink"
-                }`}
+                className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${activeTier === "pro"
+                  ? "bg-accent text-white"
+                  : "bg-bg text-ink"
+                  }`}
               >
                 {activeTier === "pro"
                   ? "PRO TIER ACTIVATED"
@@ -1003,11 +1029,10 @@ export function CleanerInterface() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-all ${
-              isDragging
-                ? "bg-accent/5 border-4 border-dashed border-accent"
-                : ""
-            }`}
+            className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-all ${isDragging
+              ? "dropzone-active"
+              : ""
+              }`}
           >
             {files.length === 0 ? (
               <div className="max-w-md mx-auto py-12 flex flex-col items-center">
@@ -1021,7 +1046,8 @@ export function CleanerInterface() {
                 <p className="font-body text-xs text-n500 mb-6 leading-relaxed">
                   Purify files completely locally in your browser. Raw pixel
                   redraw guarantees total annihilation of EXIF, XMP, IPTC
-                  labels, and cryptographically signed C2PA markers.
+                  labels, and cryptographically signed C2PA markers. JPEG,
+                  PNG, WebP, and iOS HEIC/HEIF supported.
                 </p>
 
                 <button
@@ -1044,11 +1070,10 @@ export function CleanerInterface() {
                       <div
                         key={item.id}
                         onClick={() => setSelectedFileId(item.id)}
-                        className={`border-2 p-4 text-left cursor-pointer flex flex-col justify-between transition-all select-none hover:border-ink ${
-                          isSelected
-                            ? "border-ink bg-n100 shadow-md"
-                            : "border-muted-border bg-bg"
-                        }`}
+                        className={`border-2 p-4 text-left cursor-pointer flex flex-col justify-between transition-all select-none hover:border-ink ${isSelected
+                          ? "border-ink bg-n100 shadow-md"
+                          : "border-muted-border bg-bg"
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-2.5">
                           <div className="flex items-center gap-2 overflow-hidden">
@@ -1086,13 +1111,12 @@ export function CleanerInterface() {
                           </div>
                           <div className="flex items-center justify-between mt-2.5">
                             <span
-                              className={`px-1.5 py-0.5 text-[8px] font-bold border ${
-                                item.status === "done"
-                                  ? "bg-green-800/10 border-green-800 text-green-800"
-                                  : item.status === "cleaning"
-                                    ? "bg-amber-500/10 border-amber-500 text-amber-500 animate-pulse"
-                                    : "bg-bg border-ink/20 text-n500"
-                              }`}
+                              className={`px-1.5 py-0.5 text-[8px] font-bold border ${item.status === "done"
+                                ? "bg-green-800/10 border-green-800 text-green-800"
+                                : item.status === "cleaning"
+                                  ? "bg-amber-500/10 border-amber-500 text-amber-500 animate-pulse"
+                                  : "bg-bg border-ink/20 text-n500"
+                                }`}
                             >
                               {item.status.toUpperCase()}
                             </span>
@@ -1146,7 +1170,7 @@ export function CleanerInterface() {
                             files.length > 1
                               ? "my_batch"
                               : files[0]?.name?.replace(/\.[^/.]+$/, "") ||
-                                "cleaned_image"
+                              "cleaned_image"
                           }
                           className="flex-1 bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent select-text placeholder:text-n400"
                         />
@@ -1200,6 +1224,107 @@ export function CleanerInterface() {
                       <div className="font-mono text-[8px] text-accent uppercase tracking-wider font-bold">
                         Injects standard, safe metadata to blend in perfectly on
                         social platforms
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Export Options Grid (Agent A: quality slider, resize presets, format) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-1">
+                    {/* Quality Slider */}
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="export-quality"
+                        className="font-mono text-[9px] tracking-widest uppercase text-n500 flex items-center justify-between"
+                      >
+                        <span>Export Quality</span>
+                        <span className="font-bold text-ink">
+                          {Math.round(exportQuality * 100)}%
+                        </span>
+                      </label>
+                      <input
+                        id="export-quality"
+                        type="range"
+                        min={0.1}
+                        max={1.0}
+                        step={0.05}
+                        value={exportQuality}
+                        onChange={(e) =>
+                          setExportQuality(parseFloat(e.target.value))
+                        }
+                        className="w-full accent-accent cursor-pointer h-2"
+                        aria-label="Export quality"
+                      />
+                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
+                        {exportQuality >= 0.95
+                          ? "Studio fidelity (near-lossless)"
+                          : exportQuality >= 0.7
+                            ? "Web optimized"
+                            : "Aggressive compression"}
+                      </div>
+                    </div>
+
+                    {/* Resize preset */}
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="resize-preset"
+                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                      >
+                        Canvas Size
+                      </label>
+                      <select
+                        id="resize-preset"
+                        value={resizePreset}
+                        onChange={(e) =>
+                          setResizePreset(e.target.value as ResizePreset)
+                        }
+                        className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
+                      >
+                        <option value="original" className="bg-bg text-ink">
+                          ◈ Keep Original Resolution
+                        </option>
+                        <option value="1080p" className="bg-bg text-ink">
+                          ▲ 1080p (1920px long edge)
+                        </option>
+                        <option value="4k" className="bg-bg text-ink">
+                          ▲ 4K (3840px long edge)
+                        </option>
+                      </select>
+                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
+                        Auto-downscale destroys upscaler / resize artifacts
+                      </div>
+                    </div>
+
+                    {/* Output format */}
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="export-format"
+                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                      >
+                        Output Format
+                      </label>
+                      <select
+                        id="export-format"
+                        value={exportFormat}
+                        onChange={(e) =>
+                          setExportFormat(e.target.value as typeof exportFormat)
+                        }
+                        className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
+                      >
+                        <option value="auto" className="bg-bg text-ink">
+                          ◈ Auto (match input format)
+                        </option>
+                        <option value="image/png" className="bg-bg text-ink">
+                          PNG · Lossless (largest file)
+                        </option>
+                        <option value="image/jpeg" className="bg-bg text-ink">
+                          JPEG · Compressed (smallest file)
+                        </option>
+                        <option value="image/webp" className="bg-bg text-ink">
+                          WebP · Modern web
+                        </option>
+                      </select>
+                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
+                        PNG ignores quality. HEIC inputs are converted to JPEG.
                       </div>
                     </div>
                   </div>
@@ -1291,43 +1416,77 @@ export function CleanerInterface() {
                   </div>
                 </div>
 
-                {/* Grid stats */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                      Scrubbed
-                    </span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                      1 Image
-                    </span>
-                  </div>
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                      Size reduction
-                    </span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                      83.5%
-                    </span>
-                  </div>
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                      Pixels Modified
-                    </span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                      {selectedFile.dimensions
-                        ? `${parseInt(selectedFile.dimensions) * parseInt(selectedFile.dimensions.split("x")[1] || "1") || "1.2M"}`
-                        : "1.5M"}
-                    </span>
-                  </div>
-                  <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                      Avg. Quality
-                    </span>
-                    <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                      95%
-                    </span>
-                  </div>
-                </div>
+                {/* Grid stats — all live values from the scrubbed file */}
+                {(() => {
+                  const cleanedSize = selectedFile.cleanedBlob?.size ?? 0;
+                  const originalSize = selectedFile.size || 0;
+                  const sizeDelta =
+                    originalSize > 0
+                      ? ((originalSize - cleanedSize) / originalSize) * 100
+                      : 0;
+                  const sizeLabel =
+                    cleanedSize === 0
+                      ? "—"
+                      : sizeDelta >= 0
+                        ? `${sizeDelta.toFixed(1)}%`
+                        : `+${Math.abs(sizeDelta).toFixed(1)}%`;
+
+                  const dims = selectedFile.dimensions || "";
+                  const dimMatch = dims.match(/(\d+)\s*x\s*(\d+)/);
+                  const pixelCount = dimMatch
+                    ? parseInt(dimMatch[1], 10) * parseInt(dimMatch[2], 10)
+                    : 0;
+                  const pixelLabel =
+                    pixelCount >= 1_000_000
+                      ? `${(pixelCount / 1_000_000).toFixed(1)}M`
+                      : pixelCount > 0
+                        ? pixelCount.toLocaleString()
+                        : "—";
+
+                  // PNG is lossless regardless of slider position.
+                  const outputMime = selectedFile.cleanedBlob?.type ?? "";
+                  const isLossless = outputMime === "image/png";
+                  const qualityLabel = isLossless
+                    ? "Lossless"
+                    : `${Math.round(exportQuality * 100)}%`;
+
+                  return (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                          Scrubbed
+                        </span>
+                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                          1 Image
+                        </span>
+                      </div>
+                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                          Size {sizeDelta >= 0 ? "Reduction" : "Increase"}
+                        </span>
+                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                          {sizeLabel}
+                        </span>
+                      </div>
+                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                          Pixels Redrawn
+                        </span>
+                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                          {pixelLabel}
+                        </span>
+                      </div>
+                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
+                          Output Quality
+                        </span>
+                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
+                          {qualityLabel}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* File Details / Cleaning Report */}
                 <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-3">
@@ -1464,57 +1623,107 @@ export function CleanerInterface() {
                     </div>
                   )}
 
-                  {/* Audit Tags Table */}
-                  <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[400px]">
-                    <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
-                      <div>Indicator Tag</div>
-                      <div>
-                        Extracted Data{" "}
-                        {selectedFile.metadata
-                          ? `(${Object.keys(selectedFile.metadata).length})`
-                          : ""}
-                      </div>
-                    </div>
+                  {/* Audit Tags Table — split into Risk and Structural so
+                      cleaned files visibly read as "0 risk" even though the
+                      browser still emits harmless JFIF/PNG structural fields. */}
+                  {(() => {
+                    const entries = selectedFile.metadata
+                      ? Object.entries(selectedFile.metadata)
+                      : null;
+                    const riskEntries = entries
+                      ? entries.filter(([k]) => k.startsWith("⚠"))
+                      : [];
+                    const structuralEntries = entries
+                      ? entries.filter(([k]) => !k.startsWith("⚠"))
+                      : [];
 
-                    <div className="divide-y divide-muted-border overflow-y-auto flex-1">
-                      {selectedFile.metadata ? (
-                        Object.entries(selectedFile.metadata).map(
-                          ([key, val]) => {
-                            const isRisk = key.startsWith("⚠");
-                            return (
-                              <div
-                                key={key}
-                                className={`grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 ${isRisk ? "bg-accent/3" : ""}`}
-                              >
-                                <div
-                                  className={`font-medium ${isRisk ? "text-accent" : "text-n500"}`}
-                                >
-                                  {key}
-                                </div>
-                                <div
-                                  className={`font-bold break-all ${isRisk ? "text-ink" : "text-n500"}`}
-                                >
-                                  {val}
-                                </div>
-                              </div>
-                            );
-                          },
-                        )
-                      ) : (
-                        <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
-                          Scanning structural headers...
+                    return (
+                      <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[400px]">
+                        <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
+                          <div>Indicator Tag</div>
+                          <div>
+                            Extracted Data{" "}
+                            {entries ? `(${entries.length})` : ""}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+
+                        <div className="overflow-y-auto flex-1">
+                          {!entries ? (
+                            <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
+                              Scanning structural headers...
+                            </div>
+                          ) : (
+                            <>
+                              {/* Risk section */}
+                              <div className="bg-accent/5 border-b border-accent/20 px-2.5 py-1.5 font-mono text-[8px] tracking-widest uppercase text-accent font-bold flex items-center justify-between sticky top-0 z-10">
+                                <span>⚠ Tracking Risk Tags</span>
+                                <span>{riskEntries.length}</span>
+                              </div>
+                              {riskEntries.length === 0 ? (
+                                <div className="px-3 py-3 font-mono text-[9px] text-green-700 uppercase tracking-widest border-b border-muted-border">
+                                  ✓ None detected — file is safe to upload
+                                </div>
+                              ) : (
+                                <div className="divide-y divide-muted-border">
+                                  {riskEntries.map(([key, val]) => (
+                                    <div
+                                      key={key}
+                                      className="grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 bg-accent/3"
+                                    >
+                                      <div className="font-medium text-accent">
+                                        {key}
+                                      </div>
+                                      <div className="font-bold break-all text-ink">
+                                        {val}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Structural section (collapsed by default
+                                  visually — these are harmless browser-emitted
+                                  fields that show up on every clean file). */}
+                              <div className="bg-n100 border-y border-muted-border px-2.5 py-1.5 font-mono text-[8px] tracking-widest uppercase text-n500 font-bold flex items-center justify-between sticky top-0 z-10">
+                                <span>◈ Structural File Properties (harmless)</span>
+                                <span>{structuralEntries.length}</span>
+                              </div>
+                              {structuralEntries.length === 0 ? (
+                                <div className="px-3 py-3 font-mono text-[9px] text-n400 uppercase tracking-widest">
+                                  None
+                                </div>
+                              ) : (
+                                <div className="divide-y divide-muted-border">
+                                  {structuralEntries.map(([key, val]) => (
+                                    <div
+                                      key={key}
+                                      className="grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2"
+                                    >
+                                      <div className="font-medium text-n500">
+                                        {key}
+                                      </div>
+                                      <div className="font-bold break-all text-n500">
+                                        {val}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* Auditor action instructions */}
               <div className="mt-8 border-t border-ink/15 pt-5 font-mono text-[9px] text-n500 leading-relaxed uppercase tracking-wider shrink-0">
                 💡 Canvas pipeline draws raw pixel RGB values to strip all
-                metadata signatures. Download output and re-upload to verify
-                total annihilation.
+                tracking metadata. Structural file properties (image
+                dimensions, color space, JFIF version) are emitted by every
+                browser and are not tracking risks.
               </div>
             </div>
           )}

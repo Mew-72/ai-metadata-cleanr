@@ -1,11 +1,12 @@
 import { MetadataRoute } from "next";
+import { DOCS } from "../content/docs";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.app";
   return [
     {
       url: baseUrl,
-      lastModified: "2026-05-25",
+      lastModified: "2026-05-28",
       changeFrequency: "daily",
       priority: 1.0,
     },
@@ -21,6 +22,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/docs`,
+      lastModified: "2026-05-28",
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    ...DOCS.map((doc) => ({
+      url: `${baseUrl}/docs/${doc.slug}`,
+      lastModified: "2026-05-28",
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
     {
       url: `${baseUrl}/privacy`,
       lastModified: "2026-05-23",
