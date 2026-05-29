@@ -15,7 +15,7 @@ export function Footer() {
               <span className="text-accent font-black font-sans">.</span>
             </Link>
             <p className="font-body text-[13px] leading-relaxed text-n400 mt-3 mb-6 max-w-sm">
-              The metadata sanitizer built for creators who ship. Strip cameras EXIF, IPTC labels, XMP blocks, and cryptographically signed C2PA markers. Keep your digital identity private and maintain algorithmic reach on Instagram and Pinterest.
+              The image metadata remover built for creators who care about privacy. Strip camera EXIF, GPS location, IPTC labels, XMP blocks, and cryptographically signed C2PA markers - 100% in your browser. You decide what data travels with your photos.
             </p>
             <div className="flex gap-2">
               {/* X (Twitter) */}
@@ -103,8 +103,8 @@ export function Footer() {
               <li><Link href="/c2pa-scanner" className="font-sans text-[12px] footer-link-item transition-colors">C2PA Scanner</Link></li>
               <li><Link href="/docs" className="font-sans text-[12px] footer-link-item transition-colors">Privacy Docs</Link></li>
               <li><Link href="/pricing" className="font-sans text-[12px] footer-link-item transition-colors">Pricing</Link></li>
-              <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">Changelog</a></li>
-              <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">API Docs</a></li>
+              {/* <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">Changelog</a></li> */}
+              {/* <li><a href="#" className="font-sans text-[12px] footer-link-item transition-colors">API Docs</a></li> */}
             </ul>
           </div>
 

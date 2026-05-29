@@ -36,16 +36,16 @@ export default function Home() {
 
   const faqs = [
     {
-      q: "How does the browser-only metadata purification work?",
-      a: "When you load an image, ScrubAI draws its raw pixels onto an invisible HTML5 canvas element. We then re-export these pixels to create a completely new binary file structure. This process naturally acts as a total sanitizer—since the new file is built entirely from scratch, it is completely devoid of original EXIF, XMP, IPTC, and cryptographically signed C2PA credentials.",
+      q: "How does the browser-only metadata removal work?",
+      a: "When you load an image, ScrubAI draws its raw pixels onto an invisible HTML5 canvas element. We then re-export these pixels to create a completely new binary file structure. Because the new file is built entirely from scratch, it contains none of the original EXIF, XMP, IPTC, or cryptographically signed C2PA credentials.",
     },
     {
       q: "Does this affect the quality or visual integrity of my photos?",
-      a: "No! ScrubAI handles images directly in your browser sandboxed memory without compressing or degrading them. We export standard JPEG, PNG, or WebP files at a premium 95% quality threshold, maintaining beautiful sharp lines and pixel-perfect details while ensuring absolute sanitization.",
+      a: "No. ScrubAI handles images directly in your browser's sandboxed memory without compressing or degrading them. We export standard JPEG, PNG, or WebP files at a premium 95% quality threshold, keeping sharp lines and pixel-perfect detail while fully removing metadata.",
     },
     {
-      q: "Will this bypass the 'Made with AI' labels on social platforms?",
-      a: "Yes! Platforms like Instagram, Facebook, and Pinterest scan image binary headers for specific software signatures, AI generation metadata (e.g. DALL-E or Midjourney tags), and cryptographically signed Content Credentials (C2PA/JUMBF). By stripping these headers entirely and renaming the file randomly, ScrubAI allows you to bypass these algorithmic suppression patterns.",
+      q: "Does this remove 'Made with AI' tags and C2PA Content Credentials?",
+      a: "Yes. Platforms like Instagram, Facebook, and Pinterest read image binary headers for software signatures, AI generation metadata (such as DALL-E or Midjourney tags), and cryptographically signed Content Credentials (C2PA/JUMBF). ScrubAI rebuilds the image from raw pixels, so these embedded markers are not carried into the export.",
     },
     {
       q: "Are my images uploaded to a database or backend server?",
@@ -53,7 +53,7 @@ export default function Home() {
     },
     {
       q: "How do I upgrade to Lifetime Pro and is it a one-time fee?",
-      a: `Yes! Lifetime Pro is a strictly one-time fee of ${PRICING.displayPrice} processed securely via PayPal. There are absolutely no monthly subscription charges or hidden recurring costs. Upgrading instantly unlocks batch image processing up to 50 files, ZIP exports, and priority support forever.`,
+      a: `Yes. Lifetime Pro is a strictly one-time fee of ${PRICING.displayPrice} processed securely via PayPal. There are no monthly subscription charges and no hidden recurring costs. Upgrading instantly unlocks batch image processing up to 50 files, ZIP exports, and priority support for life.`,
     },
   ];
 
@@ -68,25 +68,25 @@ export default function Home() {
             <div className="p-10 md:p-14 lg:p-20 flex flex-col justify-between h-full bg-bg">
               <div className="flex-1 flex flex-col justify-center">
                 <div className="inline-flex items-center gap-2 font-mono text-[10px] font-black tracking-widest uppercase text-ink mb-6 select-none">
-                  <span className="text-accent">■</span> Breaking System
-                  Briefing
+                  <span className="text-accent">■</span> Private by design ·
+                  100% in your browser
                 </div>
 
                 <h1 className="font-serif text-[42px] md:text-[54px] lg:text-[68px] font-black leading-[0.9] tracking-tighter text-ink mb-8 uppercase select-none flex flex-col">
-                  <span>RECLAIM YOUR</span>
-                  <span>REACH BYPASS</span>
+                  <span>REMOVE IMAGE</span>
+                  <span>METADATA.</span>
                   <span className="mt-2.5">
                     <span className="bg-accent text-bg px-4 py-1.5 inline-block transform -rotate-1 font-serif font-black tracking-tighter">
-                      AI LABELS
+                      TAKE BACK PRIVACY
                     </span>
                   </span>
                 </h1>
 
                 <p className="font-body text-[14px] md:text-[15px] leading-relaxed text-n700 mb-8 max-w-[520px]">
-                  ScrubAI is a high-performance, browser-only metadata purifier
-                  that neutralizes algorithmic reach suppression. Actively scans
-                  images for hidden EXIF, tracking, and C2PA data—so your
-                  content reaches further, without hidden penalties.
+                  ScrubAI strips EXIF, GPS location, and C2PA Content
+                  Credentials from your photos - completely inside your browser.
+                  No uploads, no servers, no tracking. Your images never leave
+                  your device.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3.5 max-w-[520px] mb-8">
@@ -94,19 +94,19 @@ export default function Home() {
                     href="#workspace"
                     className="bg-ink text-bg border-2 border-ink py-4 px-6 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer text-center hover:bg-accent hover:border-accent transition-all select-none flex-1 flex items-center justify-center gap-2"
                   >
-                    CLEAN IMAGES NOW <span className="text-sm">→</span>
+                    CLEAN MY IMAGES - FREE <span className="text-sm">→</span>
                   </a>
                   <a
-                    href="#features"
+                    href="#explain-product"
                     className="bg-transparent text-ink border-2 border-ink py-4 px-6 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer text-center hover:bg-ink hover:text-bg transition-all select-none flex-1 flex items-center justify-center"
                   >
-                    EXPLORE FEATURES
+                    SEE HOW IT WORKS
                   </a>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[9px] text-n500 uppercase tracking-widest select-none">
                   <span className="flex items-center gap-1">
-                    🛡️ 100% Local Execution
+                    🛡️ 100% Local Processing
                   </span>
                   <span className="text-n300 hidden sm:inline">|</span>
                   <span className="flex items-center gap-1">
@@ -245,7 +245,7 @@ export default function Home() {
       <section id="workspace" className="w-full border-b-4 border-ink bg-bg">
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="font-mono text-[10px] tracking-widest uppercase text-n500 p-4 px-8 border-b border-ink">
-            ✦ Interactive Local Sanitization Terminal
+            ✦ Metadata Cleaner - Drop Your Images
           </div>
           <CleanerInterface />
         </div>
@@ -259,11 +259,10 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end p-10 md:p-14 border-b border-ink select-none bg-bg">
             <div>
               <h2 className="font-serif text-4xl lg:text-6xl font-black text-ink uppercase tracking-tight leading-none mb-3">
-                Core Features
+                Everything You Can Strip From a Photo
               </h2>
               <p className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-                Reclaim complete design privacy with state-of-the-art canvas
-                purification
+                Take full control of your image metadata and privacy
               </p>
             </div>
             <div className="border border-ink px-4.5 py-1.5 font-mono text-[9px] tracking-widest uppercase text-n500 mt-4 md:mt-0">
@@ -295,12 +294,12 @@ export default function Home() {
                   <Flame size={18} className="text-ink" />
                 </div>
                 <h3 className="font-serif text-xl font-bold tracking-tight text-ink mb-3.5">
-                  Complete Annihilation
+                  Total Metadata Removal
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Redrawing image pixels on an offline HTML5 canvas wipes all
+                  Redrawing image pixels on an offline HTML5 canvas removes all
                   EXIF, XMP, IPTC headers and cryptographically signed C2PA
-                  Content Credentials manifestations naturally from scratch.
+                  Content Credentials naturally from scratch.
                 </p>
               </div>
             </div>
@@ -311,13 +310,13 @@ export default function Home() {
                   <Fingerprint size={18} className="text-ink" />
                 </div>
                 <h3 className="font-serif text-xl font-bold tracking-tight text-ink mb-3.5">
-                  Identifier Bypass
+                  Strip AI &amp; Camera Signatures
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  Activate the randomized filename toggle to wipe
+                  Activate the randomized filename toggle to remove
                   platform-identifiable default labels (like DALL-E or
-                  Midjourney) and bypass automatic algorithmic suppressing
-                  checks.
+                  Midjourney) and clear camera profile signatures from every
+                  export.
                 </p>
               </div>
             </div>
@@ -384,19 +383,19 @@ export default function Home() {
         <div className="max-w-[1280px] mx-auto w-full border-x border-ink bg-bg">
           <div className="p-10 md:p-14 border-b border-ink text-center select-none bg-bg">
             <div className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold mb-3">
-              ✦ Deep-Dive Product Intel
+              ✦ How It Works
             </div>
             <h2 className="font-serif text-4xl lg:text-5xl font-black text-ink uppercase tracking-tight">
-              The Physics of Canvas Redrawing
+              How ScrubAI Removes Metadata
               <br />
               <em className="font-serif italic font-light text-accent">
-                Total Provenance Destruction.
+                Completely.
               </em>
             </h2>
             <p className="font-body text-sm text-n500 mt-4 max-w-lg mx-auto leading-relaxed">
-              Standard file properties tools fail because tag headers represent
-              only a fraction of digital footprints. Learn how ScrubAI
-              guarantees clean creative files.
+              Standard file properties tools fall short because tag headers are
+              only a fraction of what is hidden in an image. Here is how ScrubAI
+              gives you clean, private files.
             </p>
           </div>
 
@@ -408,7 +407,7 @@ export default function Home() {
                   01 / System Integrity
                 </div>
                 <h3 className="font-serif text-xl md:text-2xl font-bold text-ink uppercase mb-5">
-                  The Canvas Redraw Advantage
+                  Why Pixel Redrawing Beats Tag Deletion
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify mb-6">
                   Traditional metadata editors simply erase common tag headers
@@ -416,16 +415,16 @@ export default function Home() {
                   settings, it leaves deeper tracking metrics completely
                   untouched. Crucially, cryptographically signed C2PA
                   credentials are woven into nested JUMBF structures which basic
-                  tag-removers fail to detect or purge.
+                  tag-removers fail to detect or remove.
                 </p>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
                   ScrubAI takes a fundamentally different path. When you load an
                   image, our offline processor draws the raw pixels onto a
                   sandboxed HTML5 canvas. We then export pure color channels to
                   compile a completely new binary structure from scratch. This
-                  process creates a clean break: since the new image features
-                  entirely fresh binary markers, all tracking footprints are
-                  physically impossible to restore.
+                  creates a clean break: since the new image features entirely
+                  fresh binary markers, the original tracking data is physically
+                  impossible to restore.
                 </p>
               </div>
             </div>
@@ -434,26 +433,23 @@ export default function Home() {
             <div className="p-10 md:p-14 flex flex-col justify-between hover:bg-n100/30 transition-colors select-none bg-bg">
               <div>
                 <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold mb-4">
-                  02 / Reach Protection
+                  02 / Content Credentials
                 </div>
                 <h3 className="font-serif text-xl md:text-2xl font-bold text-ink uppercase mb-5">
-                  Counteracting Platform Suppression
+                  Remove &quot;Made with AI&quot; Tags &amp; C2PA Data
                 </h3>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify mb-6">
-                  Social algorithms are trained to search image uploads for
-                  cryptographic signs of generative origin. In order to tag
-                  posts as &quot;Made with AI&quot; and build copyright catalogs, their
-                  servers examine inbound binary data for signatures from
-                  OpenAI, Midjourney, and Adobe.
+                  Many platforms scan image uploads for cryptographic signs of
+                  generative origin. To tag posts as &quot;Made with AI&quot; and build
+                  provenance catalogs, their servers examine inbound binary data
+                  for signatures from OpenAI, Midjourney, and Adobe.
                 </p>
                 <p className="font-body text-[13px] leading-relaxed text-n700 text-justify">
-                  ScrubAI acts as an absolute neutralizer. By breaking the
-                  cryptographic proof chains and purging custom color markers,
-                  your image is perceived by platform servers as standard,
-                  natural organic camera work. We restore your natural search
-                  and tag distribution, enabling designers and creators to
-                  bypass artificial flags and retain 100% of their creative
-                  organic reach.
+                  ScrubAI removes these markers at the source. By rebuilding the
+                  image from raw pixels, the C2PA proof chains and custom color
+                  markers are gone, so the export carries no embedded
+                  generation history. You decide what information travels with
+                  your images - not the tools that made them.
                 </p>
               </div>
             </div>
