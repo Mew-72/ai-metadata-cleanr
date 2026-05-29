@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { PRICING } from "../../config/pricing";
 
 export const metadata: Metadata = {
-  title: "Pricing — Free & Pro Plans",
+  title: "Pricing - Free & Lifetime Pro Plans",
   description:
-    "Compare ScrubAI Free and Pro plans. Batch processing up to 50 images, unlimited daily cleans, ZIP exports, and camera profile bypass. Starting at $5/mo.",
+    `Compare ScrubAI Free and Lifetime Pro plans. Batch processing up to 50 images, unlimited daily cleans, ZIP exports, and camera profile removal. One-time ${PRICING.displayPrice} payment, no subscription.`,
   openGraph: {
-    title: "ScrubAI Pricing — Free & Pro Plans",
+    title: "ScrubAI Pricing - Free & Lifetime Pro Plans",
     description:
-      "Unlimited metadata stripping, batch processing, and ZIP exports. Compare plans and upgrade instantly.",
+      "Unlimited metadata removal, batch processing, and ZIP exports. One-time payment, no recurring fees. Compare plans and upgrade instantly.",
   },
 };
 
