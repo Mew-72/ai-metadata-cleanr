@@ -5,7 +5,7 @@ import { Footer } from "../../components/Footer";
 export const metadata: Metadata = {
     title: "Privacy Docs",
     description:
-        "Editorial guides on metadata, C2PA Content Credentials, AI reach suppression, and ScrubAI's pixel-redraw pipeline.",
+        "Editorial guides on image metadata, C2PA Content Credentials, photo privacy, and how ScrubAI's pixel-redraw pipeline removes hidden data.",
 };
 
 export default function DocsLayout({
