@@ -8,7 +8,6 @@ import posthog from "posthog-js";
 import { useAppAuth, useAppUser, useUpgradeWatcher } from "../hooks/useAppAuth";
 import {
   useCanvasEngine,
-  type ResizePreset,
   type ExportFormat,
 } from "../hooks/useCanvasEngine";
 import { BillingModal } from "./BillingModal";
@@ -216,7 +215,6 @@ export function CleanerInterface() {
     "none" | "iphone" | "canon" | "sony"
   >("iphone");
   const [exportQuality, setExportQuality] = useState<number>(0.95);
-  const [resizePreset, setResizePreset] = useState<ResizePreset>("original");
   const [exportFormat, setExportFormat] = useState<"auto" | ExportFormat>("auto");
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
@@ -767,7 +765,6 @@ export function CleanerInterface() {
 
       const result = await purifyImage(item.file, {
         quality: exportQuality,
-        resize: resizePreset,
         format: requestedFormat,
       });
 
@@ -792,7 +789,6 @@ export function CleanerInterface() {
         custom_filename: !!customFilename.trim(),
         spoof_profile: spoofProfile,
         export_quality: exportQuality,
-        resize_preset: resizePreset,
         output_format: result.format,
         output_w: result.width,
         output_h: result.height,
@@ -1234,8 +1230,8 @@ export function CleanerInterface() {
                     </div>
                   </div>
 
-                  {/* Export Options Grid (Agent A: quality slider, resize presets, format) */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-1">
+                  {/* Export Options Grid (Agent A: quality slider, format) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-1">
                     {/* Quality Slider */}
                     <div className="flex flex-col gap-1">
                       <label
@@ -1266,37 +1262,6 @@ export function CleanerInterface() {
                           : exportQuality >= 0.7
                             ? "Web optimized"
                             : "Aggressive compression"}
-                      </div>
-                    </div>
-
-                    {/* Resize preset */}
-                    <div className="flex flex-col gap-1">
-                      <label
-                        htmlFor="resize-preset"
-                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
-                      >
-                        Canvas Size
-                      </label>
-                      <select
-                        id="resize-preset"
-                        value={resizePreset}
-                        onChange={(e) =>
-                          setResizePreset(e.target.value as ResizePreset)
-                        }
-                        className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
-                      >
-                        <option value="original" className="bg-bg text-ink">
-                          ◈ Keep Original Resolution
-                        </option>
-                        <option value="1080p" className="bg-bg text-ink">
-                          ▲ 1080p (1920px long edge)
-                        </option>
-                        <option value="4k" className="bg-bg text-ink">
-                          ▲ 4K (3840px long edge)
-                        </option>
-                      </select>
-                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
-                        Auto-downscale destroys upscaler / resize artifacts
                       </div>
                     </div>
 
