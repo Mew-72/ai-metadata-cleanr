@@ -279,7 +279,13 @@ export function CleanerInterface() {
   // in most browsers, so we transparently convert them to JPEG first via the
   // canvas engine. Falls back to "Unknown px" on any failure.
   const getImageDimensions = async (file: File): Promise<string> => {
-    const decodable = await normalizeForAudit(file);
+    let decodable: File;
+    try {
+      decodable = await normalizeForAudit(file);
+    } catch {
+      // If normalization fails, fall back to original file
+      decodable = file;
+    }
     return new Promise((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(decodable);
