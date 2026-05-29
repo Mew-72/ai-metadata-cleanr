@@ -116,8 +116,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column (Visual and Security Assurance Card) */}
-            <div className="p-10 md:p-14 lg:p-20 flex flex-col justify-center bg-n100/10 relative overflow-hidden min-h-[500px]">
+            {/* Right Column (Visual and Security Assurance Card) — hidden on mobile/tablet to avoid confusing users into clicking the mockup instead of the real workspace below. */}
+            <div className="hidden lg:flex p-10 md:p-14 lg:p-20 flex-col justify-center bg-n100/10 relative overflow-hidden min-h-[500px]">
               {/* Background elegant red glow */}
               <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-red-500/10 blur-[100px] pointer-events-none" />
 
@@ -494,9 +494,8 @@ export default function Home() {
                     </span>
                   </button>
                   <div
-                    className={`grid transition-all duration-200 ease-in-out ${
-                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                    }`}
+                    className={`grid transition-all duration-200 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                      }`}
                   >
                     <div className="overflow-hidden bg-bg">
                       <p className="p-6 pt-0 font-body text-[13px] leading-relaxed text-n700">

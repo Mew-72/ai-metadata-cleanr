@@ -18,7 +18,7 @@ export function Header() {
     const savedTheme = localStorage.getItem("scrubai-theme") as "light" | "dark" | null;
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
-    
+
     setTheme(initialTheme);
     document.documentElement.setAttribute("data-theme", initialTheme);
   }, []);
@@ -55,47 +55,50 @@ export function Header() {
         <nav className="hidden md:flex gap-0 ml-auto h-full" aria-label="Main navigation">
           <Link
             href="/#features"
-            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${
-              pathname === "/#features" ? "text-accent" : ""
-            }`}
+            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${pathname === "/#features" ? "text-accent" : ""
+              }`}
           >
             Features
             <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
           </Link>
           <Link
             href="/pricing"
-            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${
-              pathname === "/pricing" ? "text-accent" : ""
-            }`}
+            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${pathname === "/pricing" ? "text-accent" : ""
+              }`}
           >
             Pricing
             <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
           </Link>
           <Link
             href="/#faq"
-            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${
-              pathname === "/#faq" ? "text-accent" : ""
-            }`}
+            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${pathname === "/#faq" ? "text-accent" : ""
+              }`}
           >
             FAQ
             <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
           </Link>
           <Link
             href="/c2pa-scanner"
-            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${
-              pathname === "/c2pa-scanner" ? "text-accent" : ""
-            }`}
+            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${pathname === "/c2pa-scanner" ? "text-accent" : ""
+              }`}
           >
             C2PA Scanner
+            <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
+          </Link>
+          <Link
+            href="/docs"
+            className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border transition-colors hover:text-accent relative group shrink-0 ${pathname?.startsWith("/docs") ? "text-accent" : ""
+              }`}
+          >
+            Docs
             <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
           </Link>
 
           {isSignedIn && (
             <Link
               href="/dashboard"
-              className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border border-r transition-colors hover:text-accent relative group shrink-0 ${
-                pathname === "/dashboard" ? "text-accent" : ""
-              }`}
+              className={`font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-4.5 h-14 flex items-center border-l border-muted-border border-r transition-colors hover:text-accent relative group shrink-0 ${pathname === "/dashboard" ? "text-accent" : ""
+                }`}
             >
               Dashboard
               <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-150" />
@@ -174,6 +177,13 @@ export function Header() {
             className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
           >
             C2PA Scanner
+          </Link>
+          <Link
+            href="/docs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="font-sans text-[11px] font-bold tracking-widest uppercase text-ink px-6 py-4 hover:text-accent hover:bg-n100 transition-colors"
+          >
+            Docs
           </Link>
           {isSignedIn && (
             <Link

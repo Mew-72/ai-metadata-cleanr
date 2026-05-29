@@ -31,6 +31,15 @@ export default function ThankYouPage() {
   useEffect(() => {
     if (isPro) {
       posthog.capture("pro_subscription_thankyou_viewed");
+      // Notify any other tabs (e.g. the Workspace) that the user just upgraded
+      // so their in-progress queue can flip to Pro entitlements without a reload.
+      try {
+        const bc = new BroadcastChannel("scrubai-auth");
+        bc.postMessage({ type: "upgrade", at: Date.now() });
+        bc.close();
+      } catch {
+        /* BroadcastChannel unsupported — safe to ignore. */
+      }
     }
   }, [isPro]);
 

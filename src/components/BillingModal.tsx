@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import posthog from "posthog-js";
 import { X } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
@@ -13,7 +13,19 @@ interface BillingModalProps {
 }
 
 export function BillingModal({ isOpen, onClose }: BillingModalProps) {
-  const { isSignedIn } = useAppAuth();
+  const { isSignedIn, isPro, refreshAuth } = useAppAuth();
+
+  // When the modal opens, force-refresh Clerk so that a recent upgrade
+  // (PayPal completed in another tab) is reflected immediately. If the user
+  // is already Pro, just dismiss — they don't need to see this gate at all.
+  useEffect(() => {
+    if (!isOpen) return;
+    refreshAuth();
+  }, [isOpen, refreshAuth]);
+
+  useEffect(() => {
+    if (isOpen && isPro) onClose();
+  }, [isOpen, isPro, onClose]);
 
   if (!isOpen) return null;
 
