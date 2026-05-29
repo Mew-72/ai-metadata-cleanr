@@ -22,7 +22,6 @@ import {
   Sparkles,
   HelpCircle,
   Lock,
-  FileCode,
   X,
 } from "lucide-react";
 
@@ -217,8 +216,7 @@ export function CleanerInterface() {
   const [exportQuality, setExportQuality] = useState<number>(0.95);
   const [exportFormat, setExportFormat] = useState<"auto" | ExportFormat>("auto");
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
-  const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
-  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
   const [isGuestLimitModalOpen, setIsGuestLimitModalOpen] = useState(false);
   const [cleanCount, setCleanCount] = useState<number>(0);
   const [mounted, setMounted] = useState(false);
@@ -754,11 +752,11 @@ export function CleanerInterface() {
     };
   };
 
-  // Clean a single file utilizing the canvas engine (HEIC convert → resize → re-export)
+  // Clean a single file utilizing the canvas engine (HEIC convert → re-export)
   const cleanSingleFile = async (
     item: UploadedFile,
     index: number,
-  ): Promise<UploadedFile> => {
+
     try {
       const requestedFormat: ExportFormat | undefined =
         exportFormat === "auto" ? undefined : exportFormat;
