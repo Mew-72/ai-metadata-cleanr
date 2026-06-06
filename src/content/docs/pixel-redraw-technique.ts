@@ -1,7 +1,7 @@
-export const annihilationMath = `## Tag stripping vs pixel redraw
+export const pixelRedrawTechnique = `## Tag stripping vs pixel redraw
 
-Most "metadata removers" you'll find online — including the one your OS
-ships with — operate at the **container** layer. They open a JPEG or
+Most "metadata removers" you'll find online - including the one your OS
+ships with - operate at the **container** layer. They open a JPEG or
 PNG, walk the chunked structure, and delete the chunks they recognize.
 
 That sounds thorough. It isn't. Here's why.
@@ -46,9 +46,9 @@ Once the image becomes raw pixel data on a canvas, **every container-
 level marker is gone**. There is no APP segment, no JUMBF, no XMP, no
 ICC profile. The output is a brand-new binary built from arithmetic on
 RGBA values. The original headers cannot survive this transition because
-they aren't part of the pixel data — they were sidecar to it.
+they aren't part of the pixel data - they were sidecar to it.
 
-This is the "annihilation": the new file is *physically incapable* of
+This is the "complete removal": the new file is *physically incapable* of
 carrying the old credentials, the same way a photocopy of a document is
 physically incapable of carrying the original document's watermark
 fibers.
@@ -64,21 +64,21 @@ signature in a JUMBF block is computed over a hash of:
 
 Re-encoding pixels through a canvas changes the *essence hash*. Even if
 a tool somehow re-attached the original JUMBF block to the new file,
-**it would no longer validate** — the hash would mismatch, and any
+**it would no longer validate** - the hash would mismatch, and any
 verifier would reject the credentials as tampered. Most platforms then
 treat tampered-credentials as either "untrusted" or simply absent,
 which puts the file back into the normal distribution lane.
 
 ## What about steganographic watermarks?
 
-Some generative tools embed watermarks directly into pixel patterns —
+Some generative tools embed watermarks directly into pixel patterns -
 SynthID by DeepMind is the most prominent. ScrubAI's pixel redraw runs
 through:
 
 1. Decoding to RGBA at native resolution.
-2. Optional resize to a preset (1080p, 4K) — many steganographic
+2. Optional resize to a preset (1080p, 4K) - many steganographic
    watermarks are *resolution-coupled* and break under resize.
-3. Optional quality drop on JPEG re-encode — JPEG's DCT quantization is
+3. Optional quality drop on JPEG re-encode - JPEG's DCT quantization is
    lossy by design and tends to disrupt low-amplitude pixel patterns.
 
 This isn't a mathematical guarantee against every steganographic
@@ -113,5 +113,5 @@ hex viewer and search for the markers:
 - \`DALL\` or \`midjourney\` (filename signatures)
 
 Every one of those should return zero hits in a ScrubAI output. That's
-what total annihilation looks like in bytes.
+what complete metadata removal looks like in bytes.
 `;

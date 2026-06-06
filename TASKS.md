@@ -1,4 +1,4 @@
-# ScrubAI v1.5 — Multi-Agent Task Board
+# ScrubAI v1.5 - Multi-Agent Task Board
 
 **Branch:** `v1.5`
 **Started:** 2026-05-28
@@ -48,7 +48,7 @@ Files: `src/app/docs/page.tsx` (NEW), `src/app/docs/layout.tsx` (NEW), `src/app/
 
 - [x] **D1. Docs route shell** — Next.js App Router `/docs` index with sidebar + content pane in the existing newsprint design.
 - [x] **D2. Reach Penalties Guide** — long-form editorial piece on Instagram & Pinterest metadata-driven suppression.
-- [x] **D3. Annihilation Math** — pixel-redraw vs metadata-stripping, with security validation reasoning.
+- [x] **D3. Pixel Redraw Technique** — pixel-redraw vs metadata-stripping, with security validation reasoning.
 - [x] **D4. Client-side docs search** — fast in-memory filter pane, no server hit.
 - [x] **D5. Surface docs from Header / Footer** — add a "Docs" link so users can find the new section.
 

@@ -23,6 +23,7 @@ import {
   HelpCircle,
   Lock,
   FileCode,
+  Check,
   X,
 } from "lucide-react";
 
@@ -978,49 +979,43 @@ export function CleanerInterface() {
         accept="image/*,.heic,.heif"
         className="hidden"
       />
-      <div className="grid grid-cols-1 lg:grid-cols-3 border-b-4 border-ink">
-        {/* Left column: Drag & Drop Zone + Image Queue (Span 2) */}
-        <div className="lg:col-span-2 border-r-0 lg:border-r border-ink flex flex-col min-h-[500px]">
-          {/* Top Panel Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-6 border-b border-ink bg-n100 gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="font-serif text-lg font-bold tracking-tight text-ink">
-                Scrubbing Workspace
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px]">
+        {/* Left column: Drag & Drop Zone + Image Queue */}
+        <div className="lg:border-r border-muted-border flex flex-col min-h-[520px] lg:min-h-[620px]">
+          {/* Top toolbar */}
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center px-5 py-3.5 border-b border-muted-border bg-surface gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-sans text-[14px] font-semibold tracking-tight text-ink">
+                Workspace
               </span>
-              <span
-                className={`text-[9px] font-mono px-2 py-0.5 border border-ink ${activeTier === "pro"
-                  ? "bg-accent text-white"
-                  : "bg-bg text-ink"
-                  }`}
-              >
-                {activeTier === "pro"
-                  ? "PRO TIER ACTIVATED"
-                  : "FREE TIER (1 FILE LIMIT)"}
-              </span>
-              {activeTier === "free" && (
-                <span className="text-[9px] font-mono px-2 py-0.5 border border-ink bg-accent/5 text-accent font-bold animate-pulse">
-                  {isSignedIn ? "FREE MEMBER SCRUBS" : "GUEST SCRUBS"}:{" "}
-                  {cleanCount} / 5 IMAGES
-                </span>
+              {activeTier === "pro" ? (
+                <span className="pill pill-pro">Pro</span>
+              ) : (
+                <>
+                  <span className="pill pill-neutral">Free</span>
+                  <span className="pill pill-accent">
+                    {cleanCount} / 5 cleans today
+                  </span>
+                </>
               )}
             </div>
 
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-2">
               {files.length > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="font-mono text-[9px] uppercase tracking-wider text-accent border border-accent/20 px-3 py-1.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none"
+                  className="font-sans text-[12.5px] font-medium text-n600 hover:text-danger rounded-md px-2.5 py-1.5 hover:bg-n100 transition-colors cursor-pointer"
                 >
-                  Clear Workspace
+                  Clear all
                 </button>
               )}
 
               <button
                 onClick={handleUseSample}
-                className="font-mono text-[9px] uppercase tracking-wider bg-ink text-bg px-3.5 py-1.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none flex items-center gap-1.5"
+                className="inline-flex items-center gap-1.5 rounded-md border border-muted-border bg-surface text-ink px-3 py-1.5 font-sans text-[12.5px] font-medium hover:bg-n100 transition-colors cursor-pointer"
               >
-                <Sparkles size={10} />
-                Load Sample Image
+                <Sparkles size={12} strokeWidth={2.2} className="text-accent" />
+                Try a sample
               </button>
             </div>
           </div>
@@ -1031,66 +1026,72 @@ export function CleanerInterface() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-all ${isDragging
-              ? "dropzone-active"
-              : ""
+            className={`flex-1 flex flex-col p-5 lg:p-6 transition-all ${isDragging ? "dropzone-active" : ""
               }`}
           >
             {files.length === 0 ? (
-              <div className="max-w-md mx-auto py-12 flex flex-col items-center">
-                <div className="w-16 h-16 border border-ink flex items-center justify-center mb-6 bg-bg transition-transform hover:scale-105 duration-200">
-                  <Upload size={24} className="text-ink" />
+              <button
+                onClick={handleBrowseFiles}
+                className="group flex-1 w-full flex flex-col items-center justify-center cursor-pointer rounded-2xl border-2 border-dashed border-n300 hover:border-accent hover:bg-accent-soft/50 transition-colors py-12"
+                aria-label="Browse files to clean"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-accent-soft text-accent flex items-center justify-center mb-5 transition-transform group-hover:scale-105">
+                  <Upload size={24} strokeWidth={2} />
                 </div>
 
-                <h3 className="font-serif text-2xl font-bold text-ink tracking-tight mb-2">
-                  DRAG & DROP IMAGE HERE
+                <h3 className="font-sans text-[22px] lg:text-[28px] font-semibold text-ink tracking-tight mb-2">
+                  Drop an image to clean it
                 </h3>
-                <p className="font-body text-xs text-n500 mb-6 leading-relaxed">
-                  Purify files completely locally in your browser. Raw pixel
-                  redraw guarantees total annihilation of EXIF, XMP, IPTC
-                  labels, and cryptographically signed C2PA markers. JPEG,
-                  PNG, WebP, and iOS HEIC/HEIF supported.
+                <p className="font-sans text-[13.5px] text-n500 mb-7 leading-relaxed max-w-md text-center px-4">
+                  Drag a file here, or click anywhere in this box to browse.
+                  Processed locally in your browser. Nothing is uploaded.
                 </p>
 
-                <button
-                  onClick={handleBrowseFiles}
-                  className="bg-ink text-bg border-2 border-ink px-7 py-3 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
-                >
-                  Browse Local Files
-                </button>
-                <div className="font-mono text-[9px] text-n400 uppercase tracking-widest mt-3.5">
-                  100% Client-Side. Images Never Uploaded to Servers.
+                <div className="inline-flex items-center gap-2 rounded-md bg-ink text-bg px-5 py-2.5 font-sans text-[13px] font-medium group-hover:bg-accent transition-colors">
+                  Choose a file
                 </div>
-              </div>
+
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-sans text-[11.5px] text-n500 px-4 text-center">
+                  <span>JPG · PNG · WebP · AVIF · HEIC</span>
+                  <span className="text-n300">·</span>
+                  <span>Up to {activeTier === "pro" ? "20" : "10"} MB</span>
+                  {activeTier !== "pro" && (
+                    <>
+                      <span className="text-n300">·</span>
+                      <span>5 free cleans / day</span>
+                    </>
+                  )}
+                </div>
+              </button>
             ) : (
               <div className="w-full h-full flex flex-col">
-                {/* Images Queue List */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full p-2">
+                {/* Images Queue Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full">
                   {files.map((item, idx) => {
                     const isSelected = item.id === selectedFileId;
                     return (
                       <div
                         key={item.id}
                         onClick={() => setSelectedFileId(item.id)}
-                        className={`border-2 p-4 text-left cursor-pointer flex flex-col justify-between transition-all select-none hover:border-ink ${isSelected
-                          ? "border-ink bg-n100 shadow-md"
-                          : "border-muted-border bg-bg"
+                        className={`rounded-xl border p-3.5 text-left cursor-pointer flex flex-col gap-2 transition-all select-none ${isSelected
+                          ? "border-accent bg-accent-soft/40 ring-2 ring-accent/15"
+                          : "border-muted-border bg-surface hover:border-n300"
                           }`}
                       >
-                        <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
                             <FileImage
-                              size={16}
-                              className={`${isSelected ? "text-accent" : "text-n500"}`}
+                              size={13}
+                              className={`shrink-0 ${isSelected ? "text-accent" : "text-n400"}`}
                             />
-                            <span className="font-mono text-[10px] font-bold tracking-tight text-ink truncate max-w-[130px]">
+                            <span className="font-sans text-[12px] font-medium text-ink truncate">
                               {item.name}
                             </span>
                           </div>
 
                           <button
                             onClick={(e) => handleDeleteFile(item.id, e)}
-                            className="text-n400 hover:text-accent cursor-pointer"
+                            className="text-n400 hover:text-danger cursor-pointer shrink-0"
                             title="Remove file"
                           >
                             <Trash2 size={12} />
@@ -1098,69 +1099,70 @@ export function CleanerInterface() {
                         </div>
 
                         {/* File Details */}
-                        <div className="mt-4 pt-3 border-t border-muted-border font-mono text-[9px] text-n500 flex flex-col gap-1.5">
-                          <div>
-                            Size:{" "}
-                            <span className="font-bold text-ink">
+                        <div className="font-sans text-[11px] text-n500 flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span>Size</span>
+                            <span className="font-medium text-ink">
                               {(item.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
-                          <div>
-                            Dimensions:{" "}
-                            <span className="font-bold text-ink">
-                              {item.dimensions || "Loading..."}
+                          <div className="flex items-center justify-between">
+                            <span>Dimensions</span>
+                            <span className="font-medium text-ink truncate ml-2">
+                              {item.dimensions || "—"}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between mt-2.5">
+                          <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-muted-border">
                             <span
-                              className={`px-1.5 py-0.5 text-[8px] font-bold border ${item.status === "done"
-                                ? "bg-green-800/10 border-green-800 text-green-800"
+                              className={`pill ${item.status === "done"
+                                ? "pill-accent"
                                 : item.status === "cleaning"
-                                  ? "bg-amber-500/10 border-amber-500 text-amber-500 animate-pulse"
-                                  : "bg-bg border-ink/20 text-n500"
+                                  ? "pill-warn animate-pulse"
+                                  : "pill-neutral"
                                 }`}
                             >
-                              {item.status.toUpperCase()}
+                              {item.status === "done"
+                                ? "Cleaned"
+                                : item.status === "cleaning"
+                                  ? "Cleaning…"
+                                  : item.status === "audited"
+                                    ? "Ready"
+                                    : "Pending"}
                             </span>
-
-                            {item.status === "done" && (
-                              <span className="text-[8px] font-bold text-green-800 flex items-center gap-0.5">
-                                ✓ Sanitized
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
                     );
                   })}
 
-                  {/* Quick Drop Zone placeholder inside Queue */}
+                  {/* Add more files tile */}
                   {files.length < 50 && (
-                    <div
+                    <button
                       onClick={handleBrowseFiles}
-                      className="border-2 border-dashed border-ink/25 hover:border-ink p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[120px] transition-colors"
+                      className="rounded-xl border-2 border-dashed border-n300 hover:border-accent hover:bg-accent-soft/40 p-3.5 flex flex-col items-center justify-center text-center cursor-pointer min-h-[120px] transition-colors"
                     >
-                      <Upload size={16} className="text-n500 mb-2" />
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-n500">
-                        Add More files
+                      <Upload size={16} className="text-n500 mb-1.5" />
+                      <span className="font-sans text-[12px] font-medium text-n600">
+                        Add more
                       </span>
-                    </div>
+                    </button>
                   )}
                 </div>
 
                 {/* Batch Action Bar */}
-                <div className="mt-auto p-6 border-t border-ink bg-bg flex flex-col gap-4">
-                  {/* Two Column Control Grid: Filename & Safe Spoof Profile */}
+                <div className="mt-5 pt-5 border-t border-muted-border flex flex-col gap-4">
+                  {/* Two Column Control Grid: Filename & Spoof Profile */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Filename Input */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="output-filename"
-                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                        className="font-sans text-[12px] font-medium text-n600"
                       >
                         {files.length > 1
-                          ? "ZIP Archive Name (optional)"
-                          : "Output Filename (optional)"}
+                          ? "ZIP archive name"
+                          : "Output filename"}
+                        <span className="text-n400 font-normal"> (optional)</span>
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -1174,7 +1176,7 @@ export function CleanerInterface() {
                               : files[0]?.name?.replace(/\.[^/.]+$/, "") ||
                               "cleaned_image"
                           }
-                          className="flex-1 bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent select-text placeholder:text-n400"
+                          className="flex-1 bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 placeholder:text-n400"
                         />
                         <button
                           onClick={() => {
@@ -1183,63 +1185,60 @@ export function CleanerInterface() {
                               .substring(2, 8);
                             setCustomFilename(`batch_${rand}`);
                           }}
-                          className="shrink-0 border border-ink px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-n500 hover:bg-ink hover:text-bg transition-colors cursor-pointer select-none"
-                          title="Generate a random suffix for the archive name"
+                          className="shrink-0 rounded-md border border-muted-border bg-bg px-3 py-2 font-sans text-[12px] font-medium text-n600 hover:bg-n100 transition-colors cursor-pointer"
+                          title="Generate a random suffix"
                         >
-                          ↻ Randomize
+                          Randomize
                         </button>
                       </div>
-                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
-                        {files.length > 1
-                          ? "Files inside ZIP are always auto-renamed to neutral names"
-                          : "Files are always auto-renamed to neutral names"}
+                      <div className="font-sans text-[11px] text-n500">
+                        Files are auto-renamed to neutral names regardless.
                       </div>
                     </div>
 
-                    {/* Safe Spoof Profile Select */}
-                    <div className="flex flex-col gap-1">
+                    {/* Spoof Profile Select */}
+                    <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="spoof-profile"
-                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                        className="font-sans text-[12px] font-medium text-n600"
                       >
-                        Safe Spoof Profile (Bypasses AI reach suppression)
+                        Camera profile
                       </label>
                       <select
                         id="spoof-profile"
                         value={spoofProfile}
                         onChange={(e) => setSpoofProfile(e.target.value as any)}
-                        className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
+                        className="bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 cursor-pointer"
                       >
-                        <option value="iphone" className="bg-bg text-ink">
-                          📱 Apple iPhone 15 Capture Footprint (Recommended)
+                        <option value="iphone">
+                          iPhone 15 (recommended)
                         </option>
-                        <option value="canon" className="bg-bg text-ink">
-                          📷 Canon EOS 5D Professional SLR Footprint
+                        <option value="canon">
+                          Canon EOS 5D Mark IV
                         </option>
-                        <option value="sony" className="bg-bg text-ink">
-                          📷 Sony Alpha 7R Professional SLR Footprint
+                        <option value="sony">
+                          Sony Alpha 7R V
                         </option>
-                        <option value="none" className="bg-bg text-ink">
-                          🛡 Sterile Capture Footprint (100% Stripped / Blank)
+                        <option value="none">
+                          None (sterile, all metadata stripped)
                         </option>
                       </select>
-                      <div className="font-mono text-[8px] text-accent uppercase tracking-wider font-bold">
-                        Injects standard, safe metadata to blend in perfectly on
-                        social platforms
+                      <div className="font-sans text-[11px] text-n500">
+                        Injects safe camera metadata to bypass AI reach suppression.
                       </div>
                     </div>
                   </div>
 
-                  {/* Export Options Grid (Agent A: quality slider, format) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-1">
+                  {/* Export Options */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Quality Slider */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="export-quality"
-                        className="font-mono text-[9px] tracking-widest uppercase text-n500 flex items-center justify-between"
+                        className="font-sans text-[12px] font-medium text-n600 flex items-center justify-between"
                       >
-                        <span>Export Quality</span>
-                        <span className="font-bold text-ink">
+                        <span>Export quality</span>
+                        <span className="font-mono text-[12px] font-semibold text-ink">
                           {Math.round(exportQuality * 100)}%
                         </span>
                       </label>
@@ -1256,7 +1255,7 @@ export function CleanerInterface() {
                         className="w-full accent-accent cursor-pointer h-2"
                         aria-label="Export quality"
                       />
-                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
+                      <div className="font-sans text-[11px] text-n500">
                         {exportQuality >= 0.95
                           ? "Studio fidelity (near-lossless)"
                           : exportQuality >= 0.7
@@ -1266,12 +1265,12 @@ export function CleanerInterface() {
                     </div>
 
                     {/* Output format */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="export-format"
-                        className="font-mono text-[9px] tracking-widest uppercase text-n500"
+                        className="font-sans text-[12px] font-medium text-n600"
                       >
-                        Output Format
+                        Output format
                       </label>
                       <select
                         id="export-format"
@@ -1279,64 +1278,49 @@ export function CleanerInterface() {
                         onChange={(e) =>
                           setExportFormat(e.target.value as typeof exportFormat)
                         }
-                        className="bg-transparent border border-ink px-3 py-2 font-mono text-[11px] text-ink outline-none transition-all focus:bg-n100 focus:border-accent cursor-pointer"
+                        className="bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 cursor-pointer"
                       >
-                        <option value="auto" className="bg-bg text-ink">
-                          ◈ Auto (match input format)
-                        </option>
-                        <option value="image/png" className="bg-bg text-ink">
-                          PNG · Lossless (largest file)
-                        </option>
-                        <option value="image/jpeg" className="bg-bg text-ink">
-                          JPEG · Compressed (smallest file)
-                        </option>
-                        <option value="image/webp" className="bg-bg text-ink">
-                          WebP · Modern web
-                        </option>
+                        <option value="auto">Auto (match input)</option>
+                        <option value="image/png">PNG · Lossless</option>
+                        <option value="image/jpeg">JPEG · Compressed</option>
+                        <option value="image/webp">WebP · Modern web</option>
                       </select>
-                      <div className="font-mono text-[8px] text-n400 uppercase tracking-wider">
-                        PNG ignores quality. HEIC inputs are converted to JPEG.
+                      <div className="font-sans text-[11px] text-n500">
+                        PNG ignores quality. HEIC is converted to JPEG.
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
-                    {/* Free Tier / Guest Usage real-time counter */}
+                  {/* Bottom action row */}
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-2">
                     {activeTier === "free" ? (
-                      <div className="text-left py-1">
-                        <div className="font-mono text-[9px] text-n500 uppercase tracking-widest">
-                          {isSignedIn
-                            ? "Free Account Usage"
-                            : "Guest Cleaning Usage"}
-                        </div>
-                        <div className="font-sans text-[11px] font-bold text-ink uppercase tracking-wider mt-0.5">
-                          {cleanCount} of 5 free cleans used
-                        </div>
+                      <div className="font-sans text-[12px] text-n500">
+                        <span className="font-medium text-ink">{cleanCount}</span>
+                        {" "}of 5 free cleans used today
                       </div>
                     ) : (
-                      <div className="font-mono text-[9px] text-green-800 uppercase tracking-widest font-bold">
-                        ✓ PRO Member Session (Unlimited Client-side Cleans)
+                      <div className="inline-flex items-center gap-1.5 font-sans text-[12px] text-accent font-medium">
+                        <ShieldCheck size={13} strokeWidth={2.4} />
+                        Pro · Unlimited cleans
                       </div>
                     )}
 
-                    {/* Clean and Export Actions */}
-                    <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                       {!allPurified ? (
                         <button
                           onClick={handleCleanImages}
-                          className="w-full sm:w-auto bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors"
+                          className="btn-accent w-full sm:w-auto"
                         >
-                          Sanitize Metadata ({files.length}{" "}
-                          {files.length === 1 ? "File" : "Files"})
+                          Clean {files.length}{" "}
+                          {files.length === 1 ? "image" : "images"}
                         </button>
                       ) : (
                         <button
                           onClick={handleDownload}
-                          className="w-full sm:w-auto bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink transition-colors flex items-center justify-center gap-2"
+                          className="btn-accent w-full sm:w-auto"
                         >
-                          <Download size={14} />
-                          Download{" "}
-                          {files.length > 1 ? "ZIP Bundle" : "Cleaned Image"}
+                          <Download size={14} strokeWidth={2.2} />
+                          Download {files.length > 1 ? "ZIP" : "image"}
                         </button>
                       )}
                     </div>
@@ -1347,47 +1331,48 @@ export function CleanerInterface() {
           </div>
         </div>
 
-        {/* Right column: Auditing Panel */}
-        <div className="bg-n100 p-8 flex flex-col select-none overflow-hidden">
-          <div className="flex items-center gap-2 mb-4 pb-2.5 border-b border-ink shrink-0">
-            <ShieldCheck size={18} className="text-accent" />
-            <h3 className="font-serif text-xl font-bold tracking-tight text-ink">
+        {/* Right column: Audit Panel */}
+        <div className="bg-bg flex flex-col select-none overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-muted-border bg-surface shrink-0">
+            <ShieldCheck size={15} className="text-accent" strokeWidth={2.2} />
+            <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">
               {selectedFile?.status === "done"
-                ? "Scrubbing Report"
-                : "Auditing Briefing"}
+                ? "Cleaning report"
+                : "Metadata audit"}
             </h3>
           </div>
 
           {!selectedFile ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-n500">
-              <HelpCircle size={24} className="mb-3 opacity-50" />
-              <p className="font-body text-xs leading-relaxed max-w-[200px]">
-                Upload an image or load the sample file to perform a structural
-                tracking audit.
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-n500">
+              <div className="w-12 h-12 rounded-2xl bg-n100 flex items-center justify-center mb-4">
+                <HelpCircle size={20} className="text-n400" strokeWidth={2} />
+              </div>
+              <p className="font-sans text-[13px] leading-relaxed max-w-[220px]">
+                Drop an image to see what metadata it carries before cleaning.
               </p>
             </div>
           ) : selectedFile.status === "done" ? (
-            /* Processing Complete Stats Panel */
-            <div className="flex-1 flex flex-col justify-between overflow-y-auto pr-1">
-              <div className="flex flex-col gap-5">
-                {/* Header Badge */}
-                <div className="bg-green-800/5 border border-green-800 p-4 flex items-start gap-3">
+            /* Cleaning Report */
+            <div className="flex-1 flex flex-col p-5 overflow-y-auto">
+              <div className="flex flex-col gap-4">
+                {/* Success header */}
+                <div className="rounded-xl bg-accent-soft border border-accent/30 p-4 flex items-start gap-3">
                   <ShieldCheck
                     size={18}
-                    className="text-green-800 shrink-0 mt-0.5"
+                    className="text-accent shrink-0 mt-0.5"
+                    strokeWidth={2.2}
                   />
                   <div>
-                    <h4 className="font-serif text-sm font-bold text-green-900 uppercase tracking-wide">
-                      Processing Complete!
+                    <h4 className="font-sans text-[14px] font-semibold text-ink">
+                      Image cleaned
                     </h4>
-                    <p className="font-body text-[10px] text-n500 mt-0.5 leading-normal">
-                      The image has been completely stripped of tracking
-                      vulnerabilities and re-encoded with the safe footprint.
+                    <p className="font-sans text-[12px] text-n600 mt-1 leading-relaxed">
+                      All tracking metadata removed. Re-encoded with the selected camera profile.
                     </p>
                   </div>
                 </div>
 
-                {/* Grid stats — all live values from the scrubbed file */}
+                {/* Stats grid */}
                 {(() => {
                   const cleanedSize = selectedFile.cleanedBlob?.size ?? 0;
                   const originalSize = selectedFile.size || 0;
@@ -1399,7 +1384,7 @@ export function CleanerInterface() {
                     cleanedSize === 0
                       ? "—"
                       : sizeDelta >= 0
-                        ? `${sizeDelta.toFixed(1)}%`
+                        ? `−${sizeDelta.toFixed(1)}%`
                         : `+${Math.abs(sizeDelta).toFixed(1)}%`;
 
                   const dims = selectedFile.dimensions || "";
@@ -1414,189 +1399,163 @@ export function CleanerInterface() {
                         ? pixelCount.toLocaleString()
                         : "—";
 
-                  // PNG is lossless regardless of slider position.
                   const outputMime = selectedFile.cleanedBlob?.type ?? "";
                   const isLossless = outputMime === "image/png";
                   const qualityLabel = isLossless
                     ? "Lossless"
                     : `${Math.round(exportQuality * 100)}%`;
 
+                  const stats = [
+                    { label: "Risk tags removed", value: "All" },
+                    { label: "Size", value: sizeLabel },
+                    { label: "Pixels", value: pixelLabel },
+                    { label: "Quality", value: qualityLabel },
+                  ];
+
                   return (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                          Scrubbed
-                        </span>
-                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                          1 Image
-                        </span>
-                      </div>
-                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                          Size {sizeDelta >= 0 ? "Reduction" : "Increase"}
-                        </span>
-                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                          {sizeLabel}
-                        </span>
-                      </div>
-                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                          Pixels Redrawn
-                        </span>
-                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                          {pixelLabel}
-                        </span>
-                      </div>
-                      <div className="border border-ink bg-bg p-3 flex flex-col justify-center">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-n400">
-                          Output Quality
-                        </span>
-                        <span className="font-serif text-lg font-bold text-ink mt-0.5">
-                          {qualityLabel}
-                        </span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {stats.map((s) => (
+                        <div
+                          key={s.label}
+                          className="rounded-lg border border-muted-border bg-surface px-3 py-2.5"
+                        >
+                          <div className="font-sans text-[11px] text-n500">
+                            {s.label}
+                          </div>
+                          <div className="font-sans text-[16px] font-semibold text-ink mt-0.5">
+                            {s.value}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   );
                 })()}
 
-                {/* File Details / Cleaning Report */}
-                <div className="border border-ink/20 bg-bg p-4 flex flex-col gap-3">
-                  <h5 className="font-serif text-xs font-bold text-ink uppercase tracking-wide border-b border-ink/10 pb-1.5">
-                    Scrubbing Details & Actions
+                {/* What we did */}
+                <div className="rounded-xl border border-muted-border bg-surface p-4">
+                  <h5 className="font-sans text-[12px] font-medium text-n600 mb-3">
+                    What we removed
                   </h5>
-                  <div className="flex flex-col gap-2 font-mono text-[9px] text-n500">
-                    <div className="flex items-center gap-2 text-ink">
-                      <span className="text-green-800 font-bold">✓</span>
-                      <span>Removed C2PA Content Credentials</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-ink">
-                      <span className="text-green-800 font-bold">✓</span>
-                      <span>
-                        Stripped device make, model, & software tracking blocks
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-ink">
-                      <span className="text-green-800 font-bold">✓</span>
-                      <span>Erased EXIF GPS and IPTC metadata blocks</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-ink">
-                      <span className="text-green-800 font-bold">✓</span>
-                      <span>
-                        Applied raw canvas pixel redraw pipeline to disrupt AI
-                        classification
-                      </span>
-                    </div>
+                  <ul className="flex flex-col gap-2 font-sans text-[13px] text-ink">
+                    {[
+                      "C2PA Content Credentials",
+                      "Device make, model & software fingerprints",
+                      "EXIF GPS coordinates and IPTC blocks",
+                      "Pixel-redrew the image to disrupt classifiers",
+                    ].map((s) => (
+                      <li key={s} className="flex items-start gap-2">
+                        <Check
+                          size={13}
+                          className="text-accent mt-0.5 shrink-0"
+                          strokeWidth={2.5}
+                        />
+                        <span>{s}</span>
+                      </li>
+                    ))}
                     {spoofProfile !== "none" ? (
-                      <div className="flex items-center gap-2 text-accent font-bold">
-                        <span className="text-accent font-bold">✓</span>
+                      <li className="flex items-start gap-2 text-accent font-medium">
+                        <Check
+                          size={13}
+                          className="mt-0.5 shrink-0"
+                          strokeWidth={2.5}
+                        />
                         <span>
-                          Injected Safe {spoofProfile.toUpperCase()} Camera
-                          Footprint Profile
+                          Injected {spoofProfile === "iphone" ? "iPhone" : spoofProfile === "canon" ? "Canon" : "Sony"} camera profile
                         </span>
-                      </div>
+                      </li>
                     ) : (
-                      <div className="flex items-center gap-2 text-n500">
-                        <span className="text-n500 font-bold">✓</span>
-                        <span>Left Sterile footprint (100% stripped)</span>
-                      </div>
+                      <li className="flex items-start gap-2 text-n500">
+                        <Check
+                          size={13}
+                          className="mt-0.5 shrink-0"
+                          strokeWidth={2.5}
+                        />
+                        <span>Sterile output (no camera profile injected)</span>
+                      </li>
                     )}
-                  </div>
+                  </ul>
                 </div>
 
-                {/* Success Banner */}
-                <div className="bg-green-800/5 border border-green-800/30 p-3 text-center font-mono text-[9px] text-green-800 uppercase tracking-widest font-bold">
-                  ✓ Success! Image processed successfully!
+                <div className="rounded-lg bg-n100 px-4 py-3 font-sans text-[12px] text-n600 leading-relaxed">
+                  Tip: re-upload the cleaned file here to verify nothing slipped through.
                 </div>
-              </div>
-
-              <div className="mt-8 border-t border-ink/15 pt-5 font-mono text-[9px] text-n500 leading-relaxed uppercase tracking-wider">
-                💡 Re-upload the downloaded image into the analyzer below to
-                verify total tracking signal annihilation!
               </div>
             </div>
           ) : (
-            /* Active Audit / Inspection Panel */
-            <div className="flex-1 flex flex-col justify-between overflow-hidden">
+            /* Active audit / inspection */
+            <div className="flex-1 flex flex-col p-5 overflow-hidden">
               <div className="flex flex-col flex-1 overflow-hidden">
-                <div className="flex justify-between items-center mb-2 shrink-0">
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-n500">
-                    File Under Inspection:
+                <div className="flex justify-between items-center mb-1.5 shrink-0">
+                  <span className="font-sans text-[11px] text-n500">
+                    Inspecting
                   </span>
-                  <span className="font-mono text-[9px] font-bold text-accent">
-                    {selectedFile.status.toUpperCase()}
+                  <span className="pill pill-neutral">
+                    {selectedFile.status === "audited" ? "Ready" : "Scanning…"}
                   </span>
                 </div>
-                <h4 className="font-serif text-base font-bold text-ink truncate mb-3 shrink-0">
+                <h4 className="font-sans text-[14px] font-semibold text-ink truncate mb-4 shrink-0">
                   {selectedFile.file.name}
                 </h4>
 
-                {/* EXTRACTED TAGS */}
                 <div className="flex-1 flex flex-col overflow-hidden">
-                  {/* Risk Assessment Badge */}
+                  {/* Risk badge */}
                   {selectedFile.riskLevel === "high" && (
-                    <div className="bg-accent/5 border border-accent p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                    <div className="rounded-xl bg-danger-soft border border-danger/30 p-3.5 mb-3 flex items-start gap-2.5 shrink-0">
                       <AlertTriangle
-                        size={16}
-                        className="text-accent shrink-0 mt-0.5"
+                        size={15}
+                        className="text-danger shrink-0 mt-0.5"
+                        strokeWidth={2.2}
                       />
                       <div>
-                        <div className="font-sans text-[10px] font-bold text-accent uppercase tracking-wider">
-                          High Tracking Risk — {selectedFile.riskTagCount}{" "}
-                          risk tag
-                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
-                          found
+                        <div className="font-sans text-[13px] font-semibold text-danger">
+                          High risk — {selectedFile.riskTagCount} tracking tag
+                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""} found
                         </div>
-                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                          This file contains device identification, software
-                          fingerprints, or cryptographic signatures that
-                          platforms use to shadowban or limit reach.
+                        <p className="font-sans text-[12px] text-n600 leading-relaxed mt-0.5">
+                          Device fingerprints, GPS, or signed credentials platforms use to limit reach.
                         </p>
                       </div>
                     </div>
                   )}
 
                   {selectedFile.riskLevel === "low" && (
-                    <div className="bg-amber-500/5 border border-amber-500 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                    <div className="rounded-xl bg-warn-soft border border-warn/30 p-3.5 mb-3 flex items-start gap-2.5 shrink-0">
                       <AlertTriangle
-                        size={16}
-                        className="text-amber-500 shrink-0 mt-0.5"
+                        size={15}
+                        className="text-warn shrink-0 mt-0.5"
+                        strokeWidth={2.2}
                       />
                       <div>
-                        <div className="font-sans text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                          Low Risk — {selectedFile.riskTagCount} tracking tag
-                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}{" "}
-                          detected
+                        <div className="font-sans text-[13px] font-semibold text-warn">
+                          Low risk — {selectedFile.riskTagCount} tracking tag
+                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}
                         </div>
-                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                          Minor tracking indicators found. Run the purifier to
-                          eliminate them completely.
+                        <p className="font-sans text-[12px] text-n600 leading-relaxed mt-0.5">
+                          Run the cleaner to eliminate them completely.
                         </p>
                       </div>
                     </div>
                   )}
 
                   {selectedFile.riskLevel === "clean" && (
-                    <div className="bg-green-800/5 border border-green-800 p-3.5 mb-4 flex items-start gap-2.5 shrink-0">
+                    <div className="rounded-xl bg-accent-soft border border-accent/30 p-3.5 mb-3 flex items-start gap-2.5 shrink-0">
                       <ShieldCheck
-                        size={16}
-                        className="text-green-800 shrink-0 mt-0.5"
+                        size={15}
+                        className="text-accent shrink-0 mt-0.5"
+                        strokeWidth={2.2}
                       />
                       <div>
-                        <div className="font-sans text-[10px] font-bold text-green-800 uppercase tracking-wider">
-                          ✓ Safe — No tracking metadata detected
+                        <div className="font-sans text-[13px] font-semibold text-accent">
+                          No tracking metadata detected
                         </div>
-                        <p className="font-body text-[10px] text-n500 leading-snug mt-0.5">
-                          This file contains only harmless structural
-                          properties. It is safe for platform upload without
-                          reach suppression risk.
+                        <p className="font-sans text-[12px] text-n600 leading-relaxed mt-0.5">
+                          Only structural file properties found. Safe to upload.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* Audit Tags Table — split into Risk and Structural so
-                      cleaned files visibly read as "0 risk" even though the
-                      browser still emits harmless JFIF/PNG structural fields. */}
+                  {/* Audit table */}
                   {(() => {
                     const entries = selectedFile.metadata
                       ? Object.entries(selectedFile.metadata)
@@ -1609,42 +1568,34 @@ export function CleanerInterface() {
                       : [];
 
                     return (
-                      <div className="border border-ink bg-bg flex flex-col flex-1 overflow-hidden h-[300px] max-h-[400px]">
-                        <div className="grid grid-cols-2 font-mono text-[9px] uppercase tracking-widest text-n500 border-b border-ink p-2 bg-n100 font-bold shrink-0">
-                          <div>Indicator Tag</div>
-                          <div>
-                            Extracted Data{" "}
-                            {entries ? `(${entries.length})` : ""}
-                          </div>
-                        </div>
-
+                      <div className="rounded-xl border border-muted-border bg-surface flex flex-col flex-1 overflow-hidden min-h-[280px] max-h-[400px]">
                         <div className="overflow-y-auto flex-1">
                           {!entries ? (
-                            <div className="p-4 text-center font-mono text-[9px] text-n400 uppercase tracking-widest animate-pulse">
-                              Scanning structural headers...
+                            <div className="p-4 text-center font-sans text-[12px] text-n400 animate-pulse">
+                              Scanning structural headers…
                             </div>
                           ) : (
                             <>
                               {/* Risk section */}
-                              <div className="bg-accent/5 border-b border-accent/20 px-2.5 py-1.5 font-mono text-[8px] tracking-widest uppercase text-accent font-bold flex items-center justify-between sticky top-0 z-10">
-                                <span>⚠ Tracking Risk Tags</span>
-                                <span>{riskEntries.length}</span>
+                              <div className="bg-danger-soft border-b border-muted-border px-3 py-2 font-sans text-[11px] font-semibold text-danger flex items-center justify-between sticky top-0 z-10">
+                                <span>Tracking risk</span>
+                                <span className="font-mono">{riskEntries.length}</span>
                               </div>
                               {riskEntries.length === 0 ? (
-                                <div className="px-3 py-3 font-mono text-[9px] text-green-700 uppercase tracking-widest border-b border-muted-border">
-                                  ✓ None detected — file is safe to upload
+                                <div className="px-3 py-3 font-sans text-[12px] text-accent font-medium border-b border-muted-border">
+                                  None detected — safe to upload.
                                 </div>
                               ) : (
                                 <div className="divide-y divide-muted-border">
                                   {riskEntries.map(([key, val]) => (
                                     <div
                                       key={key}
-                                      className="grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2 bg-accent/3"
+                                      className="grid grid-cols-[1fr_1fr] px-3 py-2 font-mono text-[11px] items-start gap-2"
                                     >
-                                      <div className="font-medium text-accent">
-                                        {key}
+                                      <div className="text-danger break-all">
+                                        {key.replace(/^⚠\s*/, "")}
                                       </div>
-                                      <div className="font-bold break-all text-ink">
+                                      <div className="font-medium text-ink break-all">
                                         {val}
                                       </div>
                                     </div>
@@ -1652,15 +1603,13 @@ export function CleanerInterface() {
                                 </div>
                               )}
 
-                              {/* Structural section (collapsed by default
-                                  visually — these are harmless browser-emitted
-                                  fields that show up on every clean file). */}
-                              <div className="bg-n100 border-y border-muted-border px-2.5 py-1.5 font-mono text-[8px] tracking-widest uppercase text-n500 font-bold flex items-center justify-between sticky top-0 z-10">
-                                <span>◈ Structural File Properties (harmless)</span>
-                                <span>{structuralEntries.length}</span>
+                              {/* Structural section */}
+                              <div className="bg-n100 border-y border-muted-border px-3 py-2 font-sans text-[11px] font-medium text-n500 flex items-center justify-between sticky top-0 z-10">
+                                <span>Structural file properties (harmless)</span>
+                                <span className="font-mono">{structuralEntries.length}</span>
                               </div>
                               {structuralEntries.length === 0 ? (
-                                <div className="px-3 py-3 font-mono text-[9px] text-n400 uppercase tracking-widest">
+                                <div className="px-3 py-3 font-sans text-[12px] text-n400">
                                   None
                                 </div>
                               ) : (
@@ -1668,12 +1617,12 @@ export function CleanerInterface() {
                                   {structuralEntries.map(([key, val]) => (
                                     <div
                                       key={key}
-                                      className="grid grid-cols-2 p-2.5 font-mono text-[10px] items-start gap-2"
+                                      className="grid grid-cols-[1fr_1fr] px-3 py-2 font-mono text-[11px] items-start gap-2"
                                     >
-                                      <div className="font-medium text-n500">
-                                        {key}
+                                      <div className="text-n500 break-all">
+                                        {key.replace(/^◈\s*/, "")}
                                       </div>
-                                      <div className="font-bold break-all text-n500">
+                                      <div className="text-n600 break-all">
                                         {val}
                                       </div>
                                     </div>
@@ -1689,12 +1638,8 @@ export function CleanerInterface() {
                 </div>
               </div>
 
-              {/* Auditor action instructions */}
-              <div className="mt-8 border-t border-ink/15 pt-5 font-mono text-[9px] text-n500 leading-relaxed uppercase tracking-wider shrink-0">
-                💡 Canvas pipeline draws raw pixel RGB values to strip all
-                tracking metadata. Structural file properties (image
-                dimensions, color space, JFIF version) are emitted by every
-                browser and are not tracking risks.
+              <div className="mt-4 rounded-lg bg-n100 px-4 py-3 font-sans text-[12px] text-n600 leading-relaxed shrink-0">
+                Structural fields (image dimensions, color space, JFIF version) are harmless — they're emitted by every browser.
               </div>
             </div>
           )}
@@ -1707,57 +1652,45 @@ export function CleanerInterface() {
         onClose={() => setIsBillingModalOpen(false)}
       />
 
-      {/* Guest Limit annoying popup */}
+      {/* Guest Limit Modal */}
       {isGuestLimitModalOpen &&
         mounted &&
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 select-none animate-fadeIn overflow-y-auto"
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300 select-none animate-fadeIn overflow-y-auto"
             style={{ zIndex: 999999 }}
           >
-            <div className="bg-bg border-4 border-ink p-6 md:p-8 max-w-md w-full relative shadow-heavy select-none animate-scaleUp max-h-full overflow-y-auto">
-              {/* Close button */}
+            <div className="surface-card max-w-md w-full p-7 relative animate-scaleUp max-h-full overflow-y-auto">
               <button
                 onClick={() => setIsGuestLimitModalOpen(false)}
-                className="absolute top-4 right-4 text-n400 hover:text-ink transition-colors cursor-pointer select-none"
+                className="absolute top-4 right-4 w-7 h-7 rounded-md text-n400 hover:text-ink hover:bg-n100 flex items-center justify-center transition-colors cursor-pointer"
                 title="Close"
               >
-                <X size={16} />
+                <X size={14} strokeWidth={2.2} />
               </button>
 
-              {/* Warning header */}
-              <div className="flex items-center gap-3 border-b-2 border-ink pb-4 mb-6">
-                <AlertTriangle
-                  className="text-accent shrink-0 animate-bounce"
-                  size={24}
-                />
+              <div className="flex items-start gap-3.5 pb-5 border-b border-muted-border mb-5">
+                <span className="w-10 h-10 rounded-xl bg-warn-soft text-warn flex items-center justify-center shrink-0">
+                  <AlertTriangle size={18} strokeWidth={2.2} />
+                </span>
                 <div>
-                  <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold">
-                    {isSignedIn
-                      ? "✦ Free Tier Limit Reached ✦"
-                      : "✦ Guest Limit Reached ✦"}
+                  <div className="font-sans text-[12px] uppercase tracking-wider text-warn font-medium">
+                    Daily limit reached
                   </div>
-                  <h3 className="font-serif text-xl font-bold text-ink uppercase tracking-tight mt-0.5">
-                    Scrubbing Limit
+                  <h3 className="font-sans text-[20px] font-semibold text-ink tracking-tight mt-0.5">
+                    You've used 5 / 5 free cleans
                   </h3>
                 </div>
               </div>
 
-              {/* Description */}
-              <p className="font-body text-xs text-n500 leading-relaxed mb-6">
-                You have scrubbed <strong>5 / 5 free images</strong> in this{" "}
-                {isSignedIn ? "account session" : "guest session"}.
-              </p>
-
-              <p className="font-sans text-[11px] font-bold text-ink uppercase tracking-wide bg-n100 border border-ink/10 p-3 mb-6 flex items-center gap-2">
+              <p className="font-sans text-[13.5px] text-n600 leading-relaxed mb-5">
                 {isSignedIn
-                  ? "✦ Upgrade to Pro to unlock unlimited daily processing and up to 50 files concurrently."
-                  : "✦ Create a free account to unlock your personal workspace or acquire a Pro plan for unlimited cleanups."}
+                  ? "Upgrade to Lifetime Pro for unlimited daily cleans, batches up to 50 images, and ZIP exports."
+                  : "Create a free account to save your work, or upgrade to Pro for unlimited cleans."}
               </p>
 
-              {/* Action buttons */}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5">
                 {isSignedIn ? (
                   <>
                     <button
@@ -1768,59 +1701,31 @@ export function CleanerInterface() {
                         setIsGuestLimitModalOpen(false);
                         setIsBillingModalOpen(true);
                       }}
-                      className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
-                      style={{ transition: "all 0.15s ease" }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--bg)";
-                        e.currentTarget.style.color = "var(--accent)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--accent)";
-                        e.currentTarget.style.color = "#ffffff";
-                      }}
+                      className="btn-accent w-full"
                     >
-                      Upgrade to Pro Tiers
+                      See Pro plans
                     </button>
                     <button
                       onClick={() => setIsGuestLimitModalOpen(false)}
-                      className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2"
+                      className="btn-secondary w-full"
                     >
-                      Dismiss Workspace
+                      Maybe later
                     </button>
                   </>
                 ) : (
                   <>
                     <SignUpButton mode="modal">
-                      <button
-                        className="w-full bg-accent text-white border-2 border-accent py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer shadow-sm flex items-center justify-center gap-2"
-                        style={{ transition: "all 0.15s ease" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "var(--bg)";
-                          e.currentTarget.style.color = "var(--accent)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "var(--accent)";
-                          e.currentTarget.style.color = "#ffffff";
-                        }}
-                      >
-                        Create Free Account
+                      <button className="btn-accent w-full">
+                        Create free account
                       </button>
                     </SignUpButton>
                     <SignInButton mode="modal">
-                      <button className="w-full bg-ink text-bg border-2 border-ink py-3 font-sans text-xs font-bold tracking-widest uppercase cursor-pointer hover:bg-bg hover:text-ink transition-colors duration-150 flex items-center justify-center gap-2">
-                        Sign In to Existing Account
+                      <button className="btn-secondary w-full">
+                        Sign in
                       </button>
                     </SignInButton>
                   </>
                 )}
-              </div>
-
-              {/* Subtext info */}
-              <div className="mt-6 text-center border-t border-ink/10 pt-4">
-                <span className="font-mono text-[9px] text-n500 uppercase tracking-widest">
-                  ScrubAI · Client-Side Protection Service
-                </span>
               </div>
             </div>
           </div>,

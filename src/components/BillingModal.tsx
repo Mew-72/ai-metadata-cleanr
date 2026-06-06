@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import posthog from "posthog-js";
-import { X } from "lucide-react";
+import { X, Sparkles, Check } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
 import { PRICING } from "../config/pricing";
@@ -15,9 +15,6 @@ interface BillingModalProps {
 export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   const { isSignedIn, isPro, refreshAuth } = useAppAuth();
 
-  // When the modal opens, force-refresh Clerk so that a recent upgrade
-  // (PayPal completed in another tab) is reflected immediately. If the user
-  // is already Pro, just dismiss — they don't need to see this gate at all.
   useEffect(() => {
     if (!isOpen) return;
     refreshAuth();
@@ -30,90 +27,94 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
       <div
-        className="absolute inset-0 bg-ink/75 backdrop-blur-xs transition-opacity duration-200"
+        className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
-      <div className="relative bg-bg border-4 border-ink w-full max-w-[480px] p-6 md:p-8 z-10 shadow-2xl transition-colors duration-255 select-none max-h-full overflow-y-auto">
-        {/* Close Button */}
+      <div className="relative surface-card w-full max-w-[460px] p-7 lg:p-8 z-10 animate-scaleUp max-h-full overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-ink hover:text-accent cursor-pointer"
-          aria-label="Close modal"
+          className="absolute top-4 right-4 w-8 h-8 rounded-md text-n400 hover:text-ink hover:bg-n100 flex items-center justify-center transition-colors cursor-pointer"
+          aria-label="Close"
         >
-          <X size={20} />
+          <X size={15} strokeWidth={2.2} />
         </button>
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold mb-1">
-            ✦ Upgrade Required
-          </div>
-          <h3 className="font-serif text-3xl font-bold tracking-tight text-ink">
-            Unlock Batch Cleaning
+        <div className="mb-5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1 font-sans text-[12px] font-medium mb-3">
+            <Sparkles size={12} strokeWidth={2.4} />
+            Upgrade required
+          </span>
+          <h3 className="font-sans text-[22px] font-semibold tracking-tight text-ink mb-1.5">
+            Unlock batch cleaning
           </h3>
-          <div className="h-1 bg-ink my-3 w-16 mx-auto" />
-          <p className="font-body text-xs text-n500 max-w-sm mx-auto leading-relaxed">
-            Free tier is limited to 1 image at a time. Upgrade to the Pro Tier
-            to sanitize up to 50 images in a single batch, unlock ZIP exports,
-            and support serverless metadata annihilation.
+          <p className="font-sans text-[13.5px] text-n500 leading-relaxed">
+            Free tier handles one image at a time. Lifetime Pro unlocks batches
+            of 50, ZIP exports, and unlimited daily cleans.
           </p>
         </div>
 
-        {/* Pricing Card — Lifetime Pro */}
-        <div className="mb-6">
-          <div className="border border-ink p-5 bg-n100 relative group flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-mono text-[9px] tracking-widest uppercase text-n500 font-bold">
-                  Lifetime Pro
-                </span>
-                <span className="bg-accent text-white font-mono text-[9px] font-bold px-2 py-0.5 tracking-wider">
-                  PAY ONCE
-                </span>
-              </div>
-              <div className="font-serif text-3xl font-black text-ink mb-1">
-                {PRICING.displayPrice}
-                <span className="text-sm font-normal text-n500"> one-time</span>
-              </div>
-              <p className="font-body text-[11px] text-n500 leading-snug">
-                Batch processing up to 50 files. Unlimited daily cleans &amp;
-                C2PA scans. ZIP exports. All future tools included. Pay once,
-                own forever.
-              </p>
-            </div>
-            <div className="mt-4">
-              {isSignedIn ? (
-                <button
-                  onClick={() => {
-                    posthog.capture("upgrade_clicked", {
-                      plan: "lifetime_pro",
-                    });
-                    window.location.href = "/pricing";
-                  }}
-                  className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none"
-                >
-                  {`Get Lifetime Pro — ${PRICING.displayPrice}`}
-                </button>
-              ) : (
-                <SignInButton mode="modal">
-                  <button className="w-full bg-ink text-bg border-2 border-ink py-2 font-sans text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent transition-colors select-none">
-                    Log In to Upgrade
-                  </button>
-                </SignInButton>
-              )}
-            </div>
+        <div className="rounded-xl border border-accent/30 bg-accent-soft/40 p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-sans text-[12px] uppercase tracking-wider text-accent font-medium">
+              Lifetime Pro
+            </span>
+            <span className="pill pill-accent">Pay once</span>
           </div>
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className="font-sans text-[32px] font-semibold tracking-tight text-ink">
+              {PRICING.displayPrice}
+            </span>
+            <span className="font-sans text-[13px] text-n500">one-time</span>
+          </div>
+          <ul className="flex flex-col gap-2 mb-1">
+            {[
+              "Up to 50 images per batch",
+              "Unlimited cleans &amp; C2PA scans",
+              "ZIP exports",
+              "All future tools included",
+            ].map((f) => (
+              <li
+                key={f}
+                className="flex items-start gap-2 font-sans text-[13px] text-n700"
+              >
+                <Check
+                  size={13}
+                  className="text-accent mt-0.5 shrink-0"
+                  strokeWidth={2.5}
+                />
+                <span dangerouslySetInnerHTML={{ __html: f }} />
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Footer info */}
-        <div className="text-center font-mono text-[9px] text-n400 uppercase tracking-widest">
-          🔒 100% Secure Checkout with PayPal
+        <div className="flex flex-col gap-2.5">
+          {isSignedIn ? (
+            <button
+              onClick={() => {
+                posthog.capture("upgrade_clicked", { plan: "lifetime_pro" });
+                window.location.href = "/pricing";
+              }}
+              className="btn-accent w-full"
+            >
+              Get Lifetime Pro · {PRICING.displayPrice}
+            </button>
+          ) : (
+            <SignInButton mode="modal">
+              <button className="btn-accent w-full">Sign in to upgrade</button>
+            </SignInButton>
+          )}
+          <button onClick={onClose} className="btn-secondary w-full">
+            Maybe later
+          </button>
         </div>
+
+        <p className="font-sans text-[11.5px] text-n500 text-center mt-4">
+          Secure checkout via PayPal · No subscription
+        </p>
       </div>
     </div>
   );

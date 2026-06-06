@@ -20,7 +20,7 @@ export function useAppAuth() {
   /**
    * Force-refresh the Clerk user object so callers can detect a recently
    * applied upgrade (e.g. PayPal capture finished in another tab) without
-   * needing a full page reload. Safe to call repeatedly — Clerk dedupes
+   * needing a full page reload. Safe to call repeatedly - Clerk dedupes
    * in-flight reload requests internally.
    */
   const refreshAuth = useCallback(async () => {
@@ -52,7 +52,7 @@ export function useAppUser() {
 }
 
 /**
- * Watches for an upgrade event happening outside the current tab — e.g.
+ * Watches for an upgrade event happening outside the current tab - e.g.
  * a user finishes PayPal checkout in `/pricing`, returns to the workspace,
  * and we want their queue to switch to Pro entitlements without losing
  * the in-progress files.
@@ -86,7 +86,7 @@ export function useUpgradeWatcher(enabled: boolean = true) {
         if (e?.data?.type === "upgrade") refreshAuth();
       };
     } catch {
-      // BroadcastChannel unsupported — visibility listener is enough.
+      // BroadcastChannel unsupported - visibility listener is enough.
     }
 
     intervalRef.current = setInterval(() => {

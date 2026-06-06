@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronRight, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import { DOCS, getDoc } from "../../../content/docs";
 import { MarkdownView } from "../../../components/docs/MarkdownView";
 
@@ -35,79 +35,92 @@ export default async function DocPage({ params }: DocPageProps) {
     const next = idx >= 0 && idx < DOCS.length - 1 ? DOCS[idx + 1] : null;
 
     return (
-        <main className="flex-1 max-w-[1280px] w-full mx-auto border-x border-ink bg-bg">
-            <article className="grid grid-cols-1 lg:grid-cols-[1fr_3fr] divide-y lg:divide-y-0 lg:divide-x divide-ink">
-                {/* Sidebar with the full doc list */}
-                <aside className="p-6 md:p-8 bg-n100 select-none">
+        <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 lg:gap-12">
+                {/* Sidebar */}
+                <aside className="lg:sticky lg:top-24 lg:self-start flex flex-col gap-5">
                     <Link
                         href="/docs"
-                        className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest text-n500 hover:text-accent transition-colors"
+                        className="inline-flex items-center gap-1.5 font-sans text-[12.5px] text-n500 hover:text-ink transition-colors"
                     >
-                        <ArrowLeft size={10} />
-                        All briefings
+                        <ArrowLeft size={13} strokeWidth={2.2} />
+                        All guides
                     </Link>
-                    <div className="font-mono text-[10px] tracking-widest uppercase text-accent font-bold mt-6 mb-3 pb-2 border-b border-ink">
-                        ✦ All Briefings
+
+                    <div className="surface-card p-4">
+                        <div className="font-sans text-[11px] uppercase tracking-wider text-n500 font-medium mb-3 px-2">
+                            Privacy guides
+                        </div>
+                        <ul className="flex flex-col gap-0.5">
+                            {DOCS.map((d) => {
+                                const active = d.slug === slug;
+                                return (
+                                    <li key={d.slug}>
+                                        <Link
+                                            href={`/docs/${d.slug}`}
+                                            aria-current={active ? "page" : undefined}
+                                            className={`block rounded-md px-3 py-2.5 transition-colors ${active
+                                                    ? "bg-accent-soft text-accent"
+                                                    : "text-n600 hover:bg-n100 hover:text-ink"
+                                                }`}
+                                        >
+                                            <span
+                                                className={`block font-sans text-[10.5px] uppercase tracking-wider mb-0.5 ${active ? "text-accent" : "text-n400"
+                                                    }`}
+                                            >
+                                                {d.category}
+                                            </span>
+                                            <span
+                                                className={`block font-sans text-[13px] ${active ? "font-semibold" : "font-medium"
+                                                    }`}
+                                            >
+                                                {d.title}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
-                    <ul className="flex flex-col gap-1">
-                        {DOCS.map((d) => {
-                            const active = d.slug === slug;
-                            return (
-                                <li key={d.slug}>
-                                    <Link
-                                        href={`/docs/${d.slug}`}
-                                        aria-current={active ? "page" : undefined}
-                                        className={`block px-3 py-2 text-[12px] font-sans border-l-2 transition-colors select-none ${active
-                                                ? "border-accent bg-bg text-ink font-bold"
-                                                : "border-transparent text-n500 hover:border-ink hover:text-ink hover:bg-bg"
-                                            }`}
-                                    >
-                                        <span className="block font-mono text-[8px] uppercase tracking-widest text-n400 mb-0.5">
-                                            {d.category}
-                                        </span>
-                                        {d.title}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
                 </aside>
 
                 {/* Article body */}
-                <div className="p-8 md:p-14 max-w-3xl bg-bg">
-                    <header className="mb-8 pb-6 border-b-2 border-ink">
-                        <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] uppercase tracking-widest text-n500 mb-4">
-                            <span className="text-accent font-bold">{doc.category}</span>
-                            <span className="text-n400">·</span>
-                            <span className="flex items-center gap-1">
-                                <Clock size={10} />
+                <article className="min-w-0 max-w-3xl">
+                    <header className="mb-8 pb-6 border-b border-muted-border">
+                        <div className="flex flex-wrap items-center gap-2 font-sans text-[12px] text-n500 mb-4">
+                            <span className="font-medium text-accent uppercase tracking-wider">
+                                {doc.category}
+                            </span>
+                            <span className="text-n300">·</span>
+                            <span className="inline-flex items-center gap-1">
+                                <Clock size={11} strokeWidth={2.2} />
                                 {doc.readMinutes} min read
                             </span>
                         </div>
-                        <h1 className="font-serif text-3xl md:text-5xl font-black uppercase tracking-tight text-ink leading-[0.95]">
+                        <h1 className="font-sans text-[32px] md:text-[44px] font-semibold tracking-tight text-ink leading-[1.1] mb-3">
                             {doc.title}
                         </h1>
-                        <p className="font-body text-[14px] text-n500 leading-relaxed mt-4 max-w-2xl">
+                        <p className="font-sans text-[15px] text-n500 leading-relaxed max-w-2xl">
                             {doc.summary}
                         </p>
                     </header>
 
                     <MarkdownView source={doc.body} />
 
-                    {/* Prev/Next nav */}
                     <nav
-                        className="mt-12 pt-6 border-t-2 border-ink grid grid-cols-1 md:grid-cols-2 gap-3"
+                        className="mt-12 pt-6 border-t border-muted-border grid grid-cols-1 md:grid-cols-2 gap-3"
                         aria-label="Doc navigation"
                     >
                         {prev ? (
                             <Link
                                 href={`/docs/${prev.slug}`}
-                                className="group border-2 border-ink p-4 hover:bg-n100 transition-colors"
+                                className="card-soft p-5 group"
                             >
-                                <span className="font-mono text-[9px] tracking-widest uppercase text-n500 flex items-center gap-1">
-                                    <ArrowLeft size={10} /> Previous
+                                <span className="inline-flex items-center gap-1.5 font-sans text-[12px] text-n500">
+                                    <ArrowLeft size={12} strokeWidth={2.2} />
+                                    Previous
                                 </span>
-                                <span className="font-serif text-sm font-bold text-ink mt-1 block group-hover:text-accent transition-colors">
+                                <span className="block font-sans text-[15px] font-semibold text-ink mt-1.5 group-hover:text-accent transition-colors">
                                     {prev.title}
                                 </span>
                             </Link>
@@ -117,12 +130,13 @@ export default async function DocPage({ params }: DocPageProps) {
                         {next ? (
                             <Link
                                 href={`/docs/${next.slug}`}
-                                className="group border-2 border-ink p-4 hover:bg-n100 transition-colors text-right"
+                                className="card-soft p-5 group text-right"
                             >
-                                <span className="font-mono text-[9px] tracking-widest uppercase text-n500 flex items-center justify-end gap-1">
-                                    Next <ChevronRight size={10} />
+                                <span className="inline-flex items-center justify-end gap-1.5 font-sans text-[12px] text-n500 w-full">
+                                    Next
+                                    <ArrowRight size={12} strokeWidth={2.2} />
                                 </span>
-                                <span className="font-serif text-sm font-bold text-ink mt-1 block group-hover:text-accent transition-colors">
+                                <span className="block font-sans text-[15px] font-semibold text-ink mt-1.5 group-hover:text-accent transition-colors">
                                     {next.title}
                                 </span>
                             </Link>
@@ -130,8 +144,8 @@ export default async function DocPage({ params }: DocPageProps) {
                             <span />
                         )}
                     </nav>
-                </div>
-            </article>
+                </article>
+            </div>
         </main>
     );
 }

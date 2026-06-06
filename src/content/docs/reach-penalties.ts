@@ -1,7 +1,7 @@
 export const reachPenalties = `## Why your reach is silently flatlining
 
 You posted an image to Instagram. It looked great. Engagement died. You
-post the next one. Same fate. Nothing about the picture changed — it's
+post the next one. Same fate. Nothing about the picture changed - it's
 the same camera, same composition, same caption rhythm. So what gives?
 
 In most modern visual feeds, the *image binary itself* is now a
@@ -40,7 +40,7 @@ giveaway. Common patterns flagged in 2026:
 - \`History\` blocks naming AI processors
 - \`ImageDescription\` matching known generation prompt formats
 
-XMP packets persist across most image edits — Photoshop, Lightroom, and
+XMP packets persist across most image edits - Photoshop, Lightroom, and
 even file system copies preserve them. A "remove metadata" toggle in
 Finder or File Explorer typically clears EXIF but leaves XMP and JUMBF
 fully intact.
@@ -79,7 +79,7 @@ ScrubAI's pipeline is built specifically for this problem:
 
 - **Canvas pixel redraw.** We decode the image, draw raw RGBA values on
   a fresh \`<canvas>\`, then re-encode. The output is a *brand new* binary
-  with zero inherited headers — no JUMBF, no XMP, no EXIF, no \`Software\`
+  with zero inherited headers - no JUMBF, no XMP, no EXIF, no \`Software\`
   tag.
 - **Filename randomization.** Output files are named like
   \`img_a4q9c2_3.jpg\` so pattern-matchers find nothing.
@@ -95,7 +95,7 @@ Combined, these three steps neutralize the surface area platforms scan.
 ScrubAI is not a watermark remover for visible overlays, and it does
 not claim to defeat *content-fingerprint* models that classify the
 pixels themselves (e.g. PhotoDNA-style hashes for known datasets).
-What it does defeat is the metadata-driven suppression layer — which,
+What it does defeat is the metadata-driven suppression layer - which,
 in practice, is what costs creators the most reach today.
 
 ## Want to verify it yourself?
@@ -104,7 +104,7 @@ in practice, is what costs creators the most reach today.
 2. Run it through any major EXIF inspector (e.g. Phil Harvey's exiftool).
    You'll see C2PA, XMP, and EXIF blocks.
 3. Run it through ScrubAI.
-4. Re-inspect the output — those blocks are gone, the file size is
+4. Re-inspect the output - those blocks are gone, the file size is
    smaller, and the binary has no inherited markers.
 
 The numbers don't lie, and the reach data starts moving back to baseline

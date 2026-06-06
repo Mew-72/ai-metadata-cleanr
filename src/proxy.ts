@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Public routes — accessible to everyone (signed in or not)
+// Public routes - accessible to everyone (signed in or not)
 // All other routes are protected by default (inverted security model)
 const isPublicRoute = createRouteMatcher([
   "/",

@@ -7,7 +7,7 @@
  */
 
 import { reachPenalties } from "./reach-penalties";
-import { annihilationMath } from "./annihilation-math";
+import { pixelRedrawTechnique } from "./pixel-redraw-technique";
 import { platformsCheatsheet } from "./platforms-cheatsheet";
 
 export type DocCategory = "Strategy" | "Technical" | "Reference";
@@ -32,7 +32,7 @@ export const DOCS: DocEntry[] = [
         slug: "reach-penalties",
         title: "Why Instagram & Pinterest Penalize AI Metadata",
         summary:
-            "How algorithmic suppression actually works on visual platforms, and why metadata — not the pixels — usually triggers it.",
+            "How algorithmic suppression actually works on visual platforms, and why metadata - not the pixels - usually triggers it.",
         category: "Strategy",
         readMinutes: 9,
         tags: [
@@ -49,8 +49,8 @@ export const DOCS: DocEntry[] = [
         body: reachPenalties,
     },
     {
-        slug: "annihilation-math",
-        title: "The Annihilation Math: Pixel Redraw vs Tag Stripping",
+        slug: "pixel-redraw-technique",
+        title: "Pixel Redraw Technique: Complete Metadata Removal",
         summary:
             "A technical walkthrough of why re-encoding pixels destroys C2PA / JUMBF manifests in ways tag-removers physically cannot.",
         category: "Technical",
@@ -67,7 +67,7 @@ export const DOCS: DocEntry[] = [
             "cryptography",
             "credentials",
         ],
-        body: annihilationMath,
+        body: pixelRedrawTechnique,
     },
     {
         slug: "platforms-cheatsheet",
