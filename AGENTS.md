@@ -63,6 +63,7 @@ src/
 - **Client vs server** — most pages are `"use client"` because the canvas pipeline and PayPal SDK both need the browser. Metadata exports live in sibling `layout.tsx` files (server). Don't break that split.
 - **Privacy invariant** — image bytes never go over the network. Don't `fetch` user images. Don't add SSR for anything that touches `<canvas>` data. Treat this as a hard product constraint.
 - **Analytics** — track UI events (`pricing_page_viewed`, `checkout_completed`, etc.). Never log image content, filenames, or EXIF values.
+- **Writing content** — Never use em dashes, instead use a normal hyphen.
 
 ## Current design direction
 
