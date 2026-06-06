@@ -1,223 +1,138 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { LegalLayout } from "../../components/LegalLayout";
 
 export default function SecurityPolicyPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-bg text-ink font-body transition-colors duration-200">
+    <div className="flex flex-col min-h-screen bg-bg text-ink">
       <Header />
 
-      <main className="flex-1 max-w-[1280px] w-full mx-auto border-x border-ink grid grid-cols-1 lg:grid-cols-12 bg-bg select-none">
-        {/* Left Side: Policy Navigation Sidebar (col-span-3) */}
-        <div className="col-span-1 lg:col-span-3 p-8 border-b lg:border-b-0 lg:border-r border-ink flex flex-col gap-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Link 
-              href="/" 
-              className="w-8 h-8 border border-ink flex items-center justify-center font-mono text-xs hover:bg-ink hover:text-bg transition-colors"
-              title="Back to Purifier"
-            >
-              <ArrowLeft size={14} />
-            </Link>
-            <div className="font-mono text-[9px] uppercase tracking-widest text-n500">
-              Workspace Portal
-            </div>
-          </div>
+      <LegalLayout
+        title="Security Policy"
+        subtitle="Security by absence. Client-side isolation. Data we don't have can't leak."
+        lastUpdated="May 23, 2026"
+      >
+        <section>
+          <h2>01 · Data minimization</h2>
+          <p>
+            The strongest security guarantee is the data we don&apos;t collect.
+            ScrubAI runs entirely in your browser&apos;s sandbox, so there is
+            no centralized database of user images for an attacker to breach.
+          </p>
+          <p>
+            If someone targeted our hosting, they would find static HTML, CSS,
+            and client-side JavaScript — and zero user files, media, or
+            archives.
+          </p>
+        </section>
 
-          <div className="border border-ink p-5 bg-n100">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-n500 mb-4 pb-2 border-b border-ink/10">
-              Legal Framework
-            </div>
-            <ul className="list-none flex flex-col gap-3.5">
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/cookies"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
-                >
-                  Cookie Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/security"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-accent border-l-2 border-accent pl-2.5"
-                >
-                  Security Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/refund"
-                  className="text-[11px] font-bold uppercase tracking-wider block transition-colors text-ink hover:text-accent border-l-2 border-transparent pl-2.5"
-                >
-                  Refund Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
+        <section className="legal-card">
+          <h2>02 · Authentication &amp; sessions (Clerk)</h2>
+          <p>
+            Identity management is delegated to Clerk. The protections it
+            applies on our behalf:
+          </p>
 
-          <div className="border border-ink p-5 bg-bg font-mono text-[9px] leading-relaxed uppercase text-n500">
-            🛡️ ALL SCRUB·AI OPERATIONS RUN 100% LOCALLY IN YOUR CLIENT BROWSER SANDBOX MEMORY.
-          </div>
-        </div>
-
-        {/* Right Side: Editorial Content (col-span-9) */}
-        <div className="col-span-1 lg:col-span-9 p-8 lg:p-12 overflow-hidden">
-          {/* Header Block */}
-          <div className="pb-8 mb-8 double-border-bottom">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar size={12} className="text-accent" />
-              <span className="font-mono text-[9px] uppercase tracking-widest text-n500">
-                Last Updated: May 23, 2026
-              </span>
-            </div>
-            <h1 className="font-serif text-3xl lg:text-6xl font-black uppercase tracking-tight text-ink mb-1.5 leading-none">
-              Security Policy
-            </h1>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-accent font-bold">
-              Security by Absence &middot; Client-Side Isolation Protocols
-            </p>
-          </div>
-
-          {/* Legal Content */}
-          <div className="flex flex-col gap-10">
-            {/* Section 1 */}
-            <div>
-              <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-accent">01.</span>
-                Data Minimization: Security by Absence
-              </h2>
-              <p className="font-body text-[14px] leading-relaxed text-n700 drop-cap">
-                The ultimate security standard is data minimization: we cannot lose, leak, or compromise data we do not collect. Because ScrubAI runs entirely inside your browser's local sandbox memory, there is no centralized database of user images for malicious actors to breach or intercept.
-              </p>
-              <p className="font-body text-[14px] leading-relaxed text-n700 mt-4">
-                If a hacker targeted our backend hosting provider, they would find only static, pre-compiled HTML, CSS, and client-side JavaScript—containing absolutely zero user files, media assets, or personal archives.
+          <div className="legal-grid">
+            <div className="legal-card">
+              <h3>Brute-force protection</h3>
+              <p>
+                Continuous monitoring for login threshold abuses and suspicious
+                endpoint activity.
               </p>
             </div>
-
-            {/* Section 2 */}
-            <div className="border border-ink bg-n100 p-6 flex flex-col gap-4">
-              <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight border-b border-ink/10 pb-2.5 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-accent">02.</span>
-                Authentication & Session Integrity (Clerk)
-              </h2>
-              <p className="font-body text-[13px] leading-relaxed text-n600">
-                We delegate our complete identity management to Clerk, a leading developer-focused security framework. Clerk maintains state-of-the-art defenses to protect your profile:
+            <div className="legal-card">
+              <h3>XSS mitigation</h3>
+              <p>
+                Encrypted, <code>HttpOnly</code> session cookies prevent
+                client-side scripts from reading auth tokens.
               </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">Brute-Force Protection</div>
-                  <p className="font-body text-[12px] text-n600">Monitored continuously against login threshold abuses and suspicious endpoint inquiries.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">XSS Mitigation</div>
-                  <p className="font-body text-[12px] text-n600">Secure, encrypted, <code>HttpOnly</code> cookies prevent client-side script cross-site hacking tokens access.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">CSRF Mitigation</div>
-                  <p className="font-body text-[12px] text-n600">Protected against cross-site request forgery through strict deployment of <code>SameSite</code> cookie tags.</p>
-                </div>
-                <div className="border border-ink/10 bg-bg p-4 flex flex-col gap-1">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-accent font-bold">Session Fixation Prevention</div>
-                  <p className="font-body text-[12px] text-n600">Every sign in/out session token is completely regenerated and the old session immediately invalidated.</p>
-                </div>
-              </div>
             </div>
-
-            {/* Section 3 */}
-            <div>
-              <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-accent">03.</span>
-                Financial and Checkout Security (Stripe)
-              </h2>
-              <p className="font-body text-[14px] leading-relaxed text-n700">
-                Your credit card data is never transmitted, processed, or held on ScrubAI infrastructure. We integrate directly with Stripe (via Clerk Billing) to ensure maximum compliance:
+            <div className="legal-card">
+              <h3>CSRF mitigation</h3>
+              <p>
+                Strict <code>SameSite</code> cookie attributes block cross-site
+                request forgery.
               </p>
-              
-              <ul className="list-none flex flex-col gap-3 font-sans text-[12px] text-ink mt-4 pl-1">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>PCI-DSS Level 1 Compliance:</strong> Stripe is a certified PCI Level 1 Service Provider—the most stringent security standard in the payment processing industry.
-                  </div>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>Encrypted Handshakes:</strong> Checkout sessions are encrypted in transit via Transport Layer Security (TLS 1.3) directly between your device and Stripe.
-                  </div>
-                </li>
-              </ul>
             </div>
-
-            {/* Section 4 */}
-            <div className="border border-ink p-6 flex flex-col gap-4">
-              <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight border-b border-ink/10 pb-2.5 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-accent">04.</span>
-                Content Security Policies (CSP) & Invalidation
-              </h2>
-              <p className="font-body text-[13px] leading-relaxed text-n600">
-                We implement a strict Content Security Policy (CSP) at our application’s header layer. This prevents malicious code injections and unauthorized network calls by restricting resource loading to a pre-approved list of domains:
-              </p>
-              
-              <ul className="list-none flex flex-col gap-3 font-mono text-[10px] text-ink pl-1">
-                <li className="flex items-start gap-2">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>connect-src:</strong> Authorized exclusively for first-party assets (<code>'self'</code>), Clerk API endpoints, Stripe's gateway, and our reverse telemetry proxy (<code>/ingest</code>).
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>img-src:</strong> Authorized exclusively for local blobs (<code>blob:</code>), base64 indicators, and Clerk assets (<code>https://img.clerk.com</code>).
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent font-bold mt-0.5">&middot;</span>
-                  <div>
-                    <strong>worker-src:</strong> Standardized to run secure browser web workers locally.
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            {/* Section 5 */}
-            <div className="pb-4">
-              <h2 className="font-serif text-lg lg:text-xl font-bold text-ink uppercase tracking-tight mb-4 flex items-center gap-2">
-                <span className="font-mono text-[10px] text-accent">05.</span>
-                Reporting Vulnerabilities
-              </h2>
-              <p className="font-body text-[14px] leading-relaxed text-n700">
-                We welcome security feedback. If you discover a potential vulnerability in our code, implementation, or setup, please email us immediately at <code>security@scrubai.app</code> with reproducible steps.
-              </p>
-              <p className="font-body text-[14px] leading-relaxed text-n700 mt-4">
-                We promise to review your disclosure within 48 hours and work with you to implement a fix immediately.
+            <div className="legal-card">
+              <h3>Session rotation</h3>
+              <p>
+                Every sign-in / sign-out rotates the session token; the prior
+                token is immediately invalidated.
               </p>
             </div>
           </div>
-        </div>
-      </main>
+        </section>
+
+        <section>
+          <h2>03 · Payments (PayPal)</h2>
+          <p>
+            Card or bank credentials are never transmitted to or stored on
+            ScrubAI infrastructure. The Lifetime Pro upgrade is processed
+            entirely by PayPal via the official{" "}
+            <code>@paypal/react-paypal-js</code> SDK and verified server-side
+            on capture. We only see PayPal&apos;s order confirmation token.
+          </p>
+
+          <ul>
+            <li>
+              <strong>PCI-DSS compliant.</strong> PayPal is a certified PCI-DSS
+              Service Provider. Cardholder data is entered into PayPal&apos;s
+              own surface, never into a ScrubAI form.
+            </li>
+            <li>
+              <strong>TLS 1.3 in transit.</strong> Checkout sessions are
+              encrypted directly between your device and PayPal.
+            </li>
+            <li>
+              <strong>Server-side verification.</strong> Once PayPal confirms
+              the order, our server independently verifies the captured amount
+              and currency before unlocking Pro entitlements.
+            </li>
+            <li>
+              <strong>One-time authorization.</strong> Lifetime Pro is a single
+              payment — no stored billing token, no saved card, no recurring
+              charge.
+            </li>
+          </ul>
+        </section>
+
+        <section className="legal-card">
+          <h2>04 · Content security policy</h2>
+          <p>
+            We apply a strict CSP at the application layer, restricting
+            resource loading to a pre-approved list of domains:
+          </p>
+          <ul>
+            <li>
+              <strong>connect-src</strong> — first-party (<code>&apos;self&apos;</code>),
+              Clerk APIs, PayPal&apos;s checkout gateway, and our reverse
+              telemetry proxy (<code>/ingest</code>).
+            </li>
+            <li>
+              <strong>img-src</strong> — local blobs (<code>blob:</code>),
+              base64 data URIs, and Clerk profile images.
+            </li>
+            <li>
+              <strong>worker-src</strong> — limited to local web workers.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>05 · Reporting vulnerabilities</h2>
+          <p>
+            Found a vulnerability? Email{" "}
+            <code>security@scrubai.app</code> with reproducible steps. We
+            review disclosures within 48 hours and ship fixes as fast as
+            possible.
+          </p>
+        </section>
+      </LegalLayout>
 
       <Footer />
     </div>

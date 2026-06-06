@@ -7,8 +7,8 @@ import React from "react";
  * ─────────────
  * Tiny zero-dependency Markdown renderer tuned for ScrubAI's docs.
  *
- * Supported syntax (all we need for the editorial guides):
- *   # / ## / ### headings
+ * Supported syntax:
+ *   # / ## / ### / #### headings
  *   Paragraphs (blank-line separated)
  *   - bullet lists
  *   1. ordered lists
@@ -17,8 +17,8 @@ import React from "react";
  *   **bold**, *italic*
  *   GitHub-style tables (| cell | cell |)
  *
- * We intentionally avoid pulling a full MDX parser to keep the bundle
- * tiny and the surface area auditable.
+ * Styled with the v2 Geist + slate aesthetic: soft cards, accent
+ * borders, no all-caps display serifs.
  */
 
 interface MarkdownViewProps {
@@ -44,13 +44,11 @@ function parseBlocks(src: string): Block[] {
     while (i < lines.length) {
         const line = lines[i];
 
-        // Blank line — skip
         if (!line.trim()) {
             i++;
             continue;
         }
 
-        // Fenced code block
         const fence = line.match(/^```(\w*)\s*$/);
         if (fence) {
             const lang = fence[1] || "";
@@ -60,12 +58,11 @@ function parseBlocks(src: string): Block[] {
                 buf.push(lines[i]);
                 i++;
             }
-            i++; // skip closing fence
+            i++;
             out.push({ kind: "code", lang, text: buf.join("\n") });
             continue;
         }
 
-        // Heading
         const heading = line.match(/^(#{1,4})\s+(.*)$/);
         if (heading) {
             const level = heading[1].length as 1 | 2 | 3 | 4;
@@ -74,14 +71,17 @@ function parseBlocks(src: string): Block[] {
             continue;
         }
 
-        // Tables
-        if (isTableRow(line) && i + 1 < lines.length && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1])) {
+        if (
+            isTableRow(line) &&
+            i + 1 < lines.length &&
+            /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1])
+        ) {
             const head = line
                 .trim()
                 .replace(/^\||\|$/g, "")
                 .split("|")
                 .map((c) => c.trim());
-            i += 2; // skip separator
+            i += 2;
             const rows: string[][] = [];
             while (i < lines.length && isTableRow(lines[i])) {
                 const cells = lines[i]
@@ -96,7 +96,6 @@ function parseBlocks(src: string): Block[] {
             continue;
         }
 
-        // Unordered list
         if (/^\s*-\s+/.test(line)) {
             const items: string[] = [];
             while (i < lines.length && /^\s*-\s+/.test(lines[i])) {
@@ -107,7 +106,6 @@ function parseBlocks(src: string): Block[] {
             continue;
         }
 
-        // Ordered list
         if (/^\s*\d+\.\s+/.test(line)) {
             const items: string[] = [];
             while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
@@ -118,7 +116,6 @@ function parseBlocks(src: string): Block[] {
             continue;
         }
 
-        // Paragraph (collect until blank line / heading / list / fence)
         const paraBuf: string[] = [line];
         i++;
         while (
@@ -139,7 +136,6 @@ function parseBlocks(src: string): Block[] {
     return out;
 }
 
-/** Lightweight inline parser — code, bold, italic, in that order. */
 function renderInline(input: string, keyPrefix: string): React.ReactNode[] {
     const tokens: React.ReactNode[] = [];
     let i = 0;
@@ -156,7 +152,6 @@ function renderInline(input: string, keyPrefix: string): React.ReactNode[] {
     while (i < input.length) {
         const ch = input[i];
 
-        // Inline code: `…`
         if (ch === "`") {
             const end = input.indexOf("`", i + 1);
             if (end > i) {
@@ -164,7 +159,7 @@ function renderInline(input: string, keyPrefix: string): React.ReactNode[] {
                 tokens.push(
                     <code
                         key={`${keyPrefix}-c-${key++}`}
-                        className="font-mono text-[0.92em] bg-n100 border border-ink/15 px-1.5 py-0.5"
+                        className="font-mono text-[0.88em] bg-n100 border border-muted-border px-1.5 py-0.5 rounded"
                     >
                         {input.slice(i + 1, end)}
                     </code>,
@@ -174,13 +169,15 @@ function renderInline(input: string, keyPrefix: string): React.ReactNode[] {
             }
         }
 
-        // Bold: **…**
         if (ch === "*" && input[i + 1] === "*") {
             const end = input.indexOf("**", i + 2);
             if (end > i + 1) {
                 flush();
                 tokens.push(
-                    <strong key={`${keyPrefix}-b-${key++}`} className="font-bold text-ink">
+                    <strong
+                        key={`${keyPrefix}-b-${key++}`}
+                        className="font-semibold text-ink"
+                    >
                         {renderInline(input.slice(i + 2, end), `${keyPrefix}-b${key}`)}
                     </strong>,
                 );
@@ -189,7 +186,6 @@ function renderInline(input: string, keyPrefix: string): React.ReactNode[] {
             }
         }
 
-        // Italic: *…*
         if (ch === "*") {
             const end = input.indexOf("*", i + 1);
             if (end > i) {
@@ -216,15 +212,15 @@ export function MarkdownView({ source }: MarkdownViewProps) {
     const blocks = parseBlocks(source);
 
     return (
-        <div className="markdown-view font-body text-[14px] leading-relaxed text-n700">
+        <div className="markdown-view font-sans text-[15px] leading-relaxed text-n600">
             {blocks.map((b, idx) => {
                 switch (b.kind) {
                     case "heading": {
                         const sizes: Record<1 | 2 | 3 | 4, string> = {
-                            1: "font-serif text-3xl md:text-4xl font-black uppercase tracking-tight text-ink mt-10 mb-5",
-                            2: "font-serif text-2xl md:text-3xl font-black uppercase tracking-tight text-ink mt-10 mb-4 pb-2 border-b-2 border-ink",
-                            3: "font-serif text-xl md:text-2xl font-bold tracking-tight text-ink mt-8 mb-3",
-                            4: "font-serif text-lg font-bold tracking-tight text-ink mt-6 mb-2",
+                            1: "font-sans text-[28px] md:text-[32px] font-semibold tracking-tight text-ink mt-10 mb-4",
+                            2: "font-sans text-[22px] md:text-[26px] font-semibold tracking-tight text-ink mt-10 mb-3",
+                            3: "font-sans text-[18px] md:text-[20px] font-semibold tracking-tight text-ink mt-8 mb-2",
+                            4: "font-sans text-[16px] font-semibold tracking-tight text-ink mt-6 mb-2",
                         };
                         const Tag = `h${b.level}` as "h1" | "h2" | "h3" | "h4";
                         return (
@@ -236,7 +232,10 @@ export function MarkdownView({ source }: MarkdownViewProps) {
 
                     case "paragraph":
                         return (
-                            <p key={idx} className="my-4 text-justify">
+                            <p
+                                key={idx}
+                                className="my-4 text-[15px] leading-relaxed text-n600"
+                            >
                                 {renderInline(b.text, `p-${idx}`)}
                             </p>
                         );
@@ -245,7 +244,7 @@ export function MarkdownView({ source }: MarkdownViewProps) {
                         return (
                             <ul
                                 key={idx}
-                                className="my-4 ml-2 pl-5 list-disc marker:text-accent space-y-1.5"
+                                className="my-4 ml-1 pl-5 list-disc marker:text-accent space-y-1.5 text-[14.5px] text-n600 leading-relaxed"
                             >
                                 {b.items.map((it, j) => (
                                     <li key={j}>{renderInline(it, `ul-${idx}-${j}`)}</li>
@@ -257,7 +256,7 @@ export function MarkdownView({ source }: MarkdownViewProps) {
                         return (
                             <ol
                                 key={idx}
-                                className="my-4 ml-2 pl-5 list-decimal marker:text-accent marker:font-bold space-y-1.5"
+                                className="my-4 ml-1 pl-5 list-decimal marker:text-accent marker:font-medium space-y-1.5 text-[14.5px] text-n600 leading-relaxed"
                             >
                                 {b.items.map((it, j) => (
                                     <li key={j}>{renderInline(it, `ol-${idx}-${j}`)}</li>
@@ -269,10 +268,10 @@ export function MarkdownView({ source }: MarkdownViewProps) {
                         return (
                             <pre
                                 key={idx}
-                                className="my-5 p-4 border-2 border-ink bg-n100 overflow-x-auto"
+                                className="my-5 p-4 rounded-xl border border-muted-border bg-n100 overflow-x-auto"
                                 aria-label={b.lang ? `Code block (${b.lang})` : "Code block"}
                             >
-                                <code className="font-mono text-[12px] leading-relaxed text-ink whitespace-pre">
+                                <code className="font-mono text-[12.5px] leading-relaxed text-ink whitespace-pre">
                                     {b.text}
                                 </code>
                             </pre>
@@ -280,25 +279,34 @@ export function MarkdownView({ source }: MarkdownViewProps) {
 
                     case "table":
                         return (
-                            <div key={idx} className="my-6 overflow-x-auto border-2 border-ink">
-                                <table className="w-full text-left border-collapse font-sans text-[12px]">
-                                    <thead className="bg-n100 border-b-2 border-ink">
+                            <div
+                                key={idx}
+                                className="my-6 overflow-x-auto rounded-xl border border-muted-border"
+                            >
+                                <table className="w-full text-left border-collapse font-sans text-[13px]">
+                                    <thead className="bg-surface border-b border-muted-border">
                                         <tr>
                                             {b.head.map((h, j) => (
                                                 <th
                                                     key={j}
-                                                    className="p-3 font-mono text-[9px] uppercase tracking-widest text-n500 font-bold"
+                                                    className="px-4 py-3 font-sans text-[12px] uppercase tracking-wider text-n500 font-medium"
                                                 >
                                                     {renderInline(h, `th-${idx}-${j}`)}
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-ink/10">
+                                    <tbody>
                                         {b.rows.map((row, j) => (
-                                            <tr key={j} className="hover:bg-n100/50">
+                                            <tr
+                                                key={j}
+                                                className={`${j < b.rows.length - 1 ? "border-b border-muted-border" : ""} hover:bg-n100/40`}
+                                            >
                                                 {row.map((cell, k) => (
-                                                    <td key={k} className="p-3 align-top">
+                                                    <td
+                                                        key={k}
+                                                        className="px-4 py-3 align-top text-n600"
+                                                    >
                                                         {renderInline(cell, `td-${idx}-${j}-${k}`)}
                                                     </td>
                                                 ))}

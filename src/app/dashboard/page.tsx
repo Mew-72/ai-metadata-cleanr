@@ -6,19 +6,16 @@ import { SignOutButton, useClerk } from "@clerk/nextjs";
 import { useAppAuth, useAppUser } from "../../hooks/useAppAuth";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
-import { 
-  ShieldCheck, 
-  CreditCard, 
-  User, 
-  ArrowLeft,
-  Sparkles,
+import {
+  ShieldCheck,
+  CreditCard,
+  ArrowRight,
   Zap,
-  UserX,
-  Lock,
-  ExternalLink,
-  ChevronRight,
   ScanEye,
-  Eraser
+  Eraser,
+  ExternalLink,
+  LogOut,
+  ArrowLeft,
 } from "lucide-react";
 import posthog from "posthog-js";
 
@@ -40,7 +37,9 @@ const _decode = (encoded: string): number => {
     const scrambled = Number(atob(encoded));
     if (isNaN(scrambled)) return 0;
     return ((scrambled ^ s) - 3) / 7;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 };
 
 const _hash = (date: string, count: number): string => {
@@ -70,7 +69,7 @@ const getPersistedCleanCount = (): number => {
       }
       return 5; // Tamper detected
     }
-  } catch {}
+  } catch { }
 
   return 0;
 };
@@ -89,7 +88,7 @@ const getPersistedC2paScanCount = (): number => {
       const localVal = localStorage.getItem("scrubai_c2pa_scanned_count");
       if (localVal) localCount = parseInt(localVal, 10) || 0;
     }
-  } catch {}
+  } catch { }
 
   try {
     const cookies = document.cookie.split(";");
@@ -101,7 +100,7 @@ const getPersistedC2paScanCount = (): number => {
         cookieCount = parseInt(val, 10) || 0;
     }
     if (lastDate !== today) cookieCount = 0;
-  } catch {}
+  } catch { }
 
   return Math.max(localCount, cookieCount);
 };
@@ -110,239 +109,221 @@ export default function Dashboard() {
   const { user } = useAppUser();
   const { isPro } = useAppAuth();
   const { openUserProfile } = useClerk();
-  
-  const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
+
   const [cleanCount, setCleanCount] = useState(0);
   const [scanCount, setScanCount] = useState(0);
-
-  useEffect(() => {
-    if (isPro) {
-      setActiveTier("pro");
-    } else {
-      setActiveTier("free");
-    }
-  }, [isPro]);
 
   useEffect(() => {
     setCleanCount(getPersistedCleanCount());
     setScanCount(getPersistedC2paScanCount());
   }, []);
 
-  // Log PostHog dashboard visit
   useEffect(() => {
-    posthog.capture("viewed_dashboard", { tier: activeTier });
-  }, [activeTier]);
+    posthog.capture("viewed_dashboard", { tier: isPro ? "pro" : "free" });
+  }, [isPro]);
 
   const cleanPercentage = Math.min((cleanCount / 5) * 100, 100);
   const scanPercentage = Math.min((scanCount / 5) * 100, 100);
 
   return (
-    <div className="flex flex-col min-h-screen bg-bg transition-colors duration-200">
-      {/* Navigation Header */}
+    <div className="flex flex-col min-h-screen bg-bg text-ink">
       <Header />
 
-      {/* Main Dashboard Workspace */}
-      <main className="max-w-[1280px] mx-auto w-full border-x border-ink flex-1 grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-ink">
-        
-        {/* Left column: Sidebar navigation */}
-        <aside className="p-8 bg-n100 lg:col-span-1 flex flex-col justify-between select-none">
-          <div>
-            <div className="flex items-center gap-2 mb-6 pb-2.5 border-b border-ink">
-              <User size={18} className="text-accent" />
-              <h3 className="font-serif text-xl font-bold tracking-tight text-ink">
-                User Central
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-3 font-mono text-[10px] tracking-wider uppercase text-n500 mb-6">
-              <div>Logged In As:</div>
-              <div className="font-sans text-xs font-bold text-ink truncate">
-                {user?.primaryEmailAddress?.emailAddress || "user@creator.com"}
-              </div>
-              
-              <div className="mt-2.5">Subscription Status:</div>
-              <div className={`text-[9px] font-mono px-2.5 py-0.5 border border-ink self-start inline-block font-bold ${
-                activeTier === "pro" ? "bg-accent text-white" : "bg-bg text-ink"
-              }`}>
-                {activeTier === "pro" ? "PRO MEMBER" : "FREE PLAN"}
-              </div>
-            </div>
-
-            <hr className="border-t border-ink/15 my-6" />
-
-            <div className="flex flex-col gap-2.5">
-              <Link
-                href="/"
-                className="font-mono text-[9px] uppercase tracking-wider bg-ink text-bg px-4 py-2.5 hover:bg-accent hover:text-white transition-colors text-center cursor-pointer select-none flex items-center justify-center gap-1"
-              >
-                Go to Purifier Workspace
-                <ChevronRight size={10} />
-              </Link>
-              <Link
-                href="/c2pa-scanner"
-                className="font-mono text-[9px] uppercase tracking-wider border border-ink bg-bg text-ink px-4 py-2.5 hover:bg-n100 transition-colors text-center cursor-pointer select-none flex items-center justify-center gap-1"
-              >
-                Go to C2PA Scanner
-                <ChevronRight size={10} />
-              </Link>
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-ink/15 mt-8">
-            <SignOutButton>
-              <button className="w-full flex items-center justify-center gap-2 border border-accent/20 text-accent font-mono text-[9px] uppercase tracking-widest py-2.5 hover:bg-accent hover:text-white transition-colors cursor-pointer select-none">
-                <UserX size={10} />
-                Sign Out
-              </button>
-            </SignOutButton>
-          </div>
-        </aside>
-
-        {/* Center column: Dashboard controls (Span 3) */}
-        <div className="lg:col-span-3 p-8 md:p-10 select-none">
-          <div className="flex items-center justify-between pb-4 border-b border-ink mb-8">
-            <h2 className="font-serif text-3xl font-black text-ink uppercase tracking-tight">
-              Dashboard
-            </h2>
+      <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 lg:gap-10">
+          {/* Sidebar */}
+          <aside className="lg:sticky lg:top-24 lg:self-start flex flex-col gap-5">
             <Link
               href="/"
-              className="font-mono text-[9px] uppercase tracking-wider text-n500 hover:text-accent flex items-center gap-1.5"
+              className="inline-flex items-center gap-1.5 font-sans text-[12.5px] text-n500 hover:text-ink transition-colors"
             >
-              <ArrowLeft size={10} />
-              Return Home
+              <ArrowLeft size={13} strokeWidth={2.2} />
+              Back to workspace
             </Link>
-          </div>
 
-          {/* Real-time Dynamic Usage Limits Tracker */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            {/* Card 1: Canvas Cleans */}
-            <div className="border border-ink p-6 bg-bg flex flex-col justify-between">
+            <div className="surface-card p-5 flex flex-col gap-4">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-n500">Purifier Processing</span>
-                  <Eraser size={14} className="text-accent" />
+                <div className="font-sans text-[11px] uppercase tracking-wider text-n500 font-medium mb-1.5">
+                  Account
                 </div>
-                <h4 className="font-serif text-lg font-bold text-ink uppercase tracking-tight mb-2">
-                  Canvas Cleans Limit
-                </h4>
-                <p className="font-body text-[11px] text-n500 leading-normal mb-5">
-                  Client-side metadata purifications processed in the current daily period.
-                </p>
+                <div className="font-sans text-[13.5px] font-medium text-ink truncate">
+                  {user?.primaryEmailAddress?.emailAddress || "—"}
+                </div>
               </div>
 
               <div>
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="font-serif text-2xl font-black text-ink">
-                    {activeTier === "pro" ? "Unlimited" : `${cleanCount} / 5`}
-                  </span>
-                  {activeTier !== "pro" && (
-                    <span className="font-mono text-[8px] text-n400 uppercase">
-                      {5 - cleanCount} remaining today
-                    </span>
-                  )}
+                <div className="font-sans text-[11px] uppercase tracking-wider text-n500 font-medium mb-1.5">
+                  Plan
                 </div>
-                {activeTier !== "pro" ? (
-                  <div className="w-full h-2 bg-n100 border border-ink/20 overflow-hidden">
-                    <div 
-                      className="h-full bg-accent transition-all duration-300"
-                      style={{ width: `${cleanPercentage}%` }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-2 bg-green-800/10 border border-green-800/20 overflow-hidden">
-                    <div className="h-full bg-green-800 w-full" />
-                  </div>
-                )}
+                <span className={`pill ${isPro ? "pill-pro" : "pill-neutral"}`}>
+                  {isPro ? "Lifetime Pro" : "Free"}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-3 border-t border-muted-border">
+                <Link href="/" className="btn-secondary w-full">
+                  Open workspace
+                  <ArrowRight size={13} strokeWidth={2.2} />
+                </Link>
+                <Link href="/c2pa-scanner" className="btn-secondary w-full">
+                  C2PA scanner
+                  <ArrowRight size={13} strokeWidth={2.2} />
+                </Link>
               </div>
             </div>
 
-            {/* Card 2: C2PA Scans */}
-            <div className="border border-ink p-6 bg-bg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-n500">C2PA Verification</span>
-                  <ScanEye size={14} className="text-accent" />
-                </div>
-                <h4 className="font-serif text-lg font-bold text-ink uppercase tracking-tight mb-2">
-                  C2PA Scans Limit
-                </h4>
-                <p className="font-body text-[11px] text-n500 leading-normal mb-5">
-                  Client-side cryptographical signature audits executed today.
-                </p>
-              </div>
+            <SignOutButton>
+              <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-muted-border bg-surface px-3 py-2 font-sans text-[12.5px] font-medium text-n600 hover:text-danger hover:bg-danger-soft hover:border-danger/30 transition-colors cursor-pointer">
+                <LogOut size={13} strokeWidth={2.2} />
+                Sign out
+              </button>
+            </SignOutButton>
+          </aside>
 
-              <div>
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="font-serif text-2xl font-black text-ink">
-                    {activeTier === "pro" ? "Unlimited" : `${scanCount} / 5`}
+          {/* Body */}
+          <div className="min-w-0">
+            <header className="pb-6 mb-8 border-b border-muted-border">
+              <h1 className="font-sans text-[34px] lg:text-[42px] font-semibold tracking-tight text-ink leading-[1.1] mb-2">
+                Dashboard
+              </h1>
+              <p className="font-sans text-[14.5px] text-n500 leading-relaxed">
+                Your usage today and account settings, all in one place.
+              </p>
+            </header>
+
+            {/* Usage cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 mb-8 lg:mb-10">
+              <div className="surface-card p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-sans text-[12px] uppercase tracking-wider text-n500 font-medium">
+                    Image cleans
                   </span>
-                  {activeTier !== "pro" && (
-                    <span className="font-mono text-[8px] text-n400 uppercase">
-                      {5 - scanCount} remaining today
-                    </span>
-                  )}
+                  <span className="w-9 h-9 rounded-lg bg-accent-soft text-accent flex items-center justify-center">
+                    <Eraser size={15} strokeWidth={2} />
+                  </span>
                 </div>
-                {activeTier !== "pro" ? (
-                  <div className="w-full h-2 bg-n100 border border-ink/20 overflow-hidden">
-                    <div 
-                      className="h-full bg-accent transition-all duration-300"
-                      style={{ width: `${scanPercentage}%` }}
+                <h3 className="font-sans text-[16px] font-semibold text-ink mb-1">
+                  Daily cleaner usage
+                </h3>
+                <p className="font-sans text-[13px] text-n500 leading-relaxed mb-5">
+                  Local pixel-redraw operations executed today.
+                </p>
+
+                <div className="mt-auto">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="font-sans text-[26px] font-semibold tracking-tight text-ink">
+                      {isPro ? "Unlimited" : `${cleanCount} / 5`}
+                    </span>
+                    {!isPro && (
+                      <span className="font-sans text-[12px] text-n500">
+                        {Math.max(0, 5 - cleanCount)} left today
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 rounded-full bg-n100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-300"
+                      style={{ width: isPro ? "100%" : `${cleanPercentage}%` }}
                     />
                   </div>
-                ) : (
-                  <div className="w-full h-2 bg-green-800/10 border border-green-800/20 overflow-hidden">
-                    <div className="h-full bg-green-800 w-full" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Clerk Account Management & Security */}
-          <div className="border border-ink p-6 md:p-8 bg-n100">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 border border-ink flex items-center justify-center bg-bg shrink-0">
-                <CreditCard size={18} className="text-ink" />
-              </div>
-              <div className="flex-1">
-                <div className="font-mono text-[9px] tracking-widest uppercase text-accent font-bold mb-1">
-                  ✦ Unified User Settings
                 </div>
-                <h4 className="font-serif text-xl font-bold text-ink">
-                  Account Management &amp; Security Portal
-                </h4>
-                <p className="font-body text-xs text-n500 mt-2 mb-6 max-w-xl leading-relaxed">
-                  ScrubAI routes all account credentials and session processes directly through secure Clerk modules. Open your account modal below to configure MFA, update your profile info, or manage session security.
+              </div>
+
+              <div className="surface-card p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-sans text-[12px] uppercase tracking-wider text-n500 font-medium">
+                    C2PA scans
+                  </span>
+                  <span className="w-9 h-9 rounded-lg bg-accent-soft text-accent flex items-center justify-center">
+                    <ScanEye size={15} strokeWidth={2} />
+                  </span>
+                </div>
+                <h3 className="font-sans text-[16px] font-semibold text-ink mb-1">
+                  Daily scanner usage
+                </h3>
+                <p className="font-sans text-[13px] text-n500 leading-relaxed mb-5">
+                  Cryptographic Content Credentials inspections today.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <button
-                    onClick={() => openUserProfile()}
-                    className="bg-ink text-bg border-2 border-ink px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-accent hover:border-accent hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <ExternalLink size={12} />
-                    Manage Profile &amp; Security
+                <div className="mt-auto">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="font-sans text-[26px] font-semibold tracking-tight text-ink">
+                      {isPro ? "Unlimited" : `${scanCount} / 5`}
+                    </span>
+                    {!isPro && (
+                      <span className="font-sans text-[12px] text-n500">
+                        {Math.max(0, 5 - scanCount)} left today
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 rounded-full bg-n100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-300"
+                      style={{ width: isPro ? "100%" : `${scanPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account management */}
+            <div className="surface-card p-6 lg:p-8 flex flex-col md:flex-row items-start gap-6">
+              <span className="w-12 h-12 rounded-xl bg-accent-soft text-accent flex items-center justify-center shrink-0">
+                <CreditCard size={20} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="font-sans text-[12px] uppercase tracking-wider text-accent font-medium mb-1">
+                  Account &amp; security
+                </div>
+                <h3 className="font-sans text-[20px] font-semibold tracking-tight text-ink mb-2">
+                  Manage your profile
+                </h3>
+                <p className="font-sans text-[14px] text-n500 leading-relaxed mb-5 max-w-2xl">
+                  ScrubAI delegates auth and session management to Clerk. Open
+                  the secure profile modal to update your email, configure MFA,
+                  or revoke active sessions.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <button onClick={() => openUserProfile()} className="btn-primary">
+                    <ExternalLink size={13} strokeWidth={2.2} />
+                    Manage profile
                   </button>
 
-                  {activeTier === "free" && (
-                    <Link
-                      href="/pricing"
-                      className="bg-accent text-white border-2 border-accent px-6 py-2.5 font-sans text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:bg-ink hover:border-ink hover:text-bg transition-colors flex items-center justify-center gap-1.5 shadow-sm text-center"
-                    >
-                      <Zap size={12} />
-                      Upgrade To Premium Pro
+                  {!isPro && (
+                    <Link href="/pricing" className="btn-accent">
+                      <Zap size={13} strokeWidth={2.2} />
+                      Upgrade to Pro
                     </Link>
                   )}
                 </div>
               </div>
             </div>
+
+            {!isPro && (
+              <div className="surface-card mt-6 p-6 lg:p-8 flex flex-col md:flex-row items-start gap-6 hero-gradient">
+                <span className="w-12 h-12 rounded-xl bg-ink text-bg flex items-center justify-center shrink-0">
+                  <ShieldCheck size={20} strokeWidth={2} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-sans text-[20px] font-semibold tracking-tight text-ink mb-2">
+                    Need more? One payment unlocks everything.
+                  </h3>
+                  <p className="font-sans text-[14px] text-n500 leading-relaxed mb-5 max-w-2xl">
+                    Lifetime Pro removes the daily cap, opens up batches of 50
+                    images, and includes every future tool we ship.
+                  </p>
+                  <Link href="/pricing" className="btn-accent">
+                    See pricing
+                    <ArrowRight size={13} strokeWidth={2.2} />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
-
         </div>
-
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

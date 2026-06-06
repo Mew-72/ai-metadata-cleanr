@@ -1,75 +1,76 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This project runs **Next.js 16.2.6** with **React 19.2**. APIs, conventions, and file structure may differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing route handlers, layouts, server actions, or metadata. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# ScrubAI — Multi-Agent Developer Matrix
+# ScrubAI — Agent Guide
 
-To support efficient parallel development by multiple concurrent AI agents, the following roles, code boundaries, and tasks have been partitioned. Follow these limits strictly to avoid file intersections and merge conflicts.
+ScrubAI is a local-first image metadata remover. Users drop images into the browser, the canvas redraws them pixel-by-pixel, and the re-exported file carries no EXIF, GPS, IPTC, XMP, or C2PA Content Credentials. Nothing is uploaded. Nothing leaves the sandbox. That invariant is the product.
 
----
+## Tech stack
 
-## 🗺️ Workspace Boundaries Map
+| Area | Choice |
+|---|---|
+| Framework | Next.js 16.2.6 (App Router) |
+| React | 19.2.4 |
+| Styling | Tailwind v4 (CSS-first, no `tailwind.config.*`) — design tokens live in `src/app/globals.css` inside `@theme { }` |
+| Auth | `@clerk/nextjs` ^7.4.1 |
+| Payments | `@paypal/react-paypal-js` ^9.2.0 (one-time Lifetime Pro, no subscriptions) |
+| Icons | `lucide-react` (only icon library — don't add others) |
+| Analytics | `posthog-js` (UI events only — never image content) |
+| Image work | `exifreader`, `heic2any`, `jszip`, `@contentauth/c2pa-web` |
 
-```mermaid
-graph TD
-    classDef boundary fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    A[Agent A: Core Engine] -->|Files| AFiles["src/components/CleanerInterface.tsx<br>src/hooks/useCanvasEngine.ts"]
-    B[Agent B: UI/UX Polish] -->|Files| BFiles["src/app/globals.css<br>src/components/Ticker.tsx<br>src/components/Header.tsx"]
-    C[Agent C: Clerk Billing] -->|Files| CFiles["src/components/BillingModal.tsx<br>src/hooks/useAppAuth.ts<br>Clerk Portal Config"]
-    D[Agent D: Knowledge Docs] -->|Files| DFiles["src/app/docs/page.tsx<br>src/app/docs/layout.tsx<br>src/content/docs/*"]
-    
-    class AFiles,BFiles,CFiles,DFiles boundary;
+No shadcn, no Radix, no framer-motion. Components are hand-rolled JSX + Tailwind. Animations are CSS keyframes in `globals.css`.
+
+## Repo orientation
+
+```
+src/
+  app/
+    layout.tsx              Root layout — fonts (next/font), Clerk, Providers
+    providers.tsx           PostHog + Clerk identity sync
+    globals.css             All design tokens, animations, utility classes
+    page.tsx                Marketing landing + embedded workspace
+    pricing/                Free vs Lifetime Pro + PayPal checkout
+    dashboard/              Authenticated user view
+    docs/, docs/[slug]/     Privacy education content
+    c2pa-scanner/           Standalone C2PA inspector
+    about/                  Company / mission (if present)
+    sign-in/, sign-up/      Clerk catch-all auth
+    privacy/, terms/, cookies/, security/, refund/, thank-you/
+    api/paypal/             PayPal create-order + capture-order
+    sitemap.ts, robots.ts
+  components/
+    Header.tsx, Footer.tsx, Ticker.tsx
+    CleanerInterface.tsx    The drop zone + canvas pipeline
+    BillingModal.tsx
+    docs/MarkdownView.tsx
+  hooks/
+    useCanvasEngine.ts      Pixel redraw + export
+    useAppAuth.ts           Clerk wrapper with isPro logic
+  config/
+    pricing.ts              Single source of truth for the price
+  content/docs/             MDX-style content modules registered in index.ts
 ```
 
----
+## Conventions worth knowing
 
-## 🛠️ Role Definitions & Task Checklists
+- **Design tokens** — colors, fonts, font-feature-settings all declared as CSS custom properties in `globals.css` and exposed to Tailwind via `@theme`. Edit tokens there, not in component files.
+- **Theme switching** — `data-theme="light" | "dark"` on `<html>`. `Header.tsx` reads/writes `localStorage["scrubai-theme"]`.
+- **Pricing** — every price string flows through `src/config/pricing.ts`. Don't hardcode dollar amounts in UI or API routes; import `PRICING`.
+- **Auth gating** — use `useAppAuth()` (returns `{ isSignedIn, isPro, userId, isLoaded }`). Don't call Clerk hooks directly in feature components.
+- **Client vs server** — most pages are `"use client"` because the canvas pipeline and PayPal SDK both need the browser. Metadata exports live in sibling `layout.tsx` files (server). Don't break that split.
+- **Privacy invariant** — image bytes never go over the network. Don't `fetch` user images. Don't add SSR for anything that touches `<canvas>` data. Treat this as a hard product constraint.
+- **Analytics** — track UI events (`pricing_page_viewed`, `checkout_completed`, etc.). Never log image content, filenames, or EXIF values.
 
-### 🧑‍💻 Agent A: Core Image Processing & Formats
-* **Primary Scope:** Client-side canvas operations, image analysis engines, and file export pipelines.
-* **Target Files:**
-  * `src/components/CleanerInterface.tsx` (Internal canvas hooks and drop zones)
-* **Assigned Tasks:**
-  - [ ] **HEIC/HEIF Input Conversion:** Integrate client-side conversion libraries (e.g. `heic2any` dynamic imports) to support mobile iOS image format uploads.
-  - [ ] **Export Compression Sliders:** Add a quality slider (0.1 to 1.0) allowing professional creators to choose between high-fidelity lossless PNG conversions or highly-compressed lightweight JPEGs.
-  - [ ] **Canvas Resizing Options:** Implement a preset selector to auto-downscale files to standard social media resolutions (e.g. 1080p, 4K) to optimize load speed and destroy resizing metadata artifacts.
+## Current design direction
 
----
+The site is moving away from a newsprint / editorial aesthetic (Playfair Display all-caps, JetBrains Mono micro-labels, "Vol. 1 / Local First Edition" chrome, dot-grid paper background, rotated red stamps, hard `border-x border-ink` page frame) toward a **modern minimal SaaS look** — single sans typeface, neutral palette with a tuned red accent, generous whitespace, rounded cards, restrained motion. Match this when adding new UI.
 
-### 🎨 Agent B: Premium Aesthetics & Micro-interactions
-* **Primary Scope:** Theme styling tokens, scroll speeds, visual double-ruled frames, and drop animations.
-* **Target Files:**
-  * `src/app/globals.css` (Tailwind styles, scrolling ticker keyframes)
-  * `src/components/Ticker.tsx` (Endless statistics tracks)
-  * `src/components/Header.tsx` (Theme toggle layouts)
-* **Assigned Tasks:**
-  - [ ] **Marquee Speed Options:** Add a scroll-speed config option to the metric ticker (normal, slow, hyper-fast).
-  - [ ] **Interactive Drag Animations:** Refine dropzone borders with a pulsing double-dashed overlay and custom hover drop states.
-  - [ ] **Premium Typography Kernings:** Adjust font spacing matching strict editorial newsprint layouts on wide screens.
+## Working in this repo
 
----
-
-### 💳 Agent C: Clerk Billing & Gates Integration
-* **Primary Scope:** Interactive payment flows, subscriber gates, plan metadata, and modal popups.
-* **Target Files:**
-  * `src/components/BillingModal.tsx` (Subscription plans options)
-  * `src/hooks/useAppAuth.ts` (Mock & Live auth flows)
-  * `src/app/dashboard/page.tsx` (Tier actions)
-* **Assigned Tasks:**
-  - [ ] **Clerk Billing Setup:** Configure Clerk billing settings in the Clerk Dashboard and sync plans.
-  - [ ] **Modal Tiers Dynamic Mapping:** Populate real pricing links pointing to Clerk Stripe portal checkouts.
-  - [ ] **User Upgrade Refresh Logic:** Refine automatic page state refreshes when a user updates from Free to Pro while keeping their current file queue intact in context.
-
----
-
-### 📖 Agent D: Privacy Docs & Technical briefing
-* **Primary Scope:** Contextual documentation regarding metadata vulnerabilities, social site SUPPRESSIONS, and C2PA bypass steps.
-* **Target Files:**
-  * `src/app/docs/` [NEW] (Static documentation routes)
-  * `src/content/` [NEW] (Content files)
-* **Assigned Tasks:**
-  - [ ] **Create Reach Penalties Guide:** Write a detailed editorial guide explaining why platforms like Instagram and Pinterest filter metadata-linked AI exports.
-  - [ ] **Explain Annihilation Math:** Document how pixel redrawing differs from traditional metadata-stripping, validating security credentials.
-  - [ ] **Implement Client-Side Document Search:** Build a fast client-side filters pane for the docs directory.
+- One agent works the whole repo. Don't invent file ownership boundaries; touch what the task needs.
+- Before writing a new route, layout, server action, or metadata config, skim the matching page in `node_modules/next/dist/docs/01-app/`.
+- Run `npm run build` after non-trivial changes. `npm run lint` for surface-level checks.
+- Never start `npm run dev` from a tool call — it blocks the terminal.

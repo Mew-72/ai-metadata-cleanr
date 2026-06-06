@@ -19,7 +19,7 @@ platform transparency reports.
 ## Notes per platform
 
 ### Instagram & Threads
-Same backend. Aggressive about C2PA — even a stripped EXIF file with an
+Same backend. Aggressive about C2PA - even a stripped EXIF file with an
 intact JUMBF chunk is enough to trigger the "Made with AI" badge and
 reduce explore-tab eligibility.
 
@@ -37,7 +37,7 @@ detectable AI signatures.
 
 ### LinkedIn
 Less aggressive overall but does respect C2PA. Most reach issues on
-LinkedIn come from generic engagement patterns, not metadata — though
+LinkedIn come from generic engagement patterns, not metadata - though
 explicit AI tags can dampen reach in the Creator program.
 
 ### X (Twitter)

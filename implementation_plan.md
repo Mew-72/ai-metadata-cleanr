@@ -122,7 +122,7 @@ Automated SEO structures.
 1. **Drag and Drop / Upload File**:
    - Upload an image containing active metadata tags.
    - Assert the Audit Panel immediately extracts and displays GPS coordinates, software, camera model, etc.
-2. **Metadata Annihilation**:
+2. **Complete Metadata Removal**:
    - Sanitize the image.
    - Download the sanitized output.
    - Re-upload the output to verify all fields are completely blank/clean.

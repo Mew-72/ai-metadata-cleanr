@@ -1,41 +1,27 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import {
-  Playfair_Display,
-  Lora,
-  Inter,
-  JetBrains_Mono,
-} from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
+/**
+ * Geist + Geist Mono is Vercel's design system stack - a clean, professional
+ * sans family used by Linear, Vercel, Resend, and other modern SaaS products.
+ *
+ * Both CSS variables are referenced from globals.css (--font-geist-sans /
+ * --font-geist-mono) and remapped to all four legacy font tokens
+ * (font-serif, font-body, font-sans, font-mono) so existing markup
+ * across the app continues to render without per-file edits.
+ */
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "900"],
-  style: ["normal", "italic"],
   display: "swap",
 });
 
-const lora = Lora({
-  variable: "--font-lora",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
   display: "swap",
 });
 
@@ -48,7 +34,7 @@ export const metadata: Metadata = {
     template: "%s | ScrubAI",
   },
   description:
-    "Remove EXIF, GPS, IPTC, XMP, and C2PA metadata from your images - free and 100% in your browser. No uploads, no tracking. Protect your privacy and control your photo data with ScrubAI.",
+    "Remove EXIF, GPS, IPTC, XMP, and C2PA metadata from your images. Free, 100% in your browser. No uploads, no tracking. Take back control of what travels with your photos.",
   keywords: [
     "image metadata remover",
     "remove EXIF data",
@@ -68,7 +54,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ScrubAI - Remove Image Metadata (EXIF, GPS & C2PA)",
+        alt: "ScrubAI - Remove image metadata in your browser",
       },
     ],
   },
@@ -87,7 +73,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${playfairDisplay.variable} ${lora.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>

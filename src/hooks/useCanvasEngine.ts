@@ -14,7 +14,7 @@
  *  4. **Container scrub** — manually walk the encoded blob and strip every
  *     metadata segment / chunk the browser adds during step 3.
  *
- * Step 4 is what guarantees true annihilation. Browsers (especially
+ * Step 4 is what guarantees complete metadata removal. Browsers (especially
  * Chromium) embed an sRGB ICC profile, sometimes EXIF, in canvas-encoded
  * JPEGs. Chrome's bundled sRGB profile carries "Google Inc." vendor
  * strings, which is benign but is exactly the kind of thing an EXIF
@@ -111,7 +111,7 @@ function pickFormat(source: string | undefined, requested?: ExportFormat): Expor
 //
 // All three formats (JPEG / PNG / WebP) have a chunked structure where
 // metadata is segregated from the compressed pixel data. Removing the
-// metadata-bearing segments is a byte-level rewrite — pixels are not
+// metadata-bearing segments is a byte-level rewrite - pixels are not
 // re-decoded — so it's lossless for the image content.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ function stripJpegMetadata(buf: ArrayBuffer): ArrayBuffer {
     let i = 2;
 
     while (i < u8.length - 1) {
-        if (u8[i] !== 0xff) break; // malformed — stop scanning, copy remainder below
+        if (u8[i] !== 0xff) break; // malformed - stop scanning, copy remainder below
 
         const marker = u8[i + 1];
 
@@ -396,7 +396,7 @@ export function useCanvasEngine() {
                 // Final pass: strip every metadata segment / chunk the
                 // browser inserted during canvas.toBlob. This is what
                 // takes the output from "no source metadata" to "no
-                // metadata at all" — including Chrome's bundled ICC
+                // metadata at all" - including Chrome's bundled ICC
                 // profile that carries "Google Inc." vendor strings.
                 const blob = await scrubContainer(rawBlob, actualFormat);
 
