@@ -6,10 +6,7 @@ import ExifReader from "exifreader";
 import JSZip from "jszip";
 import posthog from "posthog-js";
 import { useAppAuth, useAppUser, useUpgradeWatcher } from "../hooks/useAppAuth";
-import {
-  useCanvasEngine,
-  type ExportFormat,
-} from "../hooks/useCanvasEngine";
+import { useCanvasEngine, type ExportFormat } from "../hooks/useCanvasEngine";
 import { BillingModal } from "./BillingModal";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
 import {
@@ -86,17 +83,22 @@ const MOCK_C2PA_MANIFEST = {
 // ensures that manually changing any value invalidates the entire record.
 
 const _RK = {
-  // Base64-encoded storage key prefixes — not human-searchable in DevTools
-  a: atob("X19zY3JiX3g5X2Q="),        // __scrb_x9_d  (date slot)
-  b: atob("X19zY3JiX3g5X3Y="),        // __scrb_x9_v  (value slot)
-  c: atob("X19zY3JiX3g5X2g="),        // __scrb_x9_h  (hash slot)
-  ck: atob("X194OWNr"),               // _x9ck         (cookie prefix)
+  // Base64-encoded storage key prefixes - not human-searchable in DevTools
+  a: atob("X19zY3JiX3g5X2Q="), // __scrb_x9_d  (date slot)
+  b: atob("X19zY3JiX3g5X3Y="), // __scrb_x9_v  (value slot)
+  c: atob("X19zY3JiX3g5X2g="), // __scrb_x9_h  (hash slot)
+  ck: atob("X194OWNr"), // _x9ck         (cookie prefix)
 };
 
 // Simple numeric XOR scramble with a daily-rotating salt
 const _salt = (): number => {
   const d = new Date();
-  return ((d.getFullYear() * 397) ^ ((d.getMonth() + 1) * 53) ^ (d.getDate() * 31)) >>> 0;
+  return (
+    ((d.getFullYear() * 397) ^
+      ((d.getMonth() + 1) * 53) ^
+      (d.getDate() * 31)) >>>
+    0
+  );
 };
 
 const _encode = (n: number): string => {
@@ -111,10 +113,12 @@ const _decode = (encoded: string): number => {
     const scrambled = Number(atob(encoded));
     if (isNaN(scrambled)) return 0;
     return ((scrambled ^ s) - 3) / 7;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 };
 
-// HMAC-like integrity hash — if any stored value is edited, this fails
+// HMAC-like integrity hash - if any stored value is edited, this fails
 const _hash = (date: string, count: number): string => {
   const payload = `${date}|${count}|${_salt()}|scrb`;
   let h = 0x811c9dc5;
@@ -142,15 +146,19 @@ const getPersistedCleanCount = (): number => {
       const storedHash = localStorage.getItem(_RK.c);
       if (raw) {
         const decoded = _decode(raw);
-        // Verify integrity — reject if hash was tampered with
-        if (storedHash === _hash(today, decoded) && decoded >= 0 && decoded <= 999) {
+        // Verify integrity - reject if hash was tampered with
+        if (
+          storedHash === _hash(today, decoded) &&
+          decoded >= 0 &&
+          decoded <= 999
+        ) {
           localCount = decoded;
         } else {
-          localCount = 5; // Tamper detected — lock out
+          localCount = 5; // Tamper detected - lock out
         }
       }
     }
-  } catch { }
+  } catch {}
 
   // ── Cookie (obfuscated) ──
   try {
@@ -174,7 +182,7 @@ const getPersistedCleanCount = (): number => {
         cookieCount = 5; // Tamper detected
       }
     }
-  } catch { }
+  } catch {}
 
   const maxCount = Math.max(localCount, cookieCount);
   setPersistedCleanCount(maxCount);
@@ -193,7 +201,7 @@ const setPersistedCleanCount = (count: number) => {
     localStorage.setItem(_RK.a, today);
     localStorage.setItem(_RK.b, encoded);
     localStorage.setItem(_RK.c, integrity);
-  } catch { }
+  } catch {}
 
   // ── Cookie (with Secure flag) ──
   try {
@@ -205,7 +213,7 @@ const setPersistedCleanCount = (count: number) => {
     document.cookie = `${_RK.ck}d=${today}; ${flags}`;
     document.cookie = `${_RK.ck}v=${encoded}; ${flags}`;
     document.cookie = `${_RK.ck}h=${integrity}; ${flags}`;
-  } catch { }
+  } catch {}
 };
 
 export function CleanerInterface() {
@@ -216,7 +224,9 @@ export function CleanerInterface() {
     "none" | "iphone" | "canon" | "sony"
   >("iphone");
   const [exportQuality, setExportQuality] = useState<number>(0.95);
-  const [exportFormat, setExportFormat] = useState<"auto" | ExportFormat>("auto");
+  const [exportFormat, setExportFormat] = useState<"auto" | ExportFormat>(
+    "auto",
+  );
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [auditTab, setAuditTab] = useState<"tags" | "c2pa">("tags");
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
@@ -404,7 +414,7 @@ export function CleanerInterface() {
     const lk = tagKey.toLowerCase();
     const lg = groupName.toLowerCase();
 
-    // Whole-group decisions first — these always win, regardless of which
+    // Whole-group decisions first - these always win, regardless of which
     // keyword the tag name happens to contain. Without this, "DeviceModel"
     // inside an ICC profile gets flagged on the "model" risk keyword even
     // though ICC profile fields are vendor-neutral structural data.
@@ -431,7 +441,7 @@ export function CleanerInterface() {
       return false;
     }
 
-    // XMP carries a mix — only structural keywords whitelist it.
+    // XMP carries a mix - only structural keywords whitelist it.
     if (lg === "xmp" && !STRUCTURAL_KEYWORDS.some((s) => lk.includes(s)))
       return true;
 
@@ -441,7 +451,7 @@ export function CleanerInterface() {
     return false;
   };
 
-  // Audit metadata — extract ALL tags with proper risk vs structural classification
+  // Audit metadata - extract ALL tags with proper risk vs structural classification
   const auditFile = async (
     file: File,
   ): Promise<{
@@ -523,7 +533,7 @@ export function CleanerInterface() {
               .toLowerCase();
             if (allKeys.includes("jumbf") || allKeys.includes("c2pa")) {
               riskTags["⚠ C2PA Content Credentials"] =
-                "DETECTED — Cryptographically signed manifest found";
+                "DETECTED - Cryptographically signed manifest found";
               riskTagCount++;
             }
 
@@ -625,13 +635,13 @@ export function CleanerInterface() {
         prev.map((item) =>
           item.id === f.id
             ? {
-              ...item,
-              metadata: auditResult.metadata,
-              dimensions: auditResult.dimensions,
-              riskLevel: auditResult.riskLevel,
-              riskTagCount: auditResult.riskTagCount,
-              status: "audited",
-            }
+                ...item,
+                metadata: auditResult.metadata,
+                dimensions: auditResult.dimensions,
+                riskLevel: auditResult.riskLevel,
+                riskTagCount: auditResult.riskTagCount,
+                status: "audited",
+              }
             : item,
         ),
       );
@@ -871,7 +881,7 @@ export function CleanerInterface() {
     if (doneFiles.length === 0) return;
 
     if (doneFiles.length === 1) {
-      // Single Download — always uses the randomized cleaned name
+      // Single Download - always uses the randomized cleaned name
       const f = doneFiles[0];
       const link = document.createElement("a");
       link.href = f.cleanedUrl!;
@@ -951,7 +961,7 @@ export function CleanerInterface() {
         "⚠ [EXIF] Copyright": "Midjourney Studio v6 & Adobe Asset Sync",
         "⚠ [EXIF] DateTimeOriginal": "2026-05-23 17:04:31",
         "⚠ C2PA Content Credentials":
-          "DETECTED — Cryptographically signed JUMBF manifest found",
+          "DETECTED - Cryptographically signed JUMBF manifest found",
         "◈ [EXIF] ImageWidth": "1024",
         "◈ [EXIF] ImageHeight": "1024",
         "◈ [ICC] ColorSpace": "sRGB",
@@ -1026,8 +1036,9 @@ export function CleanerInterface() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`flex-1 flex flex-col p-5 lg:p-6 transition-all ${isDragging ? "dropzone-active" : ""
-              }`}
+            className={`flex-1 flex flex-col p-5 lg:p-6 transition-all ${
+              isDragging ? "dropzone-active" : ""
+            }`}
           >
             {files.length === 0 ? (
               <button
@@ -1073,10 +1084,11 @@ export function CleanerInterface() {
                       <div
                         key={item.id}
                         onClick={() => setSelectedFileId(item.id)}
-                        className={`rounded-xl border p-3.5 text-left cursor-pointer flex flex-col gap-2 transition-all select-none ${isSelected
-                          ? "border-accent bg-accent-soft/40 ring-2 ring-accent/15"
-                          : "border-muted-border bg-surface hover:border-n300"
-                          }`}
+                        className={`rounded-xl border p-3.5 text-left cursor-pointer flex flex-col gap-2 transition-all select-none ${
+                          isSelected
+                            ? "border-accent bg-accent-soft/40 ring-2 ring-accent/15"
+                            : "border-muted-border bg-surface hover:border-n300"
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
@@ -1109,17 +1121,18 @@ export function CleanerInterface() {
                           <div className="flex items-center justify-between">
                             <span>Dimensions</span>
                             <span className="font-medium text-ink truncate ml-2">
-                              {item.dimensions || "—"}
+                              {item.dimensions || "-"}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-muted-border">
                             <span
-                              className={`pill ${item.status === "done"
-                                ? "pill-accent"
-                                : item.status === "cleaning"
-                                  ? "pill-warn animate-pulse"
-                                  : "pill-neutral"
-                                }`}
+                              className={`pill ${
+                                item.status === "done"
+                                  ? "pill-accent"
+                                  : item.status === "cleaning"
+                                    ? "pill-warn animate-pulse"
+                                    : "pill-neutral"
+                              }`}
                             >
                               {item.status === "done"
                                 ? "Cleaned"
@@ -1162,7 +1175,10 @@ export function CleanerInterface() {
                         {files.length > 1
                           ? "ZIP archive name"
                           : "Output filename"}
-                        <span className="text-n400 font-normal"> (optional)</span>
+                        <span className="text-n400 font-normal">
+                          {" "}
+                          (optional)
+                        </span>
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -1174,7 +1190,7 @@ export function CleanerInterface() {
                             files.length > 1
                               ? "my_batch"
                               : files[0]?.name?.replace(/\.[^/.]+$/, "") ||
-                              "cleaned_image"
+                                "cleaned_image"
                           }
                           className="flex-1 bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 placeholder:text-n400"
                         />
@@ -1210,21 +1226,16 @@ export function CleanerInterface() {
                         onChange={(e) => setSpoofProfile(e.target.value as any)}
                         className="bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 cursor-pointer"
                       >
-                        <option value="iphone">
-                          iPhone 15 (recommended)
-                        </option>
-                        <option value="canon">
-                          Canon EOS 5D Mark IV
-                        </option>
-                        <option value="sony">
-                          Sony Alpha 7R V
-                        </option>
+                        <option value="iphone">iPhone 15 (recommended)</option>
+                        <option value="canon">Canon EOS 5D Mark IV</option>
+                        <option value="sony">Sony Alpha 7R V</option>
                         <option value="none">
                           None (sterile, all metadata stripped)
                         </option>
                       </select>
                       <div className="font-sans text-[11px] text-n500">
-                        Injects safe camera metadata to bypass AI reach suppression.
+                        Injects safe camera metadata to bypass AI reach
+                        suppression.
                       </div>
                     </div>
                   </div>
@@ -1295,8 +1306,10 @@ export function CleanerInterface() {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-2">
                     {activeTier === "free" ? (
                       <div className="font-sans text-[12px] text-n500">
-                        <span className="font-medium text-ink">{cleanCount}</span>
-                        {" "}of 5 free cleans used today
+                        <span className="font-medium text-ink">
+                          {cleanCount}
+                        </span>{" "}
+                        of 5 free cleans used today
                       </div>
                     ) : (
                       <div className="inline-flex items-center gap-1.5 font-sans text-[12px] text-accent font-medium">
@@ -1367,7 +1380,8 @@ export function CleanerInterface() {
                       Image cleaned
                     </h4>
                     <p className="font-sans text-[12px] text-n600 mt-1 leading-relaxed">
-                      All tracking metadata removed. Re-encoded with the selected camera profile.
+                      All tracking metadata removed. Re-encoded with the
+                      selected camera profile.
                     </p>
                   </div>
                 </div>
@@ -1382,7 +1396,7 @@ export function CleanerInterface() {
                       : 0;
                   const sizeLabel =
                     cleanedSize === 0
-                      ? "—"
+                      ? "-"
                       : sizeDelta >= 0
                         ? `−${sizeDelta.toFixed(1)}%`
                         : `+${Math.abs(sizeDelta).toFixed(1)}%`;
@@ -1397,7 +1411,7 @@ export function CleanerInterface() {
                       ? `${(pixelCount / 1_000_000).toFixed(1)}M`
                       : pixelCount > 0
                         ? pixelCount.toLocaleString()
-                        : "—";
+                        : "-";
 
                   const outputMime = selectedFile.cleanedBlob?.type ?? "";
                   const isLossless = outputMime === "image/png";
@@ -1460,7 +1474,13 @@ export function CleanerInterface() {
                           strokeWidth={2.5}
                         />
                         <span>
-                          Injected {spoofProfile === "iphone" ? "iPhone" : spoofProfile === "canon" ? "Canon" : "Sony"} camera profile
+                          Injected{" "}
+                          {spoofProfile === "iphone"
+                            ? "iPhone"
+                            : spoofProfile === "canon"
+                              ? "Canon"
+                              : "Sony"}{" "}
+                          camera profile
                         </span>
                       </li>
                     ) : (
@@ -1477,7 +1497,8 @@ export function CleanerInterface() {
                 </div>
 
                 <div className="rounded-lg bg-n100 px-4 py-3 font-sans text-[12px] text-n600 leading-relaxed">
-                  Tip: re-upload the cleaned file here to verify nothing slipped through.
+                  Tip: re-upload the cleaned file here to verify nothing slipped
+                  through.
                 </div>
               </div>
             </div>
@@ -1508,11 +1529,15 @@ export function CleanerInterface() {
                       />
                       <div>
                         <div className="font-sans text-[13px] font-semibold text-danger">
-                          High risk — {selectedFile.riskTagCount} tracking tag
-                          {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""} found
+                          High risk - {selectedFile.riskTagCount} tracking tag
+                          {(selectedFile.riskTagCount || 0) !== 1
+                            ? "s"
+                            : ""}{" "}
+                          found
                         </div>
                         <p className="font-sans text-[12px] text-n600 leading-relaxed mt-0.5">
-                          Device fingerprints, GPS, or signed credentials platforms use to limit reach.
+                          Device fingerprints, GPS, or signed credentials
+                          platforms use to limit reach.
                         </p>
                       </div>
                     </div>
@@ -1527,7 +1552,7 @@ export function CleanerInterface() {
                       />
                       <div>
                         <div className="font-sans text-[13px] font-semibold text-warn">
-                          Low risk — {selectedFile.riskTagCount} tracking tag
+                          Low risk - {selectedFile.riskTagCount} tracking tag
                           {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}
                         </div>
                         <p className="font-sans text-[12px] text-n600 leading-relaxed mt-0.5">
@@ -1579,11 +1604,13 @@ export function CleanerInterface() {
                               {/* Risk section */}
                               <div className="bg-danger-soft border-b border-muted-border px-3 py-2 font-sans text-[11px] font-semibold text-danger flex items-center justify-between sticky top-0 z-10">
                                 <span>Tracking risk</span>
-                                <span className="font-mono">{riskEntries.length}</span>
+                                <span className="font-mono">
+                                  {riskEntries.length}
+                                </span>
                               </div>
                               {riskEntries.length === 0 ? (
                                 <div className="px-3 py-3 font-sans text-[12px] text-accent font-medium border-b border-muted-border">
-                                  None detected — safe to upload.
+                                  None detected - safe to upload.
                                 </div>
                               ) : (
                                 <div className="divide-y divide-muted-border">
@@ -1605,8 +1632,12 @@ export function CleanerInterface() {
 
                               {/* Structural section */}
                               <div className="bg-n100 border-y border-muted-border px-3 py-2 font-sans text-[11px] font-medium text-n500 flex items-center justify-between sticky top-0 z-10">
-                                <span>Structural file properties (harmless)</span>
-                                <span className="font-mono">{structuralEntries.length}</span>
+                                <span>
+                                  Structural file properties (harmless)
+                                </span>
+                                <span className="font-mono">
+                                  {structuralEntries.length}
+                                </span>
                               </div>
                               {structuralEntries.length === 0 ? (
                                 <div className="px-3 py-3 font-sans text-[12px] text-n400">
@@ -1639,7 +1670,8 @@ export function CleanerInterface() {
               </div>
 
               <div className="mt-4 rounded-lg bg-n100 px-4 py-3 font-sans text-[12px] text-n600 leading-relaxed shrink-0">
-                Structural fields (image dimensions, color space, JFIF version) are harmless — they're emitted by every browser.
+                Structural fields (image dimensions, color space, JFIF version)
+                are harmless - they're emitted by every browser.
               </div>
             </div>
           )}
@@ -1720,9 +1752,7 @@ export function CleanerInterface() {
                       </button>
                     </SignUpButton>
                     <SignInButton mode="modal">
-                      <button className="btn-secondary w-full">
-                        Sign in
-                      </button>
+                      <button className="btn-secondary w-full">Sign in</button>
                     </SignInButton>
                   </>
                 )}

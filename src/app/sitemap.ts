@@ -3,70 +3,72 @@ import { DOCS } from "../content/docs";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.app";
+  const now = new Date();
+
   return [
     {
       url: baseUrl,
-      lastModified: "2026-05-28",
+      lastModified: now,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/pricing`,
-      lastModified: "2026-05-23",
+      lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: "2026-05-30",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
       url: `${baseUrl}/c2pa-scanner`,
-      lastModified: "2026-05-24",
+      lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.7,
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/docs`,
-      lastModified: "2026-05-28",
+      lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.6,
+      priority: 0.7,
     },
     ...DOCS.map((doc) => ({
       url: `${baseUrl}/docs/${doc.slug}`,
-      lastModified: "2026-05-28",
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
     })),
     {
       url: `${baseUrl}/privacy`,
-      lastModified: "2026-05-23",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: "2026-05-25",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/security`,
-      lastModified: "2026-05-25",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/refund`,
-      lastModified: "2026-05-25",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/cookies`,
-      lastModified: "2026-05-25",
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
     },
