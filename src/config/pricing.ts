@@ -27,3 +27,22 @@ export const PRICING = {
     return parseFloat(this.amount);
   },
 } as const;
+
+/* ─── Tier limits ─────────────────────────────────────────────────────── */
+
+export type TierName = "guest_free" | "user_free" | "pro";
+
+export interface TierLimits {
+  /** Maximum cleans per calendar day. 0 means unlimited (pro). */
+  dailyCleanLimit: number;
+  /** Maximum images per single batch operation. */
+  maxBatchSize: number;
+  /** Maximum upload size in megabytes. */
+  maxUploadMB: number;
+}
+
+export const TIER_LIMITS: Record<TierName, TierLimits> = {
+  guest_free: { dailyCleanLimit: 5, maxBatchSize: 1, maxUploadMB: 25 },
+  user_free: { dailyCleanLimit: 10, maxBatchSize: 1, maxUploadMB: 25 },
+  pro: { dailyCleanLimit: 0, maxBatchSize: 50, maxUploadMB: 100 },
+};

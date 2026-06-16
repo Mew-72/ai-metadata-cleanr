@@ -22,6 +22,8 @@
  */
 
 import { useCallback } from "react";
+import { injectExif } from "@/lib/exifInjector";
+import type { ExifProfile } from "@/lib/exifInjector";
 
 export type ResizePreset = "original" | "1080p" | "4k";
 export type ExportFormat = "image/png" | "image/jpeg" | "image/webp";
@@ -33,6 +35,8 @@ export interface PurifyOptions {
     resize?: ResizePreset;
     /** Output mime — defaults to the source mime, falling back to image/png. */
     format?: ExportFormat;
+    /** Camera profile to inject as EXIF after the container scrub. Undefined = sterile (no EXIF). */
+    profile?: ExifProfile;
 }
 
 export interface PurifyResult {
@@ -40,6 +44,8 @@ export interface PurifyResult {
     width: number;
     height: number;
     format: ExportFormat;
+    /** Whether EXIF camera profile was successfully injected into the output. */
+    injected: boolean;
 }
 
 const RESIZE_TARGETS: Record<ResizePreset, number | null> = {
@@ -346,6 +352,7 @@ export function useCanvasEngine() {
                 quality = 0.95,
                 resize = "original",
                 format,
+                profile,
             } = opts;
 
             const sourceFile = isHeic(file) ? await convertHeicToJpeg(file) : file;
@@ -398,9 +405,20 @@ export function useCanvasEngine() {
                 // takes the output from "no source metadata" to "no
                 // metadata at all" - including Chrome's bundled ICC
                 // profile that carries "Google Inc." vendor strings.
-                const blob = await scrubContainer(rawBlob, actualFormat);
+                const scrubbedBlob = await scrubContainer(rawBlob, actualFormat);
 
-                return { blob, width, height, format: actualFormat };
+                // Conditionally inject camera profile EXIF after the scrub.
+                // PNG cannot carry EXIF in a standard way, so skip injection.
+                let finalBlob = scrubbedBlob;
+                let injected = false;
+
+                if (profile && actualFormat !== "image/png") {
+                    const injectResult = await injectExif(scrubbedBlob, profile, actualFormat);
+                    finalBlob = injectResult.blob;
+                    injected = injectResult.injected;
+                }
+
+                return { blob: finalBlob, width, height, format: actualFormat, injected };
             } finally {
                 URL.revokeObjectURL(objectUrl);
             }

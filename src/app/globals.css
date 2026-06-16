@@ -621,6 +621,7 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
 .legal-prose .legal-link:hover {
   color: var(--accent-strong);
 }
@@ -751,7 +752,16 @@ body {
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
+
 .legal-prose .legal-table .legal-pill-neutral {
   background: var(--n100);
   color: var(--n600);
+}
+
+/* ── CLERK MODAL Z-INDEX ─────────────────────────────────────────────
+ * Clerk's sign-in/sign-up modal must render above our guest-limit
+ * modal (which uses z-index: 999999 via createPortal).
+ * ──────────────────────────────────────────────────────────────────── */
+.cl-modalBackdrop {
+  z-index: 10000000 !important;
 }
