@@ -7,6 +7,10 @@ import JSZip from "jszip";
 import posthog from "posthog-js";
 import { useAppAuth, useAppUser, useUpgradeWatcher } from "../hooks/useAppAuth";
 import { useCanvasEngine, type ExportFormat } from "../hooks/useCanvasEngine";
+import { injectExif, CAMERA_PROFILES } from "@/lib/exifInjector";
+import type { ExifProfile } from "@/lib/exifInjector";
+import { resolveTier } from "@/lib/tierResolver";
+import { TIER_LIMITS, type TierName } from "@/config/pricing";
 import { BillingModal } from "./BillingModal";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
 import {
@@ -154,11 +158,11 @@ const getPersistedCleanCount = (): number => {
         ) {
           localCount = decoded;
         } else {
-          localCount = 5; // Tamper detected - lock out
+          localCount = TIER_LIMITS.guest_free.dailyCleanLimit; // Tamper detected - lock out
         }
       }
     }
-  } catch {}
+  } catch { }
 
   // ── Cookie (obfuscated) ──
   try {
@@ -179,10 +183,10 @@ const getPersistedCleanCount = (): number => {
       if (cHash === _hash(today, decoded) && decoded >= 0 && decoded <= 999) {
         cookieCount = decoded;
       } else {
-        cookieCount = 5; // Tamper detected
+        cookieCount = TIER_LIMITS.guest_free.dailyCleanLimit; // Tamper detected
       }
     }
-  } catch {}
+  } catch { }
 
   const maxCount = Math.max(localCount, cookieCount);
   setPersistedCleanCount(maxCount);
@@ -201,7 +205,7 @@ const setPersistedCleanCount = (count: number) => {
     localStorage.setItem(_RK.a, today);
     localStorage.setItem(_RK.b, encoded);
     localStorage.setItem(_RK.c, integrity);
-  } catch {}
+  } catch { }
 
   // ── Cookie (with Secure flag) ──
   try {
@@ -213,7 +217,7 @@ const setPersistedCleanCount = (count: number) => {
     document.cookie = `${_RK.ck}d=${today}; ${flags}`;
     document.cookie = `${_RK.ck}v=${encoded}; ${flags}`;
     document.cookie = `${_RK.ck}h=${integrity}; ${flags}`;
-  } catch {}
+  } catch { }
 };
 
 export function CleanerInterface() {
@@ -246,16 +250,9 @@ export function CleanerInterface() {
   // Canvas + HEIC purification engine (Agent A)
   const { purifyImage, normalizeForAudit, isHeic } = useCanvasEngine();
 
-  const [activeTier, setActiveTier] = useState<"free" | "pro">("free");
-
-  // Keep state sync'd with isPro
-  useEffect(() => {
-    if (isPro) {
-      setActiveTier("pro");
-    } else {
-      setActiveTier("free");
-    }
-  }, [isPro]);
+  // Derive current tier from auth state (replaces old activeTier state)
+  const currentTier: TierName = resolveTier({ isLoaded: isLoaded ?? false, isSignedIn, isPro });
+  const tierLimits = TIER_LIMITS[currentTier];
 
   // Set mounted status on load
   useEffect(() => {
@@ -581,22 +578,22 @@ export function CleanerInterface() {
       fileInputRef.current.value = "";
     }
 
-    // Free tier limit check
-    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+    // Tier daily limit check
+    if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
       setIsGuestLimitModalOpen(true);
       return;
     }
 
     // Feature gating check
-    if (activeTier === "free" && files.length + list.length > 1) {
+    if (currentTier !== "pro" && files.length + list.length > tierLimits.maxBatchSize) {
       posthog.capture("upgrade_modal_opened", {
         trigger: "batch_upload_limit",
       });
       setIsBillingModalOpen(true);
       return;
     }
-    if (files.length + list.length > 50) {
-      alert("Pro tier limit: Up to 50 images in a single batch.");
+    if (files.length + list.length > TIER_LIMITS.pro.maxBatchSize) {
+      alert(`Pro tier limit: Up to ${TIER_LIMITS.pro.maxBatchSize} images in a single batch.`);
       return;
     }
 
@@ -625,7 +622,7 @@ export function CleanerInterface() {
     posthog.capture("image_uploaded", {
       file_count: list.length,
       is_batch: list.length > 1,
-      tier: activeTier,
+      tier: currentTier,
     });
 
     // Run auditing
@@ -635,13 +632,13 @@ export function CleanerInterface() {
         prev.map((item) =>
           item.id === f.id
             ? {
-                ...item,
-                metadata: auditResult.metadata,
-                dimensions: auditResult.dimensions,
-                riskLevel: auditResult.riskLevel,
-                riskTagCount: auditResult.riskTagCount,
-                status: "audited",
-              }
+              ...item,
+              metadata: auditResult.metadata,
+              dimensions: auditResult.dimensions,
+              riskLevel: auditResult.riskLevel,
+              riskTagCount: auditResult.riskTagCount,
+              status: "audited",
+            }
             : item,
         ),
       );
@@ -669,7 +666,7 @@ export function CleanerInterface() {
   };
 
   const handleBrowseFiles = () => {
-    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+    if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
       setIsGuestLimitModalOpen(true);
       return;
     }
@@ -695,10 +692,13 @@ export function CleanerInterface() {
     setSelectedFileId(null);
   };
 
-  // Spoof/simulate normal, safe camera metadata profiles to bypass AI suppression
+  // Display metadata summary for the cleaned output.
+  // When a profile is selected, real EXIF is injected into the file bytes by the
+  // canvas engine pipeline - this display reflects what was actually written.
   const getSafeSpoofedMetadata = (
     profile: "none" | "iphone" | "canon" | "sony",
     originalName: string,
+    injected?: boolean,
   ): Record<string, string> => {
     if (profile === "none") {
       return {
@@ -712,22 +712,21 @@ export function CleanerInterface() {
     const currentDate = new Date()
       .toISOString()
       .replace("T", " ")
+      .replace(/-/g, ":")
       .substring(0, 19);
+
+    const injectedLabel = injected
+      ? "Injected into file (real EXIF)"
+      : "Display only (PNG cannot carry EXIF)";
 
     if (profile === "iphone") {
       return {
         "◈ [EXIF] Make": "Apple",
         "◈ [EXIF] Model": "iPhone 15 Pro",
-        "◈ [EXIF] LensModel": "iPhone 15 Pro Back Camera 6.86mm f/1.78",
-        "◈ [EXIF] Software": "iOS 17.4.1",
+        "◈ [EXIF] LensModel": "iPhone 15 Pro back camera 6.86mm f/1.78",
+        "◈ [EXIF] Software": "17.4.1",
         "◈ [EXIF] DateTimeOriginal": currentDate,
-        "◈ [EXIF] ExposureTime": "1/120",
-        "◈ [EXIF] FNumber": "1.78",
-        "◈ [EXIF] ISOSpeedRatings": "80",
-        "◈ [EXIF] FocalLength": "6.86 mm",
-        "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-        "◈ [SECURITY] Sandbox Profile":
-          "Protected Camera Signature Spoof (Bypass AI Flagging)",
+        "◈ [SECURITY] Profile Status": injectedLabel,
       };
     }
 
@@ -736,32 +735,20 @@ export function CleanerInterface() {
         "◈ [EXIF] Make": "Canon",
         "◈ [EXIF] Model": "Canon EOS 5D Mark IV",
         "◈ [EXIF] LensModel": "EF24-70mm f/2.8L II USM",
-        "◈ [EXIF] Software": "Canon Firmware v1.4.0",
+        "◈ [EXIF] Software": "Firmware Version 1.4.0",
         "◈ [EXIF] DateTimeOriginal": currentDate,
-        "◈ [EXIF] ExposureTime": "1/250",
-        "◈ [EXIF] FNumber": "2.8",
-        "◈ [EXIF] ISOSpeedRatings": "200",
-        "◈ [EXIF] FocalLength": "50.0 mm",
-        "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-        "◈ [SECURITY] Sandbox Profile":
-          "Protected Camera Signature Spoof (Bypass AI Flagging)",
+        "◈ [SECURITY] Profile Status": injectedLabel,
       };
     }
 
     // sony
     return {
       "◈ [EXIF] Make": "Sony",
-      "◈ [EXIF] Model": "ILCE-7RM5 (Alpha 7R V)",
+      "◈ [EXIF] Model": "ILCE-7RM5",
       "◈ [EXIF] LensModel": "FE 24-70mm F2.8 GM II",
-      "◈ [EXIF] Software": "Sony Firmware v2.00",
+      "◈ [EXIF] Software": "ILCE-7RM5 v2.00",
       "◈ [EXIF] DateTimeOriginal": currentDate,
-      "◈ [EXIF] ExposureTime": "1/160",
-      "◈ [EXIF] FNumber": "4.0",
-      "◈ [EXIF] ISOSpeedRatings": "100",
-      "◈ [EXIF] FocalLength": "35.0 mm",
-      "◈ [EXIF] ColorSpace": "sRGB (Harmless Standard IEC61966-2.1)",
-      "◈ [SECURITY] Sandbox Profile":
-        "Protected Camera Signature Spoof (Bypass AI Flagging)",
+      "◈ [SECURITY] Profile Status": injectedLabel,
     };
   };
 
@@ -774,9 +761,23 @@ export function CleanerInterface() {
       const requestedFormat: ExportFormat | undefined =
         exportFormat === "auto" ? undefined : exportFormat;
 
+      // Map selected camera profile to an ExifProfile for injection
+      const profileToInject: ExifProfile | undefined =
+        spoofProfile !== "none"
+          ? {
+            ...CAMERA_PROFILES[spoofProfile],
+            dateTimeOriginal: new Date()
+              .toISOString()
+              .replace("T", " ")
+              .replace(/-/g, ":")
+              .substring(0, 19),
+          }
+          : undefined;
+
       const result = await purifyImage(item.file, {
         quality: exportQuality,
         format: requestedFormat,
+        profile: profileToInject,
       });
 
       // Always generate a randomized neutral filename to strip AI-detectable naming patterns.
@@ -811,7 +812,7 @@ export function CleanerInterface() {
         name: cleanedName,
         cleanedBlob: result.blob,
         cleanedUrl,
-        metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name),
+        metadata: getSafeSpoofedMetadata(spoofProfile, item.file.name, result.injected),
         riskLevel: "clean",
         riskTagCount: 0,
         status: "done",
@@ -827,8 +828,8 @@ export function CleanerInterface() {
   const handleCleanImages = async () => {
     if (files.length === 0) return;
 
-    // Free tier limit check
-    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+    // Tier daily limit check
+    if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
       setIsGuestLimitModalOpen(true);
       return;
     }
@@ -842,7 +843,7 @@ export function CleanerInterface() {
       const item = files[idx];
 
       // Secondary safety check inside loop
-      if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+      if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
         setIsGuestLimitModalOpen(true);
         setFiles((prev) =>
           prev.map((f, i) =>
@@ -858,12 +859,12 @@ export function CleanerInterface() {
       // Update specific item in UI queue
       setFiles((prev) => prev.map((f) => (f.id === item.id ? cleaned : f)));
 
-      // Increment persistent clean count for Free tier
-      if (activeTier === "free") {
+      // Increment persistent clean count for non-pro tiers
+      if (tierLimits.dailyCleanLimit !== 0) {
         const nextCount = getPersistedCleanCount() + 1;
         setPersistedCleanCount(nextCount);
         setCleanCount(nextCount);
-        if (nextCount >= 5) {
+        if (nextCount >= tierLimits.dailyCleanLimit) {
           setFiles((prev) =>
             prev.map((f, i) =>
               i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
@@ -891,7 +892,7 @@ export function CleanerInterface() {
       document.body.removeChild(link);
     } else {
       // Pro ZIP Batch Download
-      if (activeTier === "free") {
+      if (currentTier !== "pro") {
         posthog.capture("upgrade_modal_opened", {
           trigger: "zip_download_gate",
         });
@@ -926,58 +927,66 @@ export function CleanerInterface() {
     }
   };
 
-  // Use Mock Sample Image
+  // Use Real Sample Image - creates a genuine JPEG with actual pixels and injected EXIF
   const handleUseSample = async () => {
-    if (activeTier === "free" && getPersistedCleanCount() >= 5) {
+    if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
       setIsGuestLimitModalOpen(true);
       return;
     }
 
-    // Generate simulated image file loaded with custom dummy EXIF/C2PA tracking markers
-    // Creating a transparent 1x1 base64 GIF is simple, then add simulated tags
-    const mockFile = new File(
-      [new Blob()],
-      "DALL·E 2026_Camera_Studio_Export.jpg",
-      {
-        type: "image/jpeg",
-      },
-    );
+    // Create a real 64x64 image with actual pixels using canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d")!;
 
-    const id = Math.random().toString(36).substring(2, 9);
-    const newFile: UploadedFile = {
-      id,
-      file: mockFile,
-      name: mockFile.name,
-      size: 48500,
-      type: "image/jpeg",
-      dimensions: "1024 x 1024 px",
-      status: "audited",
-      riskLevel: "high",
-      riskTagCount: 6,
-      metadata: {
-        "⚠ [EXIF] Make": "Apple iPhone 15 Pro Max",
-        "⚠ [EXIF] Software": "DALL·E 3 Generator Plugin v4",
-        "⚠ [EXIF] GPSLatitude": "40.7128° N, 74.0060° W (New York City, NY)",
-        "⚠ [EXIF] Copyright": "Midjourney Studio v6 & Adobe Asset Sync",
-        "⚠ [EXIF] DateTimeOriginal": "2026-05-23 17:04:31",
-        "⚠ C2PA Content Credentials":
-          "DETECTED - Cryptographically signed JUMBF manifest found",
-        "◈ [EXIF] ImageWidth": "1024",
-        "◈ [EXIF] ImageHeight": "1024",
-        "◈ [ICC] ColorSpace": "sRGB",
-      },
+    // Draw a gradient pattern so it looks like a real photo
+    const gradient = ctx.createLinearGradient(0, 0, 64, 64);
+    gradient.addColorStop(0, "#4f46e5");
+    gradient.addColorStop(0.5, "#7c3aed");
+    gradient.addColorStop(1, "#ec4899");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+
+    // Add a subtle circle
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    ctx.beginPath();
+    ctx.arc(32, 32, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Convert canvas to a real JPEG blob
+    const rawBlob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.9);
+    });
+
+    // Inject sample EXIF so the audit detects risk-bearing tags
+    const sampleProfile: ExifProfile = {
+      make: "Apple iPhone 15 Pro Max",
+      model: "iPhone 15 Pro Max",
+      lensModel: "iPhone 15 Pro Max back camera",
+      software: "DALL\u00B7E 3 Generator Plugin v4",
+      dateTimeOriginal: "2026:05:23 17:04:31",
     };
 
-    setFiles((prev) => {
-      const combined = [...prev, newFile];
-      setSelectedFileId(id);
-      return combined;
-    });
+    const injected = await injectExif(rawBlob, sampleProfile, "image/jpeg");
+    const finalBlob = injected.blob;
+
+    const sampleFile = new File(
+      [finalBlob],
+      "DALL\u00B7E 2026_Camera_Studio_Export.jpg",
+      { type: "image/jpeg" },
+    );
+
+    // Feed through the real audit pipeline
+    await handleFilesAdded([sampleFile]);
   };
 
   const selectedFile = files.find((f) => f.id === selectedFileId);
   const allPurified =
     files.length > 0 && files.every((f) => f.status === "done");
+  const isCleaningInProgress =
+    files.length > 0 && files.some((f) => f.status === "cleaning");
+  const optionsLocked = isCleaningInProgress || allPurified;
 
   return (
     <div className="w-full font-sans transition-colors duration-250 select-none">
@@ -985,7 +994,7 @@ export function CleanerInterface() {
         type="file"
         ref={fileInputRef}
         onChange={(e) => e.target.files && handleFilesAdded(e.target.files)}
-        multiple={activeTier === "pro"}
+        multiple={currentTier === "pro"}
         accept="image/*,.heic,.heif"
         className="hidden"
       />
@@ -998,13 +1007,13 @@ export function CleanerInterface() {
               <span className="font-sans text-[14px] font-semibold tracking-tight text-ink">
                 Workspace
               </span>
-              {activeTier === "pro" ? (
+              {currentTier === "pro" ? (
                 <span className="pill pill-pro">Pro</span>
               ) : (
                 <>
                   <span className="pill pill-neutral">Free</span>
                   <span className="pill pill-accent">
-                    {cleanCount} / 5 cleans today
+                    {cleanCount} / {tierLimits.dailyCleanLimit} cleans today
                   </span>
                 </>
               )}
@@ -1025,6 +1034,7 @@ export function CleanerInterface() {
                 className="inline-flex items-center gap-1.5 rounded-md border border-muted-border bg-surface text-ink px-3 py-1.5 font-sans text-[12.5px] font-medium hover:bg-n100 transition-colors cursor-pointer"
               >
                 <Sparkles size={12} strokeWidth={2.2} className="text-accent" />
+                <FileImage size={11} strokeWidth={2} className="text-muted opacity-60" />
                 Try a sample
               </button>
             </div>
@@ -1036,9 +1046,8 @@ export function CleanerInterface() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`flex-1 flex flex-col p-5 lg:p-6 transition-all ${
-              isDragging ? "dropzone-active" : ""
-            }`}
+            className={`flex-1 flex flex-col p-5 lg:p-6 transition-all ${isDragging ? "dropzone-active" : ""
+              }`}
           >
             {files.length === 0 ? (
               <button
@@ -1065,11 +1074,11 @@ export function CleanerInterface() {
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-sans text-[11.5px] text-n500 px-4 text-center">
                   <span>JPG · PNG · WebP · AVIF · HEIC</span>
                   <span className="text-n300">·</span>
-                  <span>Up to {activeTier === "pro" ? "20" : "10"} MB</span>
-                  {activeTier !== "pro" && (
+                  <span>Up to {tierLimits.maxUploadMB} MB</span>
+                  {currentTier !== "pro" && (
                     <>
                       <span className="text-n300">·</span>
-                      <span>5 free cleans / day</span>
+                      <span>{tierLimits.dailyCleanLimit} free cleans / day</span>
                     </>
                   )}
                 </div>
@@ -1077,18 +1086,17 @@ export function CleanerInterface() {
             ) : (
               <div className="w-full h-full flex flex-col">
                 {/* Images Queue Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full overflow-y-auto min-h-0">
                   {files.map((item, idx) => {
                     const isSelected = item.id === selectedFileId;
                     return (
                       <div
                         key={item.id}
                         onClick={() => setSelectedFileId(item.id)}
-                        className={`rounded-xl border p-3.5 text-left cursor-pointer flex flex-col gap-2 transition-all select-none ${
-                          isSelected
-                            ? "border-accent bg-accent-soft/40 ring-2 ring-accent/15"
-                            : "border-muted-border bg-surface hover:border-n300"
-                        }`}
+                        className={`rounded-xl border p-3.5 text-left cursor-pointer flex flex-col gap-2 transition-all select-none ${isSelected
+                          ? "border-accent bg-accent-soft/40 ring-2 ring-accent/15"
+                          : "border-muted-border bg-surface hover:border-n300"
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
@@ -1126,13 +1134,12 @@ export function CleanerInterface() {
                           </div>
                           <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-muted-border">
                             <span
-                              className={`pill ${
-                                item.status === "done"
-                                  ? "pill-accent"
-                                  : item.status === "cleaning"
-                                    ? "pill-warn animate-pulse"
-                                    : "pill-neutral"
-                              }`}
+                              className={`pill ${item.status === "done"
+                                ? "pill-accent"
+                                : item.status === "cleaning"
+                                  ? "pill-warn animate-pulse"
+                                  : "pill-neutral"
+                                }`}
                             >
                               {item.status === "done"
                                 ? "Cleaned"
@@ -1163,7 +1170,7 @@ export function CleanerInterface() {
                 </div>
 
                 {/* Batch Action Bar */}
-                <div className="mt-5 pt-5 border-t border-muted-border flex flex-col gap-4">
+                <div className="mt-auto pt-5 border-t border-muted-border flex flex-col gap-4 min-h-[120px]">
                   {/* Two Column Control Grid: Filename & Spoof Profile */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Filename Input */}
@@ -1186,13 +1193,14 @@ export function CleanerInterface() {
                           type="text"
                           value={customFilename}
                           onChange={(e) => setCustomFilename(e.target.value)}
+                          disabled={optionsLocked}
                           placeholder={
                             files.length > 1
                               ? "my_batch"
                               : files[0]?.name?.replace(/\.[^/.]+$/, "") ||
-                                "cleaned_image"
+                              "cleaned_image"
                           }
-                          className="flex-1 bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 placeholder:text-n400"
+                          className={`flex-1 bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 placeholder:text-n400 ${optionsLocked ? "opacity-50 cursor-not-allowed" : ""}`}
                         />
                         <button
                           onClick={() => {
@@ -1201,7 +1209,8 @@ export function CleanerInterface() {
                               .substring(2, 8);
                             setCustomFilename(`batch_${rand}`);
                           }}
-                          className="shrink-0 rounded-md border border-muted-border bg-bg px-3 py-2 font-sans text-[12px] font-medium text-n600 hover:bg-n100 transition-colors cursor-pointer"
+                          disabled={optionsLocked}
+                          className={`shrink-0 rounded-md border border-muted-border bg-bg px-3 py-2 font-sans text-[12px] font-medium text-n600 hover:bg-n100 transition-colors ${optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                           title="Generate a random suffix"
                         >
                           Randomize
@@ -1216,20 +1225,23 @@ export function CleanerInterface() {
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="spoof-profile"
-                        className="font-sans text-[12px] font-medium text-n600"
+                        translate="no"
+                        className="font-sans text-[12px] font-medium text-n600 notranslate"
                       >
                         Camera profile
                       </label>
                       <select
                         id="spoof-profile"
+                        translate="no"
                         value={spoofProfile}
                         onChange={(e) => setSpoofProfile(e.target.value as any)}
-                        className="bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 cursor-pointer"
+                        disabled={optionsLocked}
+                        className={`bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 notranslate ${optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                       >
-                        <option value="iphone">iPhone 15 (recommended)</option>
-                        <option value="canon">Canon EOS 5D Mark IV</option>
-                        <option value="sony">Sony Alpha 7R V</option>
-                        <option value="none">
+                        <option value="iphone" translate="no" className="notranslate">iPhone 15 (recommended)</option>
+                        <option value="canon" translate="no" className="notranslate">Canon EOS 5D Mark IV</option>
+                        <option value="sony" translate="no" className="notranslate">Sony Alpha 7R V</option>
+                        <option value="none" translate="no" className="notranslate">
                           None (sterile, all metadata stripped)
                         </option>
                       </select>
@@ -1263,15 +1275,18 @@ export function CleanerInterface() {
                         onChange={(e) =>
                           setExportQuality(parseFloat(e.target.value))
                         }
-                        className="w-full accent-accent cursor-pointer h-2"
+                        disabled={exportFormat === "image/png" || optionsLocked}
+                        className={`w-full accent-accent h-2 ${exportFormat === "image/png" || optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         aria-label="Export quality"
                       />
                       <div className="font-sans text-[11px] text-n500">
-                        {exportQuality >= 0.95
-                          ? "Studio fidelity (near-lossless)"
-                          : exportQuality >= 0.7
-                            ? "Web optimized"
-                            : "Aggressive compression"}
+                        {exportFormat === "image/png"
+                          ? "PNG is always lossless - quality has no effect"
+                          : exportQuality >= 0.95
+                            ? "Studio fidelity (near-lossless)"
+                            : exportQuality >= 0.7
+                              ? "Web optimized"
+                              : "Aggressive compression"}
                       </div>
                     </div>
 
@@ -1279,22 +1294,25 @@ export function CleanerInterface() {
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor="export-format"
-                        className="font-sans text-[12px] font-medium text-n600"
+                        translate="no"
+                        className="font-sans text-[12px] font-medium text-n600 notranslate"
                       >
                         Output format
                       </label>
                       <select
                         id="export-format"
+                        translate="no"
                         value={exportFormat}
                         onChange={(e) =>
                           setExportFormat(e.target.value as typeof exportFormat)
                         }
-                        className="bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 cursor-pointer"
+                        disabled={optionsLocked}
+                        className={`bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 notranslate ${optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                       >
-                        <option value="auto">Auto (match input)</option>
-                        <option value="image/png">PNG · Lossless</option>
-                        <option value="image/jpeg">JPEG · Compressed</option>
-                        <option value="image/webp">WebP · Modern web</option>
+                        <option value="auto" translate="no" className="notranslate">Auto (match input)</option>
+                        <option value="image/png" translate="no" className="notranslate">PNG · Lossless</option>
+                        <option value="image/jpeg" translate="no" className="notranslate">JPEG · Compressed</option>
+                        <option value="image/webp" translate="no" className="notranslate">WebP · Modern web</option>
                       </select>
                       <div className="font-sans text-[11px] text-n500">
                         PNG ignores quality. HEIC is converted to JPEG.
@@ -1304,12 +1322,12 @@ export function CleanerInterface() {
 
                   {/* Bottom action row */}
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-2">
-                    {activeTier === "free" ? (
+                    {currentTier !== "pro" ? (
                       <div className="font-sans text-[12px] text-n500">
                         <span className="font-medium text-ink">
                           {cleanCount}
                         </span>{" "}
-                        of 5 free cleans used today
+                        of {tierLimits.dailyCleanLimit} free cleans used today
                       </div>
                     ) : (
                       <div className="inline-flex items-center gap-1.5 font-sans text-[12px] text-accent font-medium">
@@ -1711,7 +1729,7 @@ export function CleanerInterface() {
                     Daily limit reached
                   </div>
                   <h3 className="font-sans text-[20px] font-semibold text-ink tracking-tight mt-0.5">
-                    You've used 5 / 5 free cleans
+                    You've used {tierLimits.dailyCleanLimit} / {tierLimits.dailyCleanLimit} free cleans
                   </h3>
                 </div>
               </div>
