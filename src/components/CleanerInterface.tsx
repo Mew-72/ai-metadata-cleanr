@@ -460,6 +460,17 @@ export function CleanerInterface() {
     const dimensions = await getImageDimensions(file);
     return new Promise((resolve) => {
       const reader = new FileReader();
+      reader.onerror = () => {
+        resolve({
+          metadata: {
+            "◈ File Info": `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`,
+            "◈ Note": "Could not read file bytes. On mobile, try using the file manager instead of the photo gallery picker.",
+          },
+          dimensions,
+          riskLevel: "clean",
+          riskTagCount: 0,
+        });
+      };
       reader.onload = () => {
         const riskTags: Record<string, string> = {};
         const structuralTags: Record<string, string> = {};
@@ -561,6 +572,13 @@ export function CleanerInterface() {
         if (Object.keys(metadata).length === 0) {
           metadata["◈ File Info"] =
             `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`;
+          // JPEG/WebP files should almost always have some metadata - if we
+          // found none, the mobile photo picker likely re-encoded the file.
+          const mimeL = (file.type || "").toLowerCase();
+          if (mimeL === "image/jpeg" || mimeL === "image/webp") {
+            metadata["◈ Note"] =
+              "No metadata found. On mobile, the photo picker may strip metadata when sharing files. Try selecting the file from Downloads or a file manager app instead.";
+          }
         }
 
         const riskLevel: "high" | "low" | "clean" =
@@ -1028,7 +1046,7 @@ export function CleanerInterface() {
         ref={fileInputRef}
         onChange={(e) => e.target.files && handleFilesAdded(e.target.files)}
         multiple={currentTier === "pro"}
-        accept="image/*,.heic,.heif"
+        accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png,.webp,.avif"
         className="hidden"
       />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px]">
