@@ -32,7 +32,7 @@ export default function Home() {
               {
                 step: "01",
                 title: "Drop your image",
-                body: "JPEG, PNG, WebP, AVIF, or HEIC from your phone. Up to 10 MB free, 20 MB on Pro.",
+                body: "JPEG, PNG, WebP, AVIF, or HEIC from your phone. Up to 25 MB free, 100 MB on Pro.",
               },
               {
                 step: "02",

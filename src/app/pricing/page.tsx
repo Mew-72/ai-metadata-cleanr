@@ -89,8 +89,8 @@ const COMPARISON: Group[] = [
       {
         label: "Max file size",
         hint: "Per individual image",
-        free: tag("10 MB"),
-        pro: tag("20 MB", "accent"),
+        free: tag("25 MB"),
+        pro: tag("100 MB", "accent"),
       },
     ],
   },
@@ -167,7 +167,7 @@ export default function PricingPage() {
                     "1 image at a time",
                     "5 cleans per day",
                     "5 C2PA scans per day",
-                    "10 MB max file size",
+                    "25 MB max file size",
                     "EXIF, GPS, IPTC, XMP, C2PA stripping",
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-[14px] text-n600">
@@ -222,7 +222,7 @@ export default function PricingPage() {
                   {[
                     "Up to 50 images in one batch",
                     "Unlimited cleans & C2PA scans",
-                    "20 MB max file size",
+                    "100 MB max file size",
                     "ZIP exports",
                     "Priority support",
                     "All future tools included",

@@ -572,10 +572,43 @@ export function CleanerInterface() {
   };
 
   const handleFilesAdded = async (incomingFiles: FileList | File[]) => {
-    const list = Array.from(incomingFiles);
+    const ALLOWED_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/heic",
+      "image/heif",
+    ];
+
+    const rawList = Array.from(incomingFiles);
+
+    // Filter out non-image files (e.g. videos dropped onto the zone)
+    const list = rawList.filter((f) => {
+      const mime = f.type.toLowerCase();
+      const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+      return (
+        ALLOWED_TYPES.includes(mime) ||
+        ext === "heic" ||
+        ext === "heif"
+      );
+    });
+
+    if (list.length === 0) return;
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+
+    // File size limit enforcement
+    const maxBytes = tierLimits.maxUploadMB * 1024 * 1024;
+    const oversized = list.filter((f) => f.size > maxBytes);
+    if (oversized.length > 0) {
+      alert(
+        `File${oversized.length > 1 ? "s" : ""} too large: ${oversized.map((f) => f.name).join(", ")}.\n` +
+        `Your plan allows up to ${tierLimits.maxUploadMB} MB per image.`
+      );
+      return;
     }
 
     // Tier daily limit check
@@ -1363,7 +1396,7 @@ export function CleanerInterface() {
         </div>
 
         {/* Right column: Audit Panel */}
-        <div className="bg-bg flex flex-col select-none overflow-hidden">
+        <div className="bg-bg flex flex-col select-none overflow-hidden min-h-[480px] lg:min-h-0">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-muted-border bg-surface shrink-0">
             <ShieldCheck size={15} className="text-accent" strokeWidth={2.2} />
             <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">
@@ -1611,7 +1644,7 @@ export function CleanerInterface() {
                       : [];
 
                     return (
-                      <div className="rounded-xl border border-muted-border bg-surface flex flex-col flex-1 overflow-hidden min-h-[280px] max-h-[400px]">
+                      <div className="rounded-xl border border-muted-border bg-surface flex flex-col flex-1 overflow-hidden min-h-[280px] lg:max-h-[400px]">
                         <div className="overflow-y-auto flex-1">
                           {!entries ? (
                             <div className="p-4 text-center font-sans text-[12px] text-n400 animate-pulse">
