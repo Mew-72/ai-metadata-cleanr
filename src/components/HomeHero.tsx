@@ -15,12 +15,11 @@ export function HomeHero() {
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
               <span className="font-medium">100% in your browser</span>
             </span>
-            <span className="hidden sm:inline text-n300">·</span>
             <span className="text-[12.5px] text-n500">No uploads, ever</span>
             <span className="hidden sm:inline text-n300">·</span>
-            <span className="text-[12.5px] text-n500">No account to start</span>
+            <span className="hidden sm:inline text-[12.5px] text-n500">No account to start</span>
             <span className="hidden sm:inline text-n300">·</span>
-            <span className="text-[12.5px] text-n500">Free up to 5 images / day</span>
+            <span className="hidden sm:inline text-[12.5px] text-n500">Free up to 5 images / day</span>
           </div>
         )}
         {isPro && (

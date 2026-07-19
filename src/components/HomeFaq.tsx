@@ -28,7 +28,7 @@ const faqs = [
 ];
 
 export function HomeFaq() {
-  const [activeFaq, setActiveFaq] = useState<number | null>(0);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const toggleFaq = (i: number) => setActiveFaq(activeFaq === i ? null : i);
 

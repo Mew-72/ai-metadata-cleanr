@@ -1,4 +1,5 @@
 import { Lock, Layers, Fingerprint, Zap, Eye, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { HomeHero } from "../components/HomeHero";
@@ -109,8 +110,11 @@ export default function Home() {
                 title: "Zero telemetry on content",
                 body: "We track UI events to improve the product. We never log image bytes, filenames, or extracted metadata. Period.",
               },
-            ].map((f) => (
-              <div key={f.title} className="card-soft p-6">
+            ].map((f, index) => (
+              <div
+                key={f.title}
+                className={`card-soft p-6 ${index > 2 ? "hidden md:block" : ""}`}
+              >
                 <span className="w-10 h-10 rounded-lg bg-accent-soft text-accent flex items-center justify-center mb-3.5">
                   <f.icon size={17} strokeWidth={2} />
                 </span>
@@ -122,6 +126,15 @@ export default function Home() {
                 </p>
               </div>
             ))}
+          </div>
+
+          <div className="md:hidden mt-5 text-center">
+            <Link
+              href="/docs"
+              className="inline-flex items-center justify-center rounded-md border border-muted-border px-4 py-2 font-sans text-[13px] font-medium text-n600 hover:text-ink hover:bg-n100 transition-colors"
+            >
+              View all features
+            </Link>
           </div>
         </div>
       </section>
