@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Plus } from "lucide-react";
 import { PRICING } from "../config/pricing";
 
@@ -28,9 +28,22 @@ const faqs = [
 ];
 
 export function HomeFaq() {
-  const [activeFaq, setActiveFaq] = useState<number | null>(0);
-
-  const toggleFaq = (i: number) => setActiveFaq(activeFaq === i ? null : i);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const isDesktop = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => { };
+      const mediaQuery = window.matchMedia("(min-width: 768px)");
+      mediaQuery.addEventListener("change", onStoreChange);
+      return () => mediaQuery.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(min-width: 768px)").matches,
+    () => false,
+  );
+  const toggleFaq = (i: number) => {
+    const defaultDesktopOpen = activeFaq === null && isDesktop && i === 0;
+    const isOpen = activeFaq === i || defaultDesktopOpen;
+    setActiveFaq(isOpen ? null : i);
+  };
 
   return (
     <section id="faq" className="w-full bg-surface border-y border-muted-border">
@@ -46,7 +59,7 @@ export function HomeFaq() {
 
         <div className="flex flex-col gap-3">
           {faqs.map((f, i) => {
-            const open = activeFaq === i;
+            const open = activeFaq === i || (activeFaq === null && isDesktop && i === 0);
             return (
               <div
                 key={i}
