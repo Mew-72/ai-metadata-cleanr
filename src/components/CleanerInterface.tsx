@@ -250,6 +250,34 @@ export function CleanerInterface() {
   // Canvas + HEIC purification engine (Agent A)
   const { purifyImage, normalizeForAudit, isHeic } = useCanvasEngine();
 
+  const getOutputFilename = (
+    outputFormat: ExportFormat,
+    index: number,
+  ): string => {
+    const extByMime: Record<ExportFormat, string> = {
+      "image/png": "png",
+      "image/jpeg": "jpg",
+      "image/webp": "webp",
+    };
+    const ext = extByMime[outputFormat] ?? "png";
+    const sanitizedBase = customFilename
+      .trim()
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[<>:"/\\|?*\x00-\x1f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (sanitizedBase) {
+      if (files.length > 1) {
+        return `${sanitizedBase}_${index + 1}.${ext}`;
+      }
+      return `${sanitizedBase}.${ext}`;
+    }
+
+    const rand = Math.random().toString(36).substring(2, 8);
+    return `img_${rand}_${index + 1}.${ext}`;
+  };
+
   // Derive current tier from auth state (replaces old activeTier state)
   const currentTier: TierName = resolveTier({ isLoaded: isLoaded ?? false, isSignedIn, isPro });
   const tierLimits = TIER_LIMITS[currentTier];
@@ -831,16 +859,7 @@ export function CleanerInterface() {
         profile: profileToInject,
       });
 
-      // Always generate a randomized neutral filename to strip AI-detectable naming patterns.
-      // Use the *output* mime to pick the extension so format conversions are honored.
-      const extByMime: Record<ExportFormat, string> = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/webp": "webp",
-      };
-      const ext = extByMime[result.format] ?? "png";
-      const rand = Math.random().toString(36).substring(2, 8);
-      const cleanedName = `img_${rand}_${index + 1}.${ext}`;
+      const cleanedName = getOutputFilename(result.format, index);
 
       const cleanedUrl = URL.createObjectURL(result.blob);
 
@@ -1258,7 +1277,9 @@ export function CleanerInterface() {
                             const rand = Math.random()
                               .toString(36)
                               .substring(2, 8);
-                            setCustomFilename(`batch_${rand}`);
+                            setCustomFilename(
+                              files.length > 1 ? `batch_${rand}` : `image_${rand}`,
+                            );
                           }}
                           disabled={optionsLocked}
                           className={`shrink-0 rounded-md border border-muted-border bg-bg px-3 py-2 font-sans text-[12px] font-medium text-n600 hover:bg-n100 transition-colors ${optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
@@ -1268,7 +1289,9 @@ export function CleanerInterface() {
                         </button>
                       </div>
                       <div className="font-sans text-[11px] text-n500">
-                        Files are auto-renamed to neutral names regardless.
+                        {files.length > 1
+                          ? "Sets the base name used for each cleaned file and ZIP archive."
+                          : "Sets the downloaded filename. Extension follows output format."}
                       </div>
                     </div>
 
@@ -1319,12 +1342,12 @@ export function CleanerInterface() {
                       <input
                         id="export-quality"
                         type="range"
-                        min={0.1}
-                        max={1.0}
-                        step={0.05}
-                        value={exportQuality}
+                        min={10}
+                        max={100}
+                        step={5}
+                        value={Math.round(exportQuality * 100)}
                         onChange={(e) =>
-                          setExportQuality(parseFloat(e.target.value))
+                          setExportQuality(Number(e.target.value) / 100)
                         }
                         disabled={exportFormat === "image/png" || optionsLocked}
                         className={`w-full accent-accent h-2 ${exportFormat === "image/png" || optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
