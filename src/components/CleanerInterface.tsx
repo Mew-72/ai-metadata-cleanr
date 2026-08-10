@@ -18,6 +18,7 @@ import {
   Trash2,
   ShieldCheck,
   Download,
+  LoaderCircle,
   FileImage,
   AlertTriangle,
   Sparkles,
@@ -236,6 +237,8 @@ export function CleanerInterface() {
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
   const [isGuestLimitModalOpen, setIsGuestLimitModalOpen] = useState(false);
   const [cleanCount, setCleanCount] = useState<number>(0);
+  const [cleaningProgress, setCleaningProgress] = useState(0);
+  const [isCleaningFeedbackActive, setIsCleaningFeedbackActive] = useState(false);
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -904,45 +907,65 @@ export function CleanerInterface() {
       return;
     }
 
-    // Set files to cleaning state
-    setFiles((prev) => prev.map((f) => ({ ...f, status: "cleaning" })));
+    const minFeedbackMs = 1400;
+    const start = Date.now();
+    setCleaningProgress(0);
+    setIsCleaningFeedbackActive(true);
+    const progressTimer = window.setInterval(() => {
+      const elapsed = Date.now() - start;
+      const ratio = Math.min(elapsed / minFeedbackMs, 1);
+      setCleaningProgress(Math.min(95, Math.round(ratio * 95)));
+    }, 50);
 
-    const cleanedResults: UploadedFile[] = [];
+    try {
+      // Set files to cleaning state
+      setFiles((prev) => prev.map((f) => ({ ...f, status: "cleaning" })));
 
-    for (let idx = 0; idx < files.length; idx++) {
-      const item = files[idx];
+      for (let idx = 0; idx < files.length; idx++) {
+        const item = files[idx];
 
-      // Secondary safety check inside loop
-      if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
-        setIsGuestLimitModalOpen(true);
-        setFiles((prev) =>
-          prev.map((f, i) =>
-            i >= idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
-          ),
-        );
-        break;
-      }
-
-      const cleaned = await cleanSingleFile(item, idx);
-      cleanedResults.push(cleaned);
-
-      // Update specific item in UI queue
-      setFiles((prev) => prev.map((f) => (f.id === item.id ? cleaned : f)));
-
-      // Increment persistent clean count for non-pro tiers
-      if (tierLimits.dailyCleanLimit !== 0) {
-        const nextCount = getPersistedCleanCount() + 1;
-        setPersistedCleanCount(nextCount);
-        setCleanCount(nextCount);
-        if (nextCount >= tierLimits.dailyCleanLimit) {
+        // Secondary safety check inside loop
+        if (tierLimits.dailyCleanLimit !== 0 && getPersistedCleanCount() >= tierLimits.dailyCleanLimit) {
+          setIsGuestLimitModalOpen(true);
           setFiles((prev) =>
             prev.map((f, i) =>
-              i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
+              i >= idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
             ),
           );
           break;
         }
+
+        const cleaned = await cleanSingleFile(item, idx);
+
+        // Update specific item in UI queue
+        setFiles((prev) => prev.map((f) => (f.id === item.id ? cleaned : f)));
+
+        // Increment persistent clean count for non-pro tiers
+        if (tierLimits.dailyCleanLimit !== 0) {
+          const nextCount = getPersistedCleanCount() + 1;
+          setPersistedCleanCount(nextCount);
+          setCleanCount(nextCount);
+          if (nextCount >= tierLimits.dailyCleanLimit) {
+            setFiles((prev) =>
+              prev.map((f, i) =>
+                i > idx && f.status === "cleaning" ? { ...f, status: "idle" } : f,
+              ),
+            );
+            break;
+          }
+        }
       }
+
+      const remainingMs = minFeedbackMs - (Date.now() - start);
+      if (remainingMs > 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, remainingMs));
+      }
+      setCleaningProgress(100);
+      await new Promise((resolve) => window.setTimeout(resolve, 120));
+    } finally {
+      window.clearInterval(progressTimer);
+      setCleaningProgress(0);
+      setIsCleaningFeedbackActive(false);
     }
   };
 
@@ -1056,7 +1079,8 @@ export function CleanerInterface() {
     files.length > 0 && files.every((f) => f.status === "done");
   const isCleaningInProgress =
     files.length > 0 && files.some((f) => f.status === "cleaning");
-  const optionsLocked = isCleaningInProgress || allPurified;
+  const isCleanFlowActive = isCleaningInProgress || isCleaningFeedbackActive;
+  const optionsLocked = isCleanFlowActive || allPurified;
 
   return (
     <div className="w-full font-sans transition-colors duration-250 select-none">
@@ -1411,13 +1435,30 @@ export function CleanerInterface() {
                     )}
 
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                      {!allPurified ? (
+                      {!allPurified || isCleanFlowActive ? (
                         <button
                           onClick={handleCleanImages}
-                          className="btn-accent w-full sm:w-auto"
+                          disabled={isCleanFlowActive}
+                          className="btn-accent w-full sm:w-auto relative overflow-hidden disabled:opacity-90 disabled:cursor-not-allowed"
                         >
-                          Clean {files.length}{" "}
-                          {files.length === 1 ? "image" : "images"}
+                          {isCleanFlowActive ? (
+                            <>
+                              <span className="relative z-10 inline-flex items-center gap-2">
+                                <LoaderCircle size={14} strokeWidth={2.3} className="animate-spin" />
+                                Cleaning {cleaningProgress}%
+                              </span>
+                              <span
+                                className="absolute inset-y-0 left-0 bg-bg/20 transition-[width] duration-75"
+                                style={{ width: `${cleaningProgress}%` }}
+                                aria-hidden="true"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              Clean {files.length}{" "}
+                              {files.length === 1 ? "image" : "images"}
+                            </>
+                          )}
                         </button>
                       ) : (
                         <button
