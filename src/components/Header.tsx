@@ -14,6 +14,9 @@ const NAV_LINKS: { label: string; href: string; match?: (p: string) => boolean }
   { label: "Docs", href: "/docs", match: (p) => p?.startsWith("/docs") ?? false },
   { label: "About", href: "/about", match: (p) => p === "/about" },
 ];
+const MOBILE_NAV_LINKS = NAV_LINKS.filter((link) =>
+  ["Pricing", "Docs", "About"].includes(link.label),
+);
 
 export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -74,7 +77,7 @@ export function Header() {
           className="hidden md:flex items-center gap-1"
           aria-label="Main navigation"
         >
-          {NAV_LINKS.map((link) => {
+          {MOBILE_NAV_LINKS.map((link) => {
             const isActive = link.match
               ? link.match(pathname || "")
               : pathname === link.href;
