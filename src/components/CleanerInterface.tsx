@@ -755,8 +755,8 @@ export function CleanerInterface() {
     fileInputRef.current?.click();
   };
 
-  const handleDeleteFile = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteFile = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setFiles((prev) => {
       const filtered = prev.filter((f) => f.id !== id);
       if (selectedFileId === id) {
@@ -1205,10 +1205,12 @@ export function CleanerInterface() {
 
                           <button
                             onClick={(e) => handleDeleteFile(item.id, e)}
-                            className="text-n400 hover:text-danger cursor-pointer shrink-0"
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium text-n500 hover:text-danger hover:bg-danger-soft cursor-pointer shrink-0 transition-colors"
                             title="Remove file"
+                            aria-label={`Remove ${item.name} from workspace`}
                           >
                             <Trash2 size={12} />
+                            <span>Remove</span>
                           </button>
                         </div>
 
@@ -1632,6 +1634,22 @@ export function CleanerInterface() {
                 <div className="rounded-lg bg-n100 px-4 py-3 font-sans text-[12px] text-n600 leading-relaxed">
                   Tip: re-upload the cleaned file here to verify nothing slipped
                   through.
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={handleBrowseFiles}
+                    className="btn-accent w-full justify-center"
+                  >
+                    Clean another image
+                  </button>
+                  <button
+                    onClick={() => handleDeleteFile(selectedFile.id)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-muted-border bg-surface px-3 py-2 font-sans text-[12.5px] font-medium text-n600 hover:text-danger hover:border-danger/40 hover:bg-danger-soft transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={12} />
+                    Remove this image
+                  </button>
                 </div>
               </div>
             </div>
