@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Security",
+  title: "Security Policy - ScrubAI",
   description:
-    "ScrubAI's security practices. All image processing happens client-side in your browser — no server uploads, no data retention, encrypted connections.",
+    "ScrubAI security practices. All image processing happens client-side — no server uploads, no image data retention. Authentication via Clerk, payments via PayPal.",
+  alternates: { canonical: "/security" },
+  openGraph: {
+    title: "Security Policy - ScrubAI",
+    description:
+      "Client-side isolation, no stored user images, encrypted connections, and third-party payment security via PayPal.",
+  },
 };
 
 export default function SecurityLayout({

@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
+import { SITE_JSON_LD, SITE_URL } from "../lib/url";
 import "./globals.css";
 
 /**
@@ -26,9 +27,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.app",
-  ),
+  // Relative per-page canonicals (alternates.canonical) resolve against this.
+  // No canonical here on purpose: a root canonical would be inherited by
+  // every route and point them all at the homepage.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "ScrubAI - Free Image Metadata Remover (EXIF, GPS & C2PA)",
     template: "%s | ScrubAI",
@@ -80,6 +82,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          // Escape "<" so the JSON can never close the script element.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(SITE_JSON_LD).replace(/</g, "\\u003c"),
+          }}
+        />
         <ClerkProvider>
           <Providers>{children}</Providers>
         </ClerkProvider>

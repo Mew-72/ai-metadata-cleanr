@@ -18,21 +18,23 @@
         ]
       }
     ],
-    "sitemap": "https://scrubai.app/sitemap.xml"
+    "sitemap": "https://www.scrubai.app/sitemap.xml"
   },
   "sitemap.urls": [
-    "https://scrubai.app",
-    "https://scrubai.app/pricing",
-    "https://scrubai.app/about",
-    "https://scrubai.app/c2pa-scanner",
-    "https://scrubai.app/docs",
-    "https://scrubai.app/docs/reach-penalties",
-    "https://scrubai.app/docs/pixel-redraw-technique",
-    "https://scrubai.app/docs/platforms-cheatsheet",
-    "https://scrubai.app/privacy",
-    "https://scrubai.app/terms",
-    "https://scrubai.app/security",
-    "https://scrubai.app/refund",
-    "https://scrubai.app/cookies"
+    "https://www.scrubai.app/",
+    "https://www.scrubai.app/pricing",
+    "https://www.scrubai.app/about",
+    "https://www.scrubai.app/c2pa-scanner",
+    "https://www.scrubai.app/docs",
+    "https://www.scrubai.app/docs/reach-penalties",
+    "https://www.scrubai.app/docs/pixel-redraw-technique",
+    "https://www.scrubai.app/docs/platforms-cheatsheet",
+    "https://www.scrubai.app/docs/c2pa-explained",
+    "https://www.scrubai.app/docs/local-first-processing",
+    "https://www.scrubai.app/privacy",
+    "https://www.scrubai.app/terms",
+    "https://www.scrubai.app/security",
+    "https://www.scrubai.app/refund",
+    "https://www.scrubai.app/cookies"
   ]
 }
