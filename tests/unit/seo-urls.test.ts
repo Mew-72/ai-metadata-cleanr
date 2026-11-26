@@ -147,6 +147,9 @@ describe("sitemap (T01)", () => {
     const paths = urls.map((u) => new URL(u).pathname);
     for (const doc of DOCS) expect(paths).toContain(`/docs/${doc.slug}`);
     for (const p of FORMER_MALFORMED_PATHS) expect(paths).toContain(p);
+    // Restored articles (plan T07).
+    expect(paths).toContain("/docs/c2pa-explained");
+    expect(paths).toContain("/docs/local-first-processing");
   });
 
   it("lists nothing robots.txt disallows (auth, dashboard, checkout, API)", () => {
