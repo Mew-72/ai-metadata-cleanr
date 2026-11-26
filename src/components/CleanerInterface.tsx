@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -10,6 +10,7 @@ import { useCanvasEngine, type ExportFormat } from "../hooks/useCanvasEngine";
 import { injectExif, CAMERA_PROFILES } from "@/lib/exifInjector";
 import type { ExifProfile } from "@/lib/exifInjector";
 import { resolveTier } from "@/lib/tierResolver";
+import { formatPixelCount } from "@/lib/localeFormat";
 import { TIER_LIMITS, type TierName } from "@/config/pricing";
 import { BillingModal } from "./BillingModal";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
@@ -82,7 +83,7 @@ const MOCK_C2PA_MANIFEST = {
   },
 };
 
-// ── Obfuscated Rate-Limit Storage ──────────────────────────────────────────
+// â”€â”€ Obfuscated Rate-Limit Storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Storage keys and values are scrambled so users cannot trivially find
 // or edit them via DevTools. A daily rotating salt + integrity hash
 // ensures that manually changing any value invalidates the entire record.
@@ -141,7 +142,7 @@ const getPersistedCleanCount = (): number => {
   let localCount = 0;
   let cookieCount = 0;
 
-  // ── localStorage (obfuscated) ──
+  // â”€â”€ localStorage (obfuscated) â”€â”€
   try {
     const storedDate = localStorage.getItem(_RK.a);
     if (storedDate !== today) {
@@ -165,7 +166,7 @@ const getPersistedCleanCount = (): number => {
     }
   } catch { }
 
-  // ── Cookie (obfuscated) ──
+  // â”€â”€ Cookie (obfuscated) â”€â”€
   try {
     const cookies = document.cookie.split(";");
     let cDate = "";
@@ -201,14 +202,14 @@ const setPersistedCleanCount = (count: number) => {
   const encoded = _encode(count);
   const integrity = _hash(today, count);
 
-  // ── localStorage ──
+  // â”€â”€ localStorage â”€â”€
   try {
     localStorage.setItem(_RK.a, today);
     localStorage.setItem(_RK.b, encoded);
     localStorage.setItem(_RK.c, integrity);
   } catch { }
 
-  // ── Cookie (with Secure flag) ──
+  // â”€â”€ Cookie (with Secure flag) â”€â”€
   try {
     const expires = new Date();
     expires.setHours(23, 59, 59, 999);
@@ -494,8 +495,8 @@ export function CleanerInterface() {
       reader.onerror = () => {
         resolve({
           metadata: {
-            "◈ File Info": `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`,
-            "◈ Note": "Could not read file bytes. On mobile, try using the file manager instead of the photo gallery picker.",
+            "â—ˆ File Info": `${file.name} Â· ${file.type || "unknown"} Â· ${(file.size / 1024).toFixed(1)} KB`,
+            "â—ˆ Note": "Could not read file bytes. On mobile, try using the file manager instead of the photo gallery picker.",
           },
           dimensions,
           riskLevel: "clean",
@@ -554,10 +555,10 @@ export function CleanerInterface() {
                   continue;
 
                 if (isRiskTag(tagKey, groupName)) {
-                  riskTags[`⚠ [${groupName.toUpperCase()}] ${tagKey}`] = val;
+                  riskTags[`âš  [${groupName.toUpperCase()}] ${tagKey}`] = val;
                   riskTagCount++;
                 } else {
-                  structuralTags[`◈ [${groupName.toUpperCase()}] ${tagKey}`] =
+                  structuralTags[`â—ˆ [${groupName.toUpperCase()}] ${tagKey}`] =
                     val;
                 }
               }
@@ -571,7 +572,7 @@ export function CleanerInterface() {
               .join(" ")
               .toLowerCase();
             if (allKeys.includes("jumbf") || allKeys.includes("c2pa")) {
-              riskTags["⚠ C2PA Content Credentials"] =
+              riskTags["âš  C2PA Content Credentials"] =
                 "DETECTED - Cryptographically signed manifest found";
               riskTagCount++;
             }
@@ -586,7 +587,7 @@ export function CleanerInterface() {
               nameL.includes("firefly") ||
               nameL.includes("comfy")
             ) {
-              riskTags["⚠ AI Platform Filename"] =
+              riskTags["âš  AI Platform Filename"] =
                 `Filename "${file.name}" matches known AI generation naming patterns`;
               riskTagCount++;
             }
@@ -601,13 +602,13 @@ export function CleanerInterface() {
         };
 
         if (Object.keys(metadata).length === 0) {
-          metadata["◈ File Info"] =
-            `${file.name} · ${file.type || "unknown"} · ${(file.size / 1024).toFixed(1)} KB`;
+          metadata["â—ˆ File Info"] =
+            `${file.name} Â· ${file.type || "unknown"} Â· ${(file.size / 1024).toFixed(1)} KB`;
           // JPEG/WebP files should almost always have some metadata - if we
           // found none, the mobile photo picker likely re-encoded the file.
           const mimeL = (file.type || "").toLowerCase();
           if (mimeL === "image/jpeg" || mimeL === "image/webp") {
-            metadata["◈ Note"] =
+            metadata["â—ˆ Note"] =
               "No metadata found. On mobile, the photo picker may strip metadata when sharing files. Try selecting the file from Downloads or a file manager app instead.";
           }
         }
@@ -784,9 +785,9 @@ export function CleanerInterface() {
   ): Record<string, string> => {
     if (profile === "none") {
       return {
-        "◈ [FILE] Format": "Purified PNG/JPEG Asset",
-        "◈ [FILE] Signature": "Client-Side Raw Pixel Redraw",
-        "◈ [SECURITY] Status":
+        "â—ˆ [FILE] Format": "Purified PNG/JPEG Asset",
+        "â—ˆ [FILE] Signature": "Client-Side Raw Pixel Redraw",
+        "â—ˆ [SECURITY] Status":
           "Sterilized (All EXIF, XMP, IPTC & C2PA tags permanently deleted)",
       };
     }
@@ -803,38 +804,38 @@ export function CleanerInterface() {
 
     if (profile === "iphone") {
       return {
-        "◈ [EXIF] Make": "Apple",
-        "◈ [EXIF] Model": "iPhone 15 Pro",
-        "◈ [EXIF] LensModel": "iPhone 15 Pro back camera 6.86mm f/1.78",
-        "◈ [EXIF] Software": "17.4.1",
-        "◈ [EXIF] DateTimeOriginal": currentDate,
-        "◈ [SECURITY] Profile Status": injectedLabel,
+        "â—ˆ [EXIF] Make": "Apple",
+        "â—ˆ [EXIF] Model": "iPhone 15 Pro",
+        "â—ˆ [EXIF] LensModel": "iPhone 15 Pro back camera 6.86mm f/1.78",
+        "â—ˆ [EXIF] Software": "17.4.1",
+        "â—ˆ [EXIF] DateTimeOriginal": currentDate,
+        "â—ˆ [SECURITY] Profile Status": injectedLabel,
       };
     }
 
     if (profile === "canon") {
       return {
-        "◈ [EXIF] Make": "Canon",
-        "◈ [EXIF] Model": "Canon EOS 5D Mark IV",
-        "◈ [EXIF] LensModel": "EF24-70mm f/2.8L II USM",
-        "◈ [EXIF] Software": "Firmware Version 1.4.0",
-        "◈ [EXIF] DateTimeOriginal": currentDate,
-        "◈ [SECURITY] Profile Status": injectedLabel,
+        "â—ˆ [EXIF] Make": "Canon",
+        "â—ˆ [EXIF] Model": "Canon EOS 5D Mark IV",
+        "â—ˆ [EXIF] LensModel": "EF24-70mm f/2.8L II USM",
+        "â—ˆ [EXIF] Software": "Firmware Version 1.4.0",
+        "â—ˆ [EXIF] DateTimeOriginal": currentDate,
+        "â—ˆ [SECURITY] Profile Status": injectedLabel,
       };
     }
 
     // sony
     return {
-      "◈ [EXIF] Make": "Sony",
-      "◈ [EXIF] Model": "ILCE-7RM5",
-      "◈ [EXIF] LensModel": "FE 24-70mm F2.8 GM II",
-      "◈ [EXIF] Software": "ILCE-7RM5 v2.00",
-      "◈ [EXIF] DateTimeOriginal": currentDate,
-      "◈ [SECURITY] Profile Status": injectedLabel,
+      "â—ˆ [EXIF] Make": "Sony",
+      "â—ˆ [EXIF] Model": "ILCE-7RM5",
+      "â—ˆ [EXIF] LensModel": "FE 24-70mm F2.8 GM II",
+      "â—ˆ [EXIF] Software": "ILCE-7RM5 v2.00",
+      "â—ˆ [EXIF] DateTimeOriginal": currentDate,
+      "â—ˆ [SECURITY] Profile Status": injectedLabel,
     };
   };
 
-  // Clean a single file utilizing the canvas engine (HEIC convert → resize → re-export)
+  // Clean a single file utilizing the canvas engine (HEIC convert â†’ resize â†’ re-export)
   const cleanSingleFile = async (
     item: UploadedFile,
     index: number,
@@ -1106,7 +1107,13 @@ export function CleanerInterface() {
               ) : (
                 <>
                   <span className="pill pill-neutral">Free</span>
-                  <span className="pill pill-accent">
+                  {/*
+                    Translation-volatile: the clean counter increments on every
+                    pipeline step, so this text node is re-rendered while a
+                    translation engine may have re-parented it. Opted out with
+                    the modern attribute plus the legacy class.
+                  */}
+                  <span translate="no" className="pill pill-accent notranslate">
                     {cleanCount} / {tierLimits.dailyCleanLimit} cleans today
                   </span>
                 </>
@@ -1166,12 +1173,12 @@ export function CleanerInterface() {
                 </div>
 
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-sans text-[11.5px] text-n500 px-4 text-center">
-                  <span>JPG · PNG · WebP · AVIF · HEIC</span>
-                  <span className="text-n300">·</span>
+                  <span>JPG Â· PNG Â· WebP Â· AVIF Â· HEIC</span>
+                  <span className="text-n300">Â·</span>
                   <span>Up to {tierLimits.maxUploadMB} MB</span>
                   {currentTier !== "pro" && (
                     <>
-                      <span className="text-n300">·</span>
+                      <span className="text-n300">Â·</span>
                       <span>{tierLimits.dailyCleanLimit} free cleans / day</span>
                     </>
                   )}
@@ -1198,7 +1205,15 @@ export function CleanerInterface() {
                               size={13}
                               className={`shrink-0 ${isSelected ? "text-accent" : "text-n400"}`}
                             />
-                            <span className="font-sans text-[12px] font-medium text-ink truncate">
+                            {/*
+                              Translation-volatile: the filename is replaced
+                              with the generated neutral name when the clean
+                              finishes, so this text node updates mid-pipeline.
+                            */}
+                            <span
+                              translate="no"
+                              className="font-sans text-[12px] font-medium text-ink truncate notranslate"
+                            >
                               {item.name}
                             </span>
                           </div>
@@ -1214,21 +1229,37 @@ export function CleanerInterface() {
 
                         {/* File Details */}
                         <div className="font-sans text-[11px] text-n500 flex flex-col gap-1">
+                          {/*
+                            Static labels stay translatable. Only the value
+                            nodes opt out: dimensions arrive after the audit
+                            and both values change when the file is cleaned.
+                          */}
                           <div className="flex items-center justify-between">
                             <span>Size</span>
-                            <span className="font-medium text-ink">
+                            <span
+                              translate="no"
+                              className="font-medium text-ink notranslate"
+                            >
                               {(item.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span>Dimensions</span>
-                            <span className="font-medium text-ink truncate ml-2">
+                            <span
+                              translate="no"
+                              className="font-medium text-ink truncate ml-2 notranslate"
+                            >
                               {item.dimensions || "-"}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-muted-border">
+                            {/*
+                              Translation-volatile: the status pill text swaps
+                              on every pipeline transition.
+                            */}
                             <span
-                              className={`pill ${item.status === "done"
+                              translate="no"
+                              className={`pill notranslate ${item.status === "done"
                                 ? "pill-accent"
                                 : item.status === "cleaning"
                                   ? "pill-warn animate-pulse"
@@ -1238,7 +1269,7 @@ export function CleanerInterface() {
                               {item.status === "done"
                                 ? "Cleaned"
                                 : item.status === "cleaning"
-                                  ? "Cleaning…"
+                                  ? "Cleaningâ€¦"
                                   : item.status === "audited"
                                     ? "Ready"
                                     : "Pending"}
@@ -1359,7 +1390,15 @@ export function CleanerInterface() {
                         className="font-sans text-[12px] font-medium text-n600 flex items-center justify-between"
                       >
                         <span>Export quality</span>
-                        <span className="font-mono text-[12px] font-semibold text-ink">
+                        {/*
+                          Translation-volatile: the percentage readout changes
+                          on every slider step. The label beside it is static
+                          and stays translatable.
+                        */}
+                        <span
+                          translate="no"
+                          className="font-mono text-[12px] font-semibold text-ink notranslate"
+                        >
                           {Math.round(exportQuality * 100)}%
                         </span>
                       </label>
@@ -1408,9 +1447,9 @@ export function CleanerInterface() {
                         className={`bg-bg border border-muted-border rounded-md px-3 py-2 font-sans text-[13px] text-ink outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/15 notranslate ${optionsLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                       >
                         <option value="auto" translate="no" className="notranslate">Auto (match input)</option>
-                        <option value="image/png" translate="no" className="notranslate">PNG · Lossless</option>
-                        <option value="image/jpeg" translate="no" className="notranslate">JPEG · Compressed</option>
-                        <option value="image/webp" translate="no" className="notranslate">WebP · Modern web</option>
+                        <option value="image/png" translate="no" className="notranslate">PNG Â· Lossless</option>
+                        <option value="image/jpeg" translate="no" className="notranslate">JPEG Â· Compressed</option>
+                        <option value="image/webp" translate="no" className="notranslate">WebP Â· Modern web</option>
                       </select>
                       <div className="font-sans text-[11px] text-n500">
                         PNG ignores quality. HEIC is converted to JPEG.
@@ -1422,7 +1461,11 @@ export function CleanerInterface() {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-2">
                     {currentTier !== "pro" ? (
                       <div className="font-sans text-[12px] text-n500">
-                        <span className="font-medium text-ink">
+                        {/* Translation-volatile: increments per clean. */}
+                        <span
+                          translate="no"
+                          className="font-medium text-ink notranslate"
+                        >
                           {cleanCount}
                         </span>{" "}
                         of {tierLimits.dailyCleanLimit} free cleans used today
@@ -1430,7 +1473,7 @@ export function CleanerInterface() {
                     ) : (
                       <div className="inline-flex items-center gap-1.5 font-sans text-[12px] text-accent font-medium">
                         <ShieldCheck size={13} strokeWidth={2.4} />
-                        Pro · Unlimited cleans
+                        Pro Â· Unlimited cleans
                       </div>
                     )}
 
@@ -1463,7 +1506,8 @@ export function CleanerInterface() {
                       ) : (
                         <button
                           onClick={handleDownload}
-                          className="btn-accent w-full sm:w-auto"
+                          translate="no"
+                          className="btn-accent w-full sm:w-auto notranslate"
                         >
                           <Download size={14} strokeWidth={2.2} />
                           Download {files.length > 1 ? "ZIP" : "image"}
@@ -1481,7 +1525,14 @@ export function CleanerInterface() {
         <div className="bg-bg flex flex-col select-none overflow-hidden min-h-[480px] lg:min-h-0">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-muted-border bg-surface shrink-0">
             <ShieldCheck size={15} className="text-accent" strokeWidth={2.2} />
-            <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">
+            {/*
+              Translation-volatile: the heading text swaps when the selected
+              file finishes cleaning.
+            */}
+            <h3
+              translate="no"
+              className="font-sans text-[14px] font-semibold tracking-tight text-ink notranslate"
+            >
               {selectedFile?.status === "done"
                 ? "Cleaning report"
                 : "Metadata audit"}
@@ -1531,7 +1582,7 @@ export function CleanerInterface() {
                     cleanedSize === 0
                       ? "-"
                       : sizeDelta >= 0
-                        ? `−${sizeDelta.toFixed(1)}%`
+                        ? `âˆ’${sizeDelta.toFixed(1)}%`
                         : `+${Math.abs(sizeDelta).toFixed(1)}%`;
 
                   const dims = selectedFile.dimensions || "";
@@ -1543,7 +1594,7 @@ export function CleanerInterface() {
                     pixelCount >= 1_000_000
                       ? `${(pixelCount / 1_000_000).toFixed(1)}M`
                       : pixelCount > 0
-                        ? pixelCount.toLocaleString()
+                        ? formatPixelCount(pixelCount)
                         : "-";
 
                   const outputMime = selectedFile.cleanedBlob?.type ?? "";
@@ -1566,10 +1617,19 @@ export function CleanerInterface() {
                           key={s.label}
                           className="rounded-lg border border-muted-border bg-surface px-3 py-2.5"
                         >
+                          {/*
+                            Stat labels stay translatable. The values - size
+                            delta, pixel count, quality label - are the
+                            highest-frequency React-updated text nodes in this
+                            component, so they opt out.
+                          */}
                           <div className="font-sans text-[11px] text-n500">
                             {s.label}
                           </div>
-                          <div className="font-sans text-[16px] font-semibold text-ink mt-0.5">
+                          <div
+                            translate="no"
+                            className="font-sans text-[16px] font-semibold text-ink mt-0.5 notranslate"
+                          >
                             {s.value}
                           </div>
                         </div>
@@ -1643,11 +1703,16 @@ export function CleanerInterface() {
                   <span className="font-sans text-[11px] text-n500">
                     Inspecting
                   </span>
-                  <span className="pill pill-neutral">
-                    {selectedFile.status === "audited" ? "Ready" : "Scanning…"}
+                  {/* Translation-volatile: audit progress text. */}
+                  <span translate="no" className="pill pill-neutral notranslate">
+                    {selectedFile.status === "audited" ? "Ready" : "Scanningâ€¦"}
                   </span>
                 </div>
-                <h4 className="font-sans text-[14px] font-semibold text-ink truncate mb-4 shrink-0">
+                {/* Translation-volatile: changes with the selected file. */}
+                <h4
+                  translate="no"
+                  className="font-sans text-[14px] font-semibold text-ink truncate mb-4 shrink-0 notranslate"
+                >
                   {selectedFile.file.name}
                 </h4>
 
@@ -1661,7 +1726,15 @@ export function CleanerInterface() {
                         strokeWidth={2.2}
                       />
                       <div>
-                        <div className="font-sans text-[13px] font-semibold text-danger">
+                        {/*
+                          Translation-volatile: the tag count changes as files
+                          are audited and re-selected. The explanatory copy
+                          below stays translatable.
+                        */}
+                        <div
+                          translate="no"
+                          className="font-sans text-[13px] font-semibold text-danger notranslate"
+                        >
                           High risk - {selectedFile.riskTagCount} tracking tag
                           {(selectedFile.riskTagCount || 0) !== 1
                             ? "s"
@@ -1684,7 +1757,11 @@ export function CleanerInterface() {
                         strokeWidth={2.2}
                       />
                       <div>
-                        <div className="font-sans text-[13px] font-semibold text-warn">
+                        {/* Translation-volatile: live tag count. */}
+                        <div
+                          translate="no"
+                          className="font-sans text-[13px] font-semibold text-warn notranslate"
+                        >
                           Low risk - {selectedFile.riskTagCount} tracking tag
                           {(selectedFile.riskTagCount || 0) !== 1 ? "s" : ""}
                         </div>
@@ -1719,25 +1796,31 @@ export function CleanerInterface() {
                       ? Object.entries(selectedFile.metadata)
                       : null;
                     const riskEntries = entries
-                      ? entries.filter(([k]) => k.startsWith("⚠"))
+                      ? entries.filter(([k]) => k.startsWith("âš "))
                       : [];
                     const structuralEntries = entries
-                      ? entries.filter(([k]) => !k.startsWith("⚠"))
+                      ? entries.filter(([k]) => !k.startsWith("âš "))
                       : [];
 
                     return (
                       <div className="rounded-xl border border-muted-border bg-surface flex flex-col flex-1 overflow-hidden min-h-[280px] lg:max-h-[400px]">
                         <div className="overflow-y-auto flex-1">
                           {!entries ? (
-                            <div className="p-4 text-center font-sans text-[12px] text-n400 animate-pulse">
-                              Scanning structural headers…
+                            /* Translation-volatile: progress placeholder that
+                               React removes as soon as the audit resolves. */
+                            <div
+                              translate="no"
+                              className="p-4 text-center font-sans text-[12px] text-n400 animate-pulse notranslate"
+                            >
+                              Scanning structural headersâ€¦
                             </div>
                           ) : (
                             <>
                               {/* Risk section */}
                               <div className="bg-danger-soft border-b border-muted-border px-3 py-2 font-sans text-[11px] font-semibold text-danger flex items-center justify-between sticky top-0 z-10">
                                 <span>Tracking risk</span>
-                                <span className="font-mono">
+                                {/* Translation-volatile: live tag tally. */}
+                                <span translate="no" className="font-mono notranslate">
                                   {riskEntries.length}
                                 </span>
                               </div>
@@ -1752,10 +1835,23 @@ export function CleanerInterface() {
                                       key={key}
                                       className="grid grid-cols-[1fr_1fr] px-3 py-2 font-mono text-[11px] items-start gap-2"
                                     >
-                                      <div className="text-danger break-all">
-                                        {key.replace(/^⚠\s*/, "")}
+                                      {/*
+                                        Translation-volatile: these rows are
+                                        replaced wholesale when the audit
+                                        resolves and again when the clean
+                                        finishes. They are raw tag readouts,
+                                        not prose.
+                                      */}
+                                      <div
+                                        translate="no"
+                                        className="text-danger break-all notranslate"
+                                      >
+                                        {key.replace(/^âš \s*/, "")}
                                       </div>
-                                      <div className="font-medium text-ink break-all">
+                                      <div
+                                        translate="no"
+                                        className="font-medium text-ink break-all notranslate"
+                                      >
                                         {val}
                                       </div>
                                     </div>
@@ -1768,7 +1864,8 @@ export function CleanerInterface() {
                                 <span>
                                   Structural file properties (harmless)
                                 </span>
-                                <span className="font-mono">
+                                {/* Translation-volatile: live tag tally. */}
+                                <span translate="no" className="font-mono notranslate">
                                   {structuralEntries.length}
                                 </span>
                               </div>
@@ -1783,10 +1880,17 @@ export function CleanerInterface() {
                                       key={key}
                                       className="grid grid-cols-[1fr_1fr] px-3 py-2 font-mono text-[11px] items-start gap-2"
                                     >
-                                      <div className="text-n500 break-all">
-                                        {key.replace(/^◈\s*/, "")}
+                                      {/* Translation-volatile: raw tag readouts. */}
+                                      <div
+                                        translate="no"
+                                        className="text-n500 break-all notranslate"
+                                      >
+                                        {key.replace(/^â—ˆ\s*/, "")}
                                       </div>
-                                      <div className="text-n600 break-all">
+                                      <div
+                                        translate="no"
+                                        className="text-n600 break-all notranslate"
+                                      >
                                         {val}
                                       </div>
                                     </div>

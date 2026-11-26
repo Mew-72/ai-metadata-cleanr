@@ -1,0 +1,3 @@
+Unit tests live here. Property tests live in ../properties, HTTP and
+middleware checks in ../integration, and the Playwright performance suite in
+../performance stays untouched by this spec.

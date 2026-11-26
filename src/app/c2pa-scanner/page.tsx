@@ -7,6 +7,7 @@ import { Footer } from "../../components/Footer";
 import { useAppAuth } from "../../hooks/useAppAuth";
 import posthog from "posthog-js";
 import { BillingModal } from "../../components/BillingModal";
+import { formatSignatureTimestamp } from "@/lib/localeFormat";
 import { createPortal } from "react-dom";
 import {
   ShieldCheck,
@@ -279,7 +280,7 @@ export default function C2paScannerPage() {
           let issuer = manifest.signatureInfo?.issuer;
           let commonName = manifest.signatureInfo?.commonName;
           let signedAt = manifest.signatureInfo?.time
-            ? new Date(manifest.signatureInfo.time).toLocaleString()
+            ? formatSignatureTimestamp(manifest.signatureInfo.time)
             : undefined;
           let algorithm = manifest.signatureInfo?.alg;
 
@@ -329,8 +330,8 @@ export default function C2paScannerPage() {
               actionAssertion?.data?.actions?.[0]?.when ||
               actionAssertion?.data?.actions?.[0]?.time;
             signedAt = whenTime
-              ? new Date(whenTime).toLocaleString()
-              : new Date().toLocaleString();
+              ? formatSignatureTimestamp(whenTime)
+              : formatSignatureTimestamp(new Date());
           }
 
           if (

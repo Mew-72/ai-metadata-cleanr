@@ -1,0 +1,20 @@
+{
+  "name": "scrubai-browser-performance-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "install:browsers": "playwright install chromium firefox webkit",
+    "test": "playwright test",
+    "test:list": "playwright test --list",
+    "test:desktop": "playwright test --project=chromium-desktop --project=firefox-desktop --project=webkit-desktop",
+    "test:mobile": "playwright test --project=chromium-mobile --project=webkit-mobile",
+    "test:workflow": "playwright test specs/cleaner-workflow.performance.spec.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.54.2"
+  }
+}
