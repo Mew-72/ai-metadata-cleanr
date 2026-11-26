@@ -9,6 +9,8 @@
 import { reachPenalties } from "./reach-penalties";
 import { pixelRedrawTechnique } from "./pixel-redraw-technique";
 import { platformsCheatsheet } from "./platforms-cheatsheet";
+import { c2paExplained } from "./c2pa-explained";
+import { localFirstProcessing } from "./local-first-processing";
 
 export type DocCategory = "Strategy" | "Technical" | "Reference";
 
@@ -87,6 +89,45 @@ export const DOCS: DocEntry[] = [
             "cheatsheet",
         ],
         body: platformsCheatsheet,
+    },
+    {
+        slug: "c2pa-explained",
+        title: "What is C2PA? Content Credentials, Trust and Limitations",
+        summary:
+            "A valid C2PA signature authenticates signed claims under a trust model. It doesn't prove a photo is real, and missing credentials prove nothing about origin.",
+        category: "Technical",
+        readMinutes: 8,
+        tags: [
+            "c2pa",
+            "content credentials",
+            "jumbf",
+            "provenance",
+            "cryptography",
+            "trust",
+            "ai metadata",
+            "signature",
+            "validation",
+        ],
+        body: c2paExplained,
+    },
+    {
+        slug: "local-first-processing",
+        title: "How Browser-Local Image Processing Protects Privacy",
+        summary:
+            "ScrubAI processes images entirely in your browser. No uploads, no server logs. What stays on your device, what we track, and how to verify it yourself.",
+        category: "Technical",
+        readMinutes: 10,
+        tags: [
+            "privacy",
+            "local processing",
+            "browser",
+            "canvas",
+            "security",
+            "analytics",
+            "data collection",
+            "client-side",
+        ],
+        body: localFirstProcessing,
     },
 ];
 
