@@ -106,9 +106,16 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/*
+            Translation-volatile: the icon and title swap on every theme
+            change, so a translation engine that re-parents this node makes
+            the next reconciliation throw. Opted out with the modern
+            attribute plus the legacy class.
+          */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-md flex items-center justify-center text-n500 hover:text-ink hover:bg-n100 transition-colors cursor-pointer"
+            translate="no"
+            className="notranslate w-9 h-9 rounded-md flex items-center justify-center text-n500 hover:text-ink hover:bg-n100 transition-colors cursor-pointer"
             title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
             aria-label="Toggle theme"
           >
@@ -128,14 +135,25 @@ export function Header() {
             {mobileMenuOpen ? <X size={15} strokeWidth={2} /> : <Menu size={15} strokeWidth={2} />}
           </button>
 
+          {/*
+            Translation-volatile: this region swaps between SignInButton and
+            UserButton when Clerk auth state resolves. Each branch is the
+            node React inserts or removes, so each branch carries the opt-out
+            itself and stays a direct child of this actions row. That keeps
+            the node React holds a reference to identical to the node in the
+            DOM, whatever the translation engine did around it.
+          */}
           {!isSignedIn ? (
             <SignInButton mode="modal">
-              <button className="hidden sm:inline-flex bg-ink text-bg rounded-md px-4 h-9 items-center font-sans text-[13px] font-medium hover:bg-accent transition-colors cursor-pointer">
+              <button
+                translate="no"
+                className="notranslate hidden sm:inline-flex bg-ink text-bg rounded-md px-4 h-9 items-center font-sans text-[13px] font-medium hover:bg-accent transition-colors cursor-pointer"
+              >
                 Sign in
               </button>
             </SignInButton>
           ) : (
-            <div className="pl-1 sm:pl-2">
+            <div translate="no" className="notranslate pl-1 sm:pl-2">
               <UserButton
                 appearance={{
                   elements: {
@@ -149,8 +167,16 @@ export function Header() {
       </div>
 
       {/* Mobile drawer */}
+      {/*
+        Translation-volatile: the drawer mounts and unmounts, and its contents
+        change with auth state. Opting out the whole container keeps every node
+        inside it React-owned.
+      */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-muted-border bg-bg w-full animate-fadeIn">
+        <div
+          translate="no"
+          className="notranslate md:hidden border-t border-muted-border bg-bg w-full animate-fadeIn"
+        >
           <nav className="flex flex-col px-4 py-3 gap-1" aria-label="Mobile navigation">
             {NAV_LINKS.map((link) => {
               const isActive = link.match

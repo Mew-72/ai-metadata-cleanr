@@ -1,0 +1,38 @@
+{
+  "robots.rules": {
+    "rules": [
+      {
+        "userAgent": "*",
+        "allow": "/",
+        "disallow": [
+          "/api/",
+          "/ingest/",
+          "/dashboard",
+          "/dashboard/",
+          "/sign-in",
+          "/sign-in/",
+          "/sign-up",
+          "/sign-up/",
+          "/thank-you",
+          "/thank-you/"
+        ]
+      }
+    ],
+    "sitemap": "https://scrubai.app/sitemap.xml"
+  },
+  "sitemap.urls": [
+    "https://scrubai.app",
+    "https://scrubai.app/pricing",
+    "https://scrubai.app/about",
+    "https://scrubai.app/c2pa-scanner",
+    "https://scrubai.app/docs",
+    "https://scrubai.app/docs/reach-penalties",
+    "https://scrubai.app/docs/pixel-redraw-technique",
+    "https://scrubai.app/docs/platforms-cheatsheet",
+    "https://scrubai.app/privacy",
+    "https://scrubai.app/terms",
+    "https://scrubai.app/security",
+    "https://scrubai.app/refund",
+    "https://scrubai.app/cookies"
+  ]
+}

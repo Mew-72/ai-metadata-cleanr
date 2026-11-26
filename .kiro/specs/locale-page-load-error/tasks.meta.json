@@ -1,0 +1,144 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "Case A (translation-style DOM mutation then reconciliation) - fast-check counterexamples, one per mutation target:\n  seed: -1105765134, path: \"0\" | Counterexample: [\"/\"]  target = theme toggle label\n  seed: -1029149974, path: \"0\" | Counterexample: [\"/\"]  target = auth action region\n  seed: -442596018,  path: \"0\" | Counterexample: [\"/\"]  target = mobile drawer subtree\n  Caused by: NotFoundError: The node to be removed is not a child of this node. (jsdom DOMException code 8 / NOT_FOUND_ERR, the jsdom wording of \"Failed to execute 'removeChild' on 'Node'\")\n\nCase B (uncaught client throw): AssertionError: uncaught client throw: heic2any decode failed for the current file: expected true to be false - is_empty_document(container) was true, the container was left empty with no app-rendered content and no recovery affordance.\n\nCase C (locale-prefixed path routing): Property failed after 1 test, seed: -1718007105, path: \"0:0\", Counterexample: [\"/pt-br/\"]\n  Caused by: AssertionError: /pt-br/ was swept into auth.protect() and redirected to sign-in instead of returning the app 404: expected true to be false\n\nTotal: 5 failed, 2 passed (the two control assertions - /dashboard still protected, public routes still pass through - passed).",
+      "lastRunTimestamp": 1785473185237
+    },
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1785492233118
+    },
+    "3.8 Add `isKnownRoute` to `src/proxy.ts` so unknown paths reach the 404": {
+      "status": "passed",
+      "lastRunTimestamp": 1785497019163
+    },
+    "3.11 Pin ambient-locale formatting": {
+      "status": "passed",
+      "lastRunTimestamp": 1785523419644
+    },
+    "3.12 Verify bug condition exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1785524237431
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469513901
+      },
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469524804
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469514448
+      }
+    ],
+    "3.1 Finalize the test framework setup": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469514939
+      }
+    ],
+    "3.2 Create the shared `ErrorFallback` UI": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469515210
+      }
+    ],
+    "3.3 Add the route-level error boundary `src/app/error.tsx`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469515453
+      }
+    ],
+    "3.4 Add the global error boundary `src/app/global-error.tsx`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469515693
+      }
+    ],
+    "3.5 Add the app 404 `src/app/not-found.tsx`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469515912
+      }
+    ],
+    "3.6 Add `src/lib/errorReporting.ts` with the sanitizer and capture": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469516222
+      }
+    ],
+    "3.7 Add the `before_send` sanitizer hook to `instrumentation-client.ts`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469516628
+      }
+    ],
+    "3.8 Add `isKnownRoute` to `src/proxy.ts` so unknown paths reach the 404": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469516815
+      }
+    ],
+    "3.9 Mark translation-volatile nodes in `src/components/Header.tsx`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469517026
+      }
+    ],
+    "3.10 Mark translation-volatile stat readouts in `src/components/CleanerInterface.tsx`": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469517264
+      }
+    ],
+    "3.11 Pin ambient-locale formatting": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469517472
+      }
+    ],
+    "3.12 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469517718
+      }
+    ],
+    "3.13 Verify preservation tests still pass": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469517990
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "c00252aa-5874-4ac4-b533-9431768ae594",
+        "chatSessionId": "sess_327939f2-a7b0-4ea1-a068-ba87544b68f4",
+        "timestamp": 1785469518278
+      }
+    ]
+  }
+}

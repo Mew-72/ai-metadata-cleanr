@@ -1,0 +1,28 @@
+{
+  "config.matcher": [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+    "/__clerk/(.*)"
+  ],
+  "protected|/api/paypal/capture-order": true,
+  "protected|/dashboard": true,
+  "protected|/dashboard/": true,
+  "protected|/dashboard/settings": true,
+  "protected|/thank-you": true,
+  "public|/": false,
+  "public|/about": false,
+  "public|/api/paypal/create-order": false,
+  "public|/c2pa-scanner": false,
+  "public|/cookies": false,
+  "public|/docs": false,
+  "public|/ingest": false,
+  "public|/pricing": false,
+  "public|/privacy": false,
+  "public|/refund": false,
+  "public|/robots.txt": false,
+  "public|/security": false,
+  "public|/sign-in": false,
+  "public|/sign-up": false,
+  "public|/sitemap.xml": false,
+  "public|/terms": false
+}

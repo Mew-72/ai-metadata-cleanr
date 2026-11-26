@@ -1,0 +1,21 @@
+{
+  "PRICING": {
+    "amount": "24.99",
+    "currency": "USD",
+    "displayPrice": "$24.99",
+    "description": "ScrubAI Lifetime Pro Membership",
+    "minCaptureAmount": 24.99
+  },
+  "createOrderPayload": {
+    "intent": "CAPTURE",
+    "purchase_units": [
+      {
+        "amount": {
+          "currency_code": "USD",
+          "value": "24.99"
+        },
+        "description": "ScrubAI Lifetime Pro Membership"
+      }
+    ]
+  }
+}
