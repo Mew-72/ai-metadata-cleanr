@@ -14,15 +14,16 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({
-    params,
+  params,
 }: DocPageProps): Promise<Metadata> {
-    const { slug } = await params;
-    const doc = getDoc(slug);
-    if (!doc) return { title: "Not Found" };
-    return {
-        title: doc.title,
-        description: doc.summary,
-    };
+  const { slug } = await params;
+  const doc = getDoc(slug);
+  if (!doc) return { title: "Not Found" };
+  return {
+    title: doc.title,
+    description: doc.summary,
+    alternates: { canonical: `/docs/${slug}` },
+  };
 }
 
 export default async function DocPage({ params }: DocPageProps) {
@@ -34,8 +35,31 @@ export default async function DocPage({ params }: DocPageProps) {
     const prev = idx > 0 ? DOCS[idx - 1] : null;
     const next = idx >= 0 && idx < DOCS.length - 1 ? DOCS[idx + 1] : null;
 
+    const breadcrumbJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+            {
+                "@type": "ListItem",
+                position: 1,
+                name: "Docs",
+                item: "https://www.scrubai.app/docs",
+            },
+            {
+                "@type": "ListItem",
+                position: 2,
+                name: doc.title,
+                item: `https://www.scrubai.app/docs/${slug}`,
+            },
+        ],
+    };
+
     return (
         <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+            />
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 lg:gap-12">
                 {/* Sidebar */}
                 <aside className="lg:sticky lg:top-24 lg:self-start flex flex-col gap-5">

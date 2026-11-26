@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Lock, Layers, Fingerprint, Zap, Eye, ShieldCheck } from "lucide-react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
@@ -5,9 +6,41 @@ import { HomeHero } from "../components/HomeHero";
 import { HomeFaq } from "../components/HomeFaq";
 import { HomeCta } from "../components/HomeCta";
 
+export const metadata: Metadata = {
+  title: "Free Image Metadata Remover - EXIF, GPS & C2PA",
+  description:
+    "Remove EXIF, GPS, XMP and C2PA metadata from images in your browser. No image uploads or account required to start.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Free Image Metadata Remover - EXIF, GPS & C2PA | ScrubAI",
+    description:
+      "Remove EXIF, GPS, XMP and C2PA metadata from images in your browser. No image uploads or account required to start.",
+  },
+};
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "ScrubAI Image Metadata Remover",
+  url: "https://www.scrubai.app/",
+  description:
+    "Remove EXIF, GPS, XMP and C2PA metadata from JPEG, PNG, WebP, AVIF and HEIC images entirely in your browser. Five free cleans per day, no account required.",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-bg text-ink">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppJsonLd) }}
+      />
       <Header />
 
       <HomeHero />
@@ -42,7 +75,7 @@ export default function Home() {
               {
                 step: "03",
                 title: "Download the clean file",
-                body: "A fresh export at 95% quality. Bit-for-bit free of the original metadata.",
+                body: "A fresh export with all embedded metadata removed. JPEG output uses 95% quality canvas re-encoding, which may alter pixel values slightly — that is exactly what destroys every signed metadata block.",
               },
             ].map((s) => (
               <div key={s.step} className="card-soft p-6">

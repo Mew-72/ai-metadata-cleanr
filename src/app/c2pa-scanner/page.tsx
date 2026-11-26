@@ -431,12 +431,44 @@ export default function C2paScannerPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-bg text-ink">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "ScrubAI C2PA Scanner",
+            url: "https://www.scrubai.app/c2pa-scanner",
+            description:
+              "Inspect C2PA Content Credentials and signed image provenance privately in your browser. Understand validation results: valid, invalid, or untrusted signer.",
+            applicationCategory: "UtilitiesApplication",
+            operatingSystem: "Any",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }),
+        }}
+      />
       <Header />
 
       <main className="flex-1 w-full">
         {/* Workspace section */}
         <section className="hero-gradient">
           <div className="max-w-[1440px] mx-auto w-full px-3 sm:px-5 lg:px-6 pt-5 lg:pt-7 pb-10">
+            {/* Page title — compact, keeps workspace first */}
+            <div className="text-center mb-4">
+              <h1 className="font-sans text-[22px] lg:text-[26px] font-semibold tracking-tight text-ink mb-1.5">
+                C2PA Checker — Verify Content Credentials
+              </h1>
+              <p className="font-sans text-[13px] text-n500 max-w-2xl mx-auto leading-relaxed">
+                Upload an image to inspect its C2PA provenance manifest. Results show whether credentials are valid,
+                invalid, or signed by an untrusted issuer. Missing credentials do not confirm human or AI origin —
+                they mean no C2PA manifest was detected. Runs entirely in your browser; no image is uploaded.
+              </p>
+            </div>
+
             {/* Eyebrow */}
             {mounted && !isPro && (
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 mb-4">
@@ -637,9 +669,10 @@ export default function C2paScannerPage() {
                                 Content credentials found
                               </h4>
                               <p className="font-sans text-[12.5px] text-n600 leading-relaxed mt-1">
-                                Cryptographic tracking signatures detected.
-                                Platforms reading this manifest may apply &quot;Made
-                                with AI&quot; labels or suppress reach.
+                                Cryptographic C2PA credentials detected.
+                                Platforms that support the C2PA standard may display &quot;Made
+                                with AI&quot; labels based on these credentials. How platforms
+                                act on them is determined by each platform&apos;s own policies.
                               </p>
                             </div>
                           </div>
@@ -754,9 +787,9 @@ export default function C2paScannerPage() {
                             </h5>
                             <ul className="flex flex-col gap-2 font-sans text-[13px] text-ink">
                               {[
-                                'Instagram "Made with AI" flag · bypassed',
-                                "Pinterest reach suppression · neutralized",
-                                "Cryptographic tracking · clean",
+                                "C2PA manifest: not detected",
+                                "Signed JUMBF block: none found",
+                                "Cryptographic credentials: clean",
                               ].map((s) => (
                                 <li
                                   key={s}
@@ -774,7 +807,7 @@ export default function C2paScannerPage() {
                           </div>
 
                           <div className="rounded-lg bg-n100 px-4 py-3 font-sans text-[12.5px] text-n600 leading-relaxed text-center">
-                            Safe to upload anywhere.
+                            No C2PA provenance data found in this image.
                           </div>
                         </div>
                       )}
