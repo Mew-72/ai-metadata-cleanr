@@ -1,7 +1,12 @@
 import { MetadataRoute } from "next";
+import { absoluteUrl } from "../lib/url";
 
+/**
+ * Public pages and rendering assets (/_next, /wasm, images) are allowed by
+ * "/". The disallows are intentional: auth, dashboard, checkout return and
+ * API/analytics endpoints are not search landing pages.
+ */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://scrubai.app";
   return {
     rules: [
       {
@@ -21,6 +26,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: absoluteUrl("/sitemap.xml"),
   };
 }

@@ -17,6 +17,19 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        // Bare apex -> canonical www host in one permanent (308) hop. Path and
+        // query string carry over unchanged. Repeated slashes ("//about") are
+        // already collapsed by Next with its own 308.
+        source: "/:path*",
+        has: [{ type: "host", value: "scrubai.app" }],
+        destination: "https://www.scrubai.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
