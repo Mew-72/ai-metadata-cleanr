@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy - ScrubAI",
   description:
-    "How ScrubAI handles your data. 100% client-side processing — images never leave your browser. Learn about our privacy practices and data collection policies.",
+    "How ScrubAI handles your data. Images are processed entirely in your browser and never uploaded. Anonymous UI analytics via PostHog. No image data or filenames logged.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy - ScrubAI",
+    description:
+      "Images never leave your device. Anonymous UI analytics help improve the product. No image bytes or filenames are ever logged.",
+  },
 };
 
 export default function PrivacyLayout({

@@ -9,6 +9,20 @@ export function HomeHero() {
   return (
     <section className="relative w-full hero-gradient">
       <div className="max-w-[1440px] mx-auto w-full px-3 sm:px-5 lg:px-6 pt-5 lg:pt-7 pb-12 lg:pb-16">
+        {/* Title header — compact, keeps tool first */}
+        <div className="text-center mb-4 lg:mb-5">
+          <h1 className="font-sans text-[22px] lg:text-[28px] font-semibold tracking-tight text-ink mb-2">
+            Free Online Image Metadata Remover
+          </h1>
+          <p className="font-sans text-[13.5px] text-n500 max-w-2xl mx-auto leading-relaxed">
+            Remove EXIF, GPS, XMP and C2PA data from JPEG, PNG, WebP, AVIF and HEIC files — entirely in your browser.
+            Five free cleans per day. No account required.{" "}
+            <a href="/c2pa-scanner" className="text-accent hover:underline">Verify C2PA credentials</a>{" "}
+            or{" "}
+            <a href="/docs" className="text-accent hover:underline">read the guides</a>.
+          </p>
+        </div>
+
         {!isPro && (
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 mb-4 lg:mb-5">
             <span className="inline-flex items-center gap-1.5 text-[12.5px] text-ink">

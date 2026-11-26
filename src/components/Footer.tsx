@@ -24,8 +24,9 @@ export function Footer() {
             </Link>
             <p className="font-sans text-[14px] leading-relaxed text-n500 mt-4 max-w-md">
               Local-first privacy tools. Strip EXIF, GPS, IPTC, XMP, and C2PA
-              Content Credentials from your images entirely in your browser. No
-              uploads, no tracking, no compromises.
+              Content Credentials from your images entirely in your browser.
+              Images never leave your device. Anonymous UI analytics via PostHog;
+              image bytes and filenames are never logged.
             </p>
 
             <div className="flex gap-2 mt-6">

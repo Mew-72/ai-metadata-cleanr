@@ -37,12 +37,11 @@ export default function DocsIndexPage() {
                     ScrubAI privacy docs
                 </div>
                 <h1 className="font-sans text-[34px] md:text-[44px] lg:text-[52px] font-semibold tracking-tight text-ink leading-[1.05] mb-4 max-w-3xl">
-                    Guides on metadata, reach, and the cleaning pipeline.
+                    Image Metadata and Photo Privacy Guides
                 </h1>
                 <p className="font-sans text-[15px] lg:text-[16px] text-n500 leading-relaxed max-w-2xl">
-                    Long-form pieces on how platforms suppress AI-tagged content, why
-                    ScrubAI&apos;s canvas redraw works where tag-strippers don&apos;t,
-                    and the platform-by-platform field manual for creators who ship.
+                    Long-form pieces on image metadata formats, C2PA Content Credentials, the
+                    pixel-redraw removal technique, and how platforms handle provenance data.
                 </p>
             </section>
 

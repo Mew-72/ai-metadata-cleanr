@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "C2PA Content Credentials Scanner",
+  title: "Free C2PA Checker & Content Credentials Scanner",
   description:
-    "Scan images for C2PA cryptographic provenance manifests, JUMBF signature blocks, and 'Made with AI' markers. 100% client-side verification.",
+    "Inspect C2PA Content Credentials and signed image provenance privately in your browser. Understand credential validation results.",
+  alternates: { canonical: "/c2pa-scanner" },
   openGraph: {
-    title: "C2PA Scanner - Detect AI Content Credentials",
+    title: "Free C2PA Checker & Content Credentials Scanner | ScrubAI",
     description:
-      "Upload any image to scan for hidden C2PA provenance manifests and AI generation signatures. Free, instant, client-side.",
+      "Inspect C2PA Content Credentials and signed image provenance privately in your browser. Understand credential validation results.",
   },
 };
 

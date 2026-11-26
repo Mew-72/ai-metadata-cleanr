@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppAuth } from "../hooks/useAppAuth";
-import { Sun, Moon, Menu, X, ShieldCheck } from "lucide-react";
+import { Sun, Moon, Menu, X, ShieldCheck, ChevronDown } from "lucide-react";
 
 const NAV_LINKS: { label: string; href: string; match?: (p: string) => boolean }[] = [
   { label: "Features", href: "/#features" },
@@ -15,10 +15,17 @@ const NAV_LINKS: { label: string; href: string; match?: (p: string) => boolean }
   { label: "About", href: "/about", match: (p) => p === "/about" },
 ];
 
+const TOOLS_LINKS = [
+  { label: "Metadata Remover", href: "/", desc: "Strip EXIF, GPS, XMP, C2PA" },
+  { label: "C2PA Scanner", href: "/c2pa-scanner", desc: "Verify Content Credentials" },
+];
+
 export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { isSignedIn } = useAppAuth();
 
@@ -41,6 +48,16 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toggleTheme = () => {
@@ -91,6 +108,47 @@ export function Header() {
               </Link>
             );
           })}
+
+          {/* Tools dropdown — links always in DOM for crawlers */}
+          <div className="relative" ref={toolsRef}>
+            <button
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+              aria-haspopup="true"
+              className={`inline-flex items-center gap-1 font-sans text-[13px] font-medium px-3 py-1.5 rounded-md transition-colors ${
+                pathname === "/" || pathname === "/c2pa-scanner"
+                  ? "text-ink bg-n100"
+                  : "text-n500 hover:text-ink hover:bg-n100"
+              }`}
+            >
+              Tools
+              <ChevronDown
+                size={12}
+                strokeWidth={2.2}
+                className={`transition-transform ${toolsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            <div
+              className={`absolute left-0 top-full mt-1 w-52 rounded-xl border border-muted-border bg-bg shadow-lg overflow-hidden transition-all duration-150 ${
+                toolsOpen ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-1"
+              }`}
+              role="menu"
+            >
+              {TOOLS_LINKS.map((t) => (
+                <a
+                  key={t.href}
+                  href={t.href}
+                  role="menuitem"
+                  onClick={() => setToolsOpen(false)}
+                  className="block px-4 py-3 hover:bg-n100 transition-colors border-b last:border-b-0 border-muted-border"
+                >
+                  <div className="font-sans text-[13px] font-medium text-ink">{t.label}</div>
+                  <div className="font-sans text-[11.5px] text-n500 mt-0.5">{t.desc}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+
           {isSignedIn && (
             <Link
               href="/dashboard"
@@ -196,6 +254,24 @@ export function Header() {
                 </Link>
               );
             })}
+            {/* Tools links — always present for crawlability */}
+            <div className="mt-1 mb-0.5 px-3 pt-2 pb-1 font-sans text-[11px] uppercase tracking-wider text-n400 font-medium">
+              Tools
+            </div>
+            {TOOLS_LINKS.map((t) => (
+              <a
+                key={t.href}
+                href={t.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`font-sans text-[14px] font-medium px-3 py-2.5 rounded-md transition-colors ${
+                  pathname === t.href
+                    ? "text-ink bg-n100"
+                    : "text-n600 hover:text-ink hover:bg-n100"
+                }`}
+              >
+                {t.label}
+              </a>
+            ))}
             {isSignedIn && (
               <Link
                 href="/dashboard"
