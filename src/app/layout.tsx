@@ -66,6 +66,7 @@ export const metadata: Metadata = {
   },
   other: {
     google: "notranslate",
+    "msvalidate.01":"F14FE6E5FDFFA997F0F2B1406CADC921"
   },
 };
 
