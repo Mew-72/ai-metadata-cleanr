@@ -2,9 +2,8 @@ import { MetadataRoute } from "next";
 import { absoluteUrl } from "../lib/url";
 
 /**
- * Public pages and rendering assets (/_next, /wasm, images) are allowed by
- * "/". The disallows are intentional: auth, dashboard, checkout return and
- * API/analytics endpoints are not search landing pages.
+ * Allow public pages and rendering assets, and let crawlers follow the
+ * dashboard sign-in redirect. Authentication is independent of these rules.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -15,10 +14,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/api/",
           "/ingest/",
-          "/dashboard",
-          "/dashboard/",
-          "/sign-in",
-          "/sign-in/",
           "/sign-up",
           "/sign-up/",
           "/thank-you",
